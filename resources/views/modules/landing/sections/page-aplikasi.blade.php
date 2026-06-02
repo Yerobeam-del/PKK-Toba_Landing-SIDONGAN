@@ -1,0 +1,226 @@
+<div class="page" id="page-aplikasi" style="display: none;">
+    <div class="page-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light));">
+        <div class="page-header-content">
+            <h1>Aplikasi & Sistem</h1>
+            <p>Sistem informasi digital PKK Kabupaten Toba</p>
+            <div class="breadcrumb">
+                <a onclick="navigateTo('beranda')">Beranda</a><span>/</span><span class="current">Aplikasi</span>
+            </div>
+        </div>
+    </div>
+    
+    <div id="aplikasi-loading" style="text-align: center; padding: 4rem 2rem;">
+        <div style="font-size: 1.2rem; color: var(--text-muted);">Memuat data aplikasi...</div>
+    </div>
+    
+    <section class="apps-full-section" id="aplikasi-content" style="display: none;">
+        
+        {{-- SECTION: APLIKASI AKTIF --}}
+        <div class="section-header" id="active-section-header">
+            <div class="section-label">Aplikasi Aktif</div>
+            <h2 class="section-title">Sistem yang Tersedia</h2>
+        </div>
+        <div class="apps-full-grid" id="active-apps-grid">
+            <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: var(--text-muted);">Memuat aplikasi aktif...</div>
+        </div>
+    </section>
+</div>
+
+<script>
+let aplikasiDataLoaded = false;
+
+// ==========================================
+// HELPER FUNCTIONS
+// ==========================================
+
+function getIconHtml(app, size = 40) {
+    return `
+    <svg width="${size}" height="${size}" viewBox="0 0 24 24" fill="none" 
+         stroke="rgba(255,255,255,0.95)" stroke-width="2" 
+         stroke-linecap="round" stroke-linejoin="round">
+        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+        <line x1="8" y1="21" x2="16" y2="21"/>
+        <line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>
+    `;
+}
+
+function buildImageUrl(iconPath) {
+    if (!iconPath) return null;
+    const cleanPath = iconPath.replace(/^(storage\/|public\/|app\/public\/)/i, '');
+    return '/storage/' + cleanPath;
+}
+
+// Empty state untuk APLIKASI AKTIF
+function renderEmptyActiveState() {
+    return `
+    <div style="grid-column: 1 / -1; width: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; padding: 6rem 2rem; min-height: 50vh; margin: 0 auto;">
+        <div style="width: 120px; height: 120px; margin: 0 auto 2rem; background: linear-gradient(135deg, rgba(15,107,99,0.1), rgba(20,184,166,0.1)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+            <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f6b63" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;">
+                <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
+                <line x1="8" y1="21" x2="16" y2="21"/>
+                <line x1="12" y1="17" x2="12" y2="21"/>
+            </svg>
+        </div>
+        <h3 style="font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0 0 0.75rem 0;">Belum Ada Aplikasi Aktif</h3>
+        <p style="color: #64748b; font-size: 1.05rem; line-height: 1.7; margin: 0 auto 2rem; max-width: 500px;">Tim kami sedang mempersiapkan sistem digital untuk meningkatkan pelayanan PKK Kabupaten Toba. Silakan kunjungi kembali nanti untuk update terbaru.</p>
+        <a onclick="navigateTo('beranda')" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 2rem; background: linear-gradient(135deg, #0f6b63, #14b8a6); color: #fff; border-radius: 12px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(15,107,99,0.3);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(15,107,99,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(15,107,99,0.3)'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+            Kembali ke Beranda
+        </a>
+    </div>
+    `;
+}
+
+// ==========================================
+// ✅ RENDER APLIKASI AKTIF (HANYA SATU DEFINISI)
+// ==========================================
+function renderActiveApps(apps) {
+    const container = document.getElementById('active-apps-grid');
+    if (!container) return;
+    
+    if (!apps || apps.length === 0) { 
+        container.innerHTML = renderEmptyActiveState();
+        const activeHeader = document.getElementById('active-section-header');
+        if (activeHeader) activeHeader.style.display = 'none';
+        return; 
+    }
+    
+    const activeCardTemplate = (app, index) => {
+        // ✅ FIX 1: Tentukan class berdasarkan short_name ATAU name
+        const appName = (app.short_name || app.name || '').toLowerCase().trim();
+        let cardClass = '';
+        
+        if (appName.includes('sieda') || appName.includes('e-dasawisma')) {
+            cardClass = 'sieda';
+        } else if (appName.includes('sidongan')) {
+            cardClass = 'SIDONGAN';
+        } else {
+            cardClass = `app-${index}`; // Fallback
+        }
+        
+        // ✅ FIX 2: Build image URL dengan validasi
+        let imgUrl = null;
+        if (app.icon) {
+            const cleanPath = app.icon.replace(/^(storage\/|public\/|app\/public\/)/i, '');
+            imgUrl = '/storage/' + cleanPath;
+        }
+        
+        // ✅ FIX 3: Features list
+        const features = Array.isArray(app.features) ? app.features.slice(0, 5) : [];
+        const featuresHtml = features.length > 0 
+            ? features.map(f => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${f}</li>`).join('')
+            : `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Fitur unggulan aplikasi</li>`;
+        
+        // ✅ FIX 4: Icon HTML dengan fallback yang robust
+        let iconHtml = '';
+        if (imgUrl) {
+            iconHtml = `
+                <img src="${imgUrl}" 
+                     alt="${app.short_name || app.name}" 
+                     style="width:100%;height:100%;object-fit:contain;display:block;padding:10px;"
+                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                <div class="placeholder-icon" style="display:none;width:50px;height:50px;align-items:center;justify-content:center;">
+                    ${getIconHtml(app, 40)}
+                </div>
+            `;
+        } else {
+            iconHtml = `<div class="placeholder-icon" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;">${getIconHtml(app, 40)}</div>`;
+        }
+        
+        // ✅ FIX 5: Render card dengan class yang benar
+        return `
+        <a href="${app.url && app.url !== '#' ? app.url : '#'}" 
+           target="_blank" 
+           class="app-card-home ${cardClass}" 
+           ${!app.url || app.url === '#' ? 'style="pointer-events:none;opacity:0.7"' : ''}>
+            
+            <div class="app-card-header">
+                <div class="app-icon-wrapper">
+                    ${iconHtml}
+                </div>
+            </div>
+            
+            <div class="app-card-body">
+                <h3 class="app-name">${app.short_name || app.name || 'Aplikasi'}</h3>
+                <p class="app-fullname">${app.name || ''}</p>
+                <p class="app-description">${app.description || 'Sistem informasi digital terpadu PKK Kabupaten Toba.'}</p>
+                <ul class="app-features">${featuresHtml}</ul>
+            </div>
+            
+            <div class="app-card-footer">
+                <span class="app-btn">
+                    ${app.url && app.url !== '#' ? `Akses ${app.short_name || 'Aplikasi'}` : 'Akses Terbatas'}
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M5 12h14M12 5l7 7-7 7"/>
+                    </svg>
+                </span>
+                <div class="app-status"><div class="app-status-dot"></div>Aktif</div>
+            </div>
+        </a>`;
+    };
+    
+    container.innerHTML = apps.map((app, i) => activeCardTemplate(app, i)).join('');
+}
+
+// ==========================================
+// LOAD DATA & INIT
+// ==========================================
+async function loadAplikasiData() {
+    if (aplikasiDataLoaded) return;
+    
+    const loadingEl = document.getElementById('aplikasi-loading');
+    const contentEl = document.getElementById('aplikasi-content');
+    const activeGrid = document.getElementById('active-apps-grid');
+    const activeHeader = document.getElementById('active-section-header');
+    
+    try {
+        const response = await fetch('/api/v1/applications');
+        const result = await response.json();
+        
+        if (!result.success) throw new Error(result.message);
+        
+        const { active } = result.data;
+        
+        if (active && active.length > 0) {
+            renderActiveApps(active);
+        } else {
+            if (activeGrid) activeGrid.innerHTML = renderEmptyActiveState();
+            if (activeHeader) activeHeader.style.display = 'none';
+        }
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
+        
+        aplikasiDataLoaded = true;
+        
+    } catch (error) {
+        console.error('Error loading aplikasi:', error);
+        
+        if (activeGrid) activeGrid.innerHTML = renderEmptyActiveState();
+        if (activeHeader) activeHeader.style.display = 'none';
+        
+        if (loadingEl) loadingEl.style.display = 'none';
+        if (contentEl) contentEl.style.display = 'block';
+        
+        aplikasiDataLoaded = true;
+    }
+}
+
+// Auto-load when page becomes active
+document.addEventListener('DOMContentLoaded', () => {
+    const observer = new MutationObserver(() => {
+        const page = document.getElementById('page-aplikasi');
+        if (page && page.classList.contains('active') && !aplikasiDataLoaded) {
+            setTimeout(() => loadAplikasiData(), 100);
+            observer.disconnect();
+        }
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+    
+    const page = document.getElementById('page-aplikasi');
+    if (page && page.classList.contains('active')) {
+        setTimeout(() => loadAplikasiData(), 100);
+    }
+});
+</script>
