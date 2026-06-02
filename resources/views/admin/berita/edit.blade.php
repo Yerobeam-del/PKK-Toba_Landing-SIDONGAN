@@ -64,7 +64,7 @@
         {{-- Content dengan TinyMCE --}}
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Konten Lengkap *</label>
-            <textarea name="content" id="contentEditor" class="form-control" rows="10" required placeholder="Tulis konten berita lengkap di sini...">{{ old('content', $berita->content) }}</textarea>
+            <textarea name="content" id="contentEditor" class="form-control" rows="10" placeholder="Tulis konten berita lengkap di sini...">{{ old('content', $berita->content) }}</textarea>
             <small style="color:var(--text-muted);display:block;margin-top:0.4rem;font-size:0.8rem">Gunakan editor di atas untuk format teks yang lebih baik</small>
         </div>
 

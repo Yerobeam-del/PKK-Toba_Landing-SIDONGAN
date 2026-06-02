@@ -64,7 +64,7 @@
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Konten Lengkap *</label>
             <!-- CKEditor akan mengubah textarea ini menjadi Editor -->
-            <textarea name="content" id="contentEditor" class="form-control" rows="10" required>{{ old('content') }}</textarea>
+            <textarea name="content" id="contentEditor" class="form-control" rows="10">{{ old('content') }}</textarea>
             <small style="color:var(--text-muted);display:block;margin-top:0.4rem;font-size:0.8rem">
                 Gunakan toolbar di atas untuk memformat teks, membuat list, atau menambahkan gambar.
             </small>
