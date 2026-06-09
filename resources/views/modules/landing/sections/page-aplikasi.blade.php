@@ -73,13 +73,19 @@ function renderEmptyActiveState() {
 }
 
 // ==========================================
-// ✅ RENDER APLIKASI AKTIF (HANYA SATU DEFINISI)
+// ✅ RENDER APLIKASI AKTIF (FIXED VERSION)
 // ==========================================
 function renderActiveApps(apps) {
     const container = document.getElementById('active-apps-grid');
-    if (!container) return;
+    if (!container) {
+        console.error('Container active-apps-grid not found!');
+        return;
+    }
+    
+    console.log('📊 Rendering apps:', apps);
     
     if (!apps || apps.length === 0) { 
+        console.log('No apps to render, showing empty state');
         container.innerHTML = renderEmptyActiveState();
         const activeHeader = document.getElementById('active-section-header');
         if (activeHeader) activeHeader.style.display = 'none';
@@ -87,7 +93,11 @@ function renderActiveApps(apps) {
     }
     
     const activeCardTemplate = (app, index) => {
-        // ✅ FIX 1: Tentukan class berdasarkan short_name ATAU name
+        // ✅ CEK STATUS MAINTENANCE - PASTIKAN BENAR
+        const isMaintenance = app.status === 'maintenance';
+        console.log(`App ${index}: ${app.short_name} - Status: ${app.status} - Is Maintenance: ${isMaintenance}`);
+        
+        // Tentukan class berdasarkan short_name
         const appName = (app.short_name || app.name || '').toLowerCase().trim();
         let cardClass = '';
         
@@ -96,71 +106,117 @@ function renderActiveApps(apps) {
         } else if (appName.includes('sidongan')) {
             cardClass = 'SIDONGAN';
         } else {
-            cardClass = `app-${index}`; // Fallback
+            cardClass = `app-${index}`;
         }
         
-        // ✅ FIX 2: Build image URL dengan validasi
+        // Build image URL
         let imgUrl = null;
         if (app.icon) {
             const cleanPath = app.icon.replace(/^(storage\/|public\/|app\/public\/)/i, '');
             imgUrl = '/storage/' + cleanPath;
         }
         
-        // ✅ FIX 3: Features list
+        // Features list
         const features = Array.isArray(app.features) ? app.features.slice(0, 5) : [];
         const featuresHtml = features.length > 0 
             ? features.map(f => `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>${f}</li>`).join('')
             : `<li><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Fitur unggulan aplikasi</li>`;
         
-        // ✅ FIX 4: Icon HTML dengan fallback yang robust
+        // Icon HTML dengan fallback
         let iconHtml = '';
         if (imgUrl) {
             iconHtml = `
                 <img src="${imgUrl}" 
-                     alt="${app.short_name || app.name}" 
-                     style="width:100%;height:100%;object-fit:contain;display:block;padding:10px;"
-                     onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                    alt="${app.short_name || app.name}" 
+                    style="width:100%;height:100%;object-fit:contain;display:block;padding:10px;${isMaintenance ? 'filter: grayscale(100%) brightness(1.3) !important;' : ''}"
+                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
                 <div class="placeholder-icon" style="display:none;width:50px;height:50px;align-items:center;justify-content:center;">
                     ${getIconHtml(app, 40)}
                 </div>
             `;
         } else {
-            iconHtml = `<div class="placeholder-icon" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;">${getIconHtml(app, 40)}</div>`;
+            iconHtml = `<div class="placeholder-icon" style="width:50px;height:50px;display:flex;align-items:center;justify-content:center;${isMaintenance ? 'filter: grayscale(100%) brightness(1.5) !important;' : ''}">${getIconHtml(app, 40)}</div>`;
         }
         
-        // ✅ FIX 5: Render card dengan class yang benar
+        // ✅ RENDER CARD DENGAN MAINTENANCE MODE
         return `
-        <a href="${app.url && app.url !== '#' ? app.url : '#'}" 
-           target="_blank" 
-           class="app-card-home ${cardClass}" 
-           ${!app.url || app.url === '#' ? 'style="pointer-events:none;opacity:0.7"' : ''}>
+        <div class="app-card-home ${cardClass} ${isMaintenance ? 'maintenance-mode' : ''}" 
+             style="
+                ${isMaintenance ? 'filter: grayscale(80%) !important; opacity: 0.85 !important; pointer-events: none !important; cursor: not-allowed !important;' : ''}
+                background: #fff;
+                border-radius: 16px;
+                overflow: hidden;
+                box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+                transition: all 0.3s ease;
+             ">
             
-            <div class="app-card-header">
-                <div class="app-icon-wrapper">
+            <div class="app-card-header" style="position: relative; overflow: hidden;">
+                <div style="position: absolute; top: -50%; right: -30%; width: 200px; height: 200px; border-radius: 50%; background: ${cardClass === 'sieda' ? '#bfdbfe' : (cardClass === 'SIDONGAN' ? '#fecaca' : '#ddd6fe')}; opacity: ${isMaintenance ? '0.2' : '0.4'};"></div>
+                <div class="app-icon-wrapper" style="${isMaintenance ? 'filter: grayscale(100%) brightness(1.2) !important;' : ''}">
                     ${iconHtml}
                 </div>
+                ${isMaintenance ? `
+                <div style="position:absolute;top:1rem;right:1rem;background:rgba(245,158,11,0.9);color:#fff;padding:0.4rem 0.8rem;border-radius:20px;font-size:0.7rem;font-weight:700;display:flex;align-items:center;gap:0.4rem;z-index:10;box-shadow:0 2px 8px rgba(245,158,11,0.3);">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
+                    </svg>
+                    MAINTENANCE
+                </div>` : ''}
             </div>
             
-            <div class="app-card-body">
-                <h3 class="app-name">${app.short_name || app.name || 'Aplikasi'}</h3>
-                <p class="app-fullname">${app.name || ''}</p>
-                <p class="app-description">${app.description || 'Sistem informasi digital terpadu PKK Kabupaten Toba.'}</p>
+            <div class="app-card-body" style="padding-top: 2rem;">
+                <h3 class="app-name" style="${isMaintenance ? 'color: #64748b;' : ''}">${app.short_name || app.name || 'Aplikasi'}</h3>
+                <p class="app-fullname" style="color: #64748b;">${app.name || ''}</p>
+                <p class="app-description" style="color: #64748b;">${app.description || 'Sistem informasi digital terpadu PKK Kabupaten Toba.'}</p>
                 <ul class="app-features">${featuresHtml}</ul>
             </div>
             
-            <div class="app-card-footer">
-                <span class="app-btn">
-                    ${app.url && app.url !== '#' ? `Akses ${app.short_name || 'Aplikasi'}` : 'Akses Terbatas'}
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+            <div class="app-card-footer" style="display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.5rem; border-top: 1px solid #f1f5f9;">
+                <span class="app-btn" style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 0.5rem;
+                    padding: 0.75rem 1.25rem;
+                    background: ${isMaintenance ? '#94a3b8' : (cardClass === 'sieda' ? '#2563eb' : (cardClass === 'SIDONGAN' ? '#dc2626' : '#7c3aed'))};
+                    color: #fff;
+                    border: none;
+                    border-radius: 10px;
+                    font-weight: 600;
+                    cursor: ${isMaintenance ? 'not-allowed' : 'pointer'};
+                    transition: all 0.3s;
+                ">
+                    ${isMaintenance ? 'Sedang Dalam Perbaikan' : `Akses ${app.short_name || 'Aplikasi'}`}
+                    ${!isMaintenance ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M5 12h14M12 5l7 7-7 7"/>
-                    </svg>
+                    </svg>` : ''}
                 </span>
-                <div class="app-status"><div class="app-status-dot"></div>Aktif</div>
+                <div class="app-status" style="
+                    display: inline-flex;
+                    align-items: center;
+                    gap: 6px;
+                    padding: 6px 12px;
+                    background: ${isMaintenance ? 'rgba(245,158,11,0.1)' : 'rgba(34,197,94,0.1)'};
+                    border-radius: 20px;
+                    font-size: 0.75rem;
+                    font-weight: 600;
+                    color: ${isMaintenance ? '#f59e0b' : '#22c55e'};
+                ">
+                    <div class="app-status-dot" style="
+                        width: 7px;
+                        height: 7px;
+                        background: ${isMaintenance ? '#f59e0b' : '#22c55e'};
+                        border-radius: 50%;
+                        ${isMaintenance ? '' : 'animation: pulse 2s infinite;'}
+                    "></div>
+                    ${isMaintenance ? 'Dalam Perbaikan' : 'Aktif'}
+                </div>
             </div>
-        </a>`;
+        </div>`;
     };
     
-    container.innerHTML = apps.map((app, i) => activeCardTemplate(app, i)).join('');
+    const html = apps.map((app, i) => activeCardTemplate(app, i)).join('');
+    console.log('Generated HTML length:', html.length);
+    container.innerHTML = html;
 }
 
 // ==========================================
@@ -180,10 +236,16 @@ async function loadAplikasiData() {
         
         if (!result.success) throw new Error(result.message);
         
-        const { active } = result.data;
+        // GABUNGKAN: active + maintenance
+        const activeApps = result.data.active || [];
+        const maintenanceApps = result.data.maintenance || [];
+        const allApps = [...activeApps, ...maintenanceApps];
         
-        if (active && active.length > 0) {
-            renderActiveApps(active);
+        console.log('📊 Total apps:', allApps.length);
+        console.log('Active:', activeApps.length, 'Maintenance:', maintenanceApps.length);
+        
+        if (allApps && allApps.length > 0) {
+            renderActiveApps(allApps);
         } else {
             if (activeGrid) activeGrid.innerHTML = renderEmptyActiveState();
             if (activeHeader) activeHeader.style.display = 'none';

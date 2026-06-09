@@ -264,13 +264,30 @@ body {
    COMPONENTS (Buttons, Cards, Tables)
    ========================================== */
 .btn {
-  padding: 0.6rem 1.2rem; border: none; border-radius: 8px;
-  font-family: inherit; font-weight: 600; cursor: pointer;
-  display: inline-flex; align-items: center; gap: 8px;
-  transition: all 0.2s ease; font-size: 0.9rem;
+  padding: 0.6rem 1.2rem; 
+  border: none; 
+  border-radius: 8px;
+  font-family: inherit; 
+  font-weight: 600; 
+  cursor: pointer;
+  display: inline-flex; 
+  align-items: center; 
+  gap: 8px;
+  transition: all 0.2s ease; 
+  font-size: 0.9rem;
+  text-decoration: none; /* ← TAMBAHKAN INI */
 }
-.btn-primary { background: var(--primary); color: #fff; }
-.btn-primary:hover { background: var(--primary-dark); }
+
+.btn-primary { 
+  background: var(--primary); 
+  color: #fff; 
+  text-decoration: none; /* ← TAMBAHKAN INI JUGA */
+}
+
+.btn-primary:hover { 
+  background: var(--primary-dark); 
+  text-decoration: none; /* ← DAN INI */
+}
 
 .card {
   background: var(--card-bg); border-radius: 12px;
@@ -320,6 +337,11 @@ tr:hover td { background: #fafbfc; }
 }
 
 /* --- Efek HOVER (Muncul warna lembut, BUKAN GARIS) --- */
+.btn-view:hover {
+    background-color: rgba(59, 130, 246, 0.1) !important; /* Background Biru Sangat Muda */
+    color: #2563eb !important; /* Ikon jadi Biru Terang */
+}
+
 .btn-edit:hover {
     background-color: rgba(59, 130, 246, 0.1) !important; /* Background Biru Sangat Muda */
     color: #2563eb !important; /* Ikon jadi Biru Terang */

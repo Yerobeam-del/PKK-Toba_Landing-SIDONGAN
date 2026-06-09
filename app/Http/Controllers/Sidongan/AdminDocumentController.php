@@ -23,36 +23,38 @@ class AdminDocumentController extends Controller
     {
         $user = auth()->guard('sidongan')->user();
 
-        // Safety check
         if (!$user) {
             return redirect()->route('sidongan.login');
         }
         
-        // Stats query
         $statsQuery = Document::query();
         
-        // Filter stats based on role
         if ($user->hasSidonganRole('sekretaris')) {
             $statsQuery->where('created_by', $user->id);
         }
         
-        $totalDocuments = $statsQuery->count();
-        $publishedDocuments = (clone $statsQuery)->where('status', 'published')->count();
-        $draftDocuments = (clone $statsQuery)->where('status', 'draft')->count();
-        $berjalanDocuments = (clone $statsQuery)->where('status', 'berjalan')->count();
-        $menungguDocuments = (clone $statsQuery)->whereIn('status', ['menunggu_disposisi', 'menunggu_verifikasi'])->count();
-        $selesaiDocuments = (clone $statsQuery)->where('status', 'selesai')->count();
-        $arsipDocuments = (clone $statsQuery)->where('status', 'diarsipkan')->count();
-        
-        // Recent documents for dashboard
+        // ✅ RECENT DOCUMENTS - Dengan sorting prioritas status
         $recentDocuments = (clone $statsQuery)
-            ->with(['creator'])
-            ->latest()
+            ->with(['creator', 'activityReports' => function($q) {
+                $q->with('creator')->latest();
+            }])
+            ->orderByRaw("
+                CASE 
+                    WHEN status = 'menunggu_disposisi' THEN 1
+                    WHEN status = 'berjalan' THEN 2
+                    WHEN status = 'menunggu_verifikasi' THEN 3
+                    WHEN status = 'selesai' THEN 4
+                    WHEN status = 'diarsipkan' THEN 5
+                    ELSE 6
+                END
+            ")
+            ->orderBy('created_at', 'desc')
             ->take(5)
             ->get();
 
-        // NOTIFICATIONS: Ambil notifikasi untuk user ini
+        // NOTIFIKASI: HANYA yang BELUM DIBACA
         $notifications = Notification::where('user_id', $user->id)
+            ->whereNull('read_at')
             ->latest()
             ->take(5)
             ->get();
@@ -62,7 +64,7 @@ class AdminDocumentController extends Controller
             ->count();
 
         return view('sidongan.dashboard', [
-            'totalSurat' => $statsQuery->count(),
+            'totalSurat' => (clone $statsQuery)->count(),
             'sedangBerjalan' => (clone $statsQuery)->where('status', 'berjalan')->count(),
             'menungguProses' => (clone $statsQuery)->whereIn('status', ['menunggu_disposisi', 'menunggu_verifikasi'])->count(),
             'selesai' => (clone $statsQuery)->where('status', 'selesai')->count(),
@@ -81,22 +83,30 @@ class AdminDocumentController extends Controller
         $user = auth()->guard('sidongan')->user();
         
         // 1. Buat Query Dasar
-        $query = Document::with(['category', 'creator']);
+        $query = Document::with(['category', 'creator', 'activityReports' => function($q) {
+            $q->with('creator')->latest();
+        }]);
         
-        // Filter Role (Sekretaris hanya lihat surat buatannya)
+        // Filter Role
         if ($user->hasSidonganRole('sekretaris')) {
             $query->where('created_by', $user->id);
         }
 
-        // LANGKAH PENTING: Hitung Total Dokumen DI SINI (sebelum filter search)
+        // Hitung Total Dokumen
         $totalDocuments = (clone $query)->count();
         
-        // 2. Terapkan Filter Pencarian (hanya untuk tabel, bukan untuk kartu total)
+        // Hitung Stats
+        $statSelesai = (clone $query)->where('status', 'selesai')->count();
+        $statBerjalan = (clone $query)->where('status', 'berjalan')->count();
+        $statMenungguDisposisi = (clone $query)->where('status', 'menunggu_disposisi')->count();
+        $statMenungguVerifikasi = (clone $query)->where('status', 'menunggu_verifikasi')->count();
+        
+        // 2. Filter Pencarian
         if ($request->filled('search')) {
             $query->search($request->search);
         }
         
-        // 3. Terapkan Filter Status & Kategori
+        // 3. Filter Status & Kategori
         if ($request->filled('category')) {
             $query->where('category_id', $request->category);
         }
@@ -104,13 +114,40 @@ class AdminDocumentController extends Controller
             $query->where('status', $request->status);
         }
 
-        $documents = $query->latest()->paginate(15)->withQueryString();
+        // 4. SORTING CUSTOM
+        $query->orderByRaw("
+            CASE 
+                WHEN status = 'menunggu_disposisi' THEN 1
+                WHEN status = 'berjalan' THEN 2
+                WHEN status = 'menunggu_verifikasi' THEN 3
+                WHEN status = 'selesai' THEN 4
+                WHEN status = 'diarsipkan' THEN 5
+                ELSE 6
+            END
+        ");
+        
+        $query->orderBy('created_at', 'desc');
+
+        // 5. PAGINATION DENGAN PER PAGE DYNAMIC
+        $perPage = $request->get('per_page', 10); // Default 10
+        $allowedPerPages = [5, 10, 15, 25, 50];
+        if (!in_array($perPage, $allowedPerPages)) {
+            $perPage = 10;
+        }
+
+        $documents = $query->paginate($perPage)->withQueryString();
         $categories = DocumentCategory::where('is_active', true)->orderBy('name')->get();
 
         return view('sidongan.documents.index', [
             'documents' => $documents,
             'categories' => $categories,
-            'totalDocuments' => $totalDocuments
+            'totalDocuments' => $totalDocuments,
+            'statSelesai' => $statSelesai,
+            'statBerjalan' => $statBerjalan,
+            'statMenungguDisposisi' => $statMenungguDisposisi,
+            'statMenungguVerifikasi' => $statMenungguVerifikasi,
+            'currentPerPage' => $perPage,
+            'allowedPerPages' => $allowedPerPages, // ✅ TAMBAHKAN INI
         ]);
     }
 
@@ -209,6 +246,8 @@ class AdminDocumentController extends Controller
 
     public function update(Request $request, Document $document)
     {
+        $user = auth()->guard('sidongan')->user();
+
         // 1. HANDLE HAPUS FILE
         if ($request->has('delete_file') && $request->delete_file == '1') {
             if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
@@ -225,7 +264,26 @@ class AdminDocumentController extends Controller
             return back()->with('success', 'File berhasil dihapus!');
         }
 
-        // 2. VALIDASI
+        // 2. Handle archive
+        if ($request->has('archive') && $request->archive === '1') {
+            if (!$user || !$user->hasSidonganRole('sekretaris')) {
+                abort(403, 'Akses ditolak.');
+            }
+            
+            if ($document->status !== 'selesai') {
+                return back()->with('error', 'Hanya dokumen yang sudah selesai yang dapat diarsipkan.');
+            }
+            
+            $document->update([
+                'status' => 'diarsipkan',
+                'updated_by' => $user->id,
+            ]);
+            
+            return redirect()->route('sidongan.documents.show', $document)
+                ->with('success', 'Surat berhasil diarsipkan!');
+        }
+
+        // 3. VALIDASI
         $validated = $request->validate([
             'sender' => 'required|string|max:255',
             'document_number' => 'required|string|max:100',
@@ -235,7 +293,7 @@ class AdminDocumentController extends Controller
             'file' => 'nullable|file|mimes:pdf,jpg,jpeg,png,doc,docx|max:5120',
         ]);
 
-        // 3. HANDLE UPLOAD FILE BARU
+        // 4. HANDLE UPLOAD FILE BARU
         if ($request->hasFile('file')) {
             if ($document->file_path && Storage::disk('public')->exists($document->file_path)) {
                 Storage::disk('public')->delete($document->file_path);
@@ -253,7 +311,7 @@ class AdminDocumentController extends Controller
             ]);
         }
 
-        // 4. UPDATE TEXT FIELDS
+        // 5. UPDATE TEXT FIELDS
         $document->update([
             'sender' => $validated['sender'],
             'document_number' => $validated['document_number'],
@@ -294,18 +352,22 @@ class AdminDocumentController extends Controller
     }
 
     /**
-     * Mark notification as read (AJAX)
+     * Mark notification as read + AUTO DELETE (AJAX)
      */
     public function markNotificationAsRead($id)
     {
-        $notification = Notification::findOrFail($id);
+        $user = auth()->guard('sidongan')->user();
         
-        // Hanya update jika belum dibaca
-        if (is_null($notification->read_at)) {
-            $notification->update(['read_at' => now()]);
-        }
+        // Cari notifikasi milik user ini
+        $notification = Notification::where('user_id', $user->id)->findOrFail($id);
         
-        return response()->json(['success' => true]);
+        // ✅ LANGSUNG HAPUS (karena sudah "dibaca")
+        $notification->delete();
+        
+        return response()->json([
+            'success' => true, 
+            'message' => 'Notifikasi dihapus'
+        ]);
     }
 
     /**
@@ -339,7 +401,9 @@ class AdminDocumentController extends Controller
         }
         
         $roles = User::getSidonganRoles();
-        unset($roles['bupati'], $roles['ketua'], $roles['sekretaris']); // Exclude certain roles
+        // Exclude ketua (tidak bisa disposisi ke diri sendiri) dan sekretaris (karena sekretaris yang upload)
+        unset($roles['ketua']);
+        unset($roles['sekretaris']);
         
         return view('sidongan.disposisi.form', compact('document', 'roles'));
     }
@@ -358,9 +422,10 @@ class AdminDocumentController extends Controller
         
         // 1. VALIDASI INPUT
         $validated = $request->validate([
-            'target_roles' => 'required|array|min:1', // Wajib pilih minimal 1
-            'target_roles.*' => 'in:bendahara,pokja1,pokja2,pokja3,pokja4,sekretaris',
+            'target_roles' => 'required|array|min:1',
+            'target_roles.*' => 'in:bendahara,pengurus_1,pengurus_2,pengurus_3,pengurus_4,sekretaris,staf_ahli_1,staf_ahli_2',
             'action' => 'required|string',
+            'custom_action' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
         ], [
             'target_roles.required' => 'Anda wajib memilih minimal satu tujuan disposisi.',
@@ -368,30 +433,43 @@ class AdminDocumentController extends Controller
             'action.required' => 'Tindakan/Instruksi wajib dipilih.',
         ]);
         
-        // 2. UPDATE DOKUMEN
+        // 2. TENTUKAN TINDAKAN FINAL
+        $finalAction = $validated['action'];
+        
+        // Jika "Lainnya" dipilih, gunakan custom_action
+        if ($validated['action'] === 'Lainnya') {
+            if (empty(trim($validated['custom_action'] ?? ''))) {
+                return back()->withErrors(['custom_action' => 'Tindakan/Instruksi lainnya wajib diisi.'])->withInput();
+            }
+            $finalAction = trim($validated['custom_action']);
+        }
+        
+        // 3. UPDATE DOKUMEN
         $document->update([
-            'status' => 'berjalan', // Ubah status menjadi berjalan
+            'status' => 'berjalan',
             'disposisi_data' => json_encode([
                 'target_roles' => $validated['target_roles'],
-                'action' => $validated['action'],
+                'action' => $finalAction,
+                'action_type' => $validated['action'], // Simpan tipe: 'Lainnya' atau pilihan standar
                 'comment' => $validated['comment'] ?? null,
                 'disposed_by' => $user->id,
                 'disposed_at' => now(),
             ])
         ]);
         
-        // 3. NOTIFIKASI (Opsional: Beri tahu pihak yang didisposisi)
+        // 4. NOTIFIKASI
         $rolesMap = [
             'sekretaris' => 'Sekretaris PKK',
             'bendahara' => 'Bendahara PKK',
-            'pokja1' => 'Ketua POKJA 1',
-            'pokja2' => 'Ketua POKJA 2',
-            'pokja3' => 'Ketua POKJA 3',
-            'pokja4' => 'Ketua POKJA 4',
+            'staf_ahli_1' => 'Staf Ahli I',
+            'staf_ahli_2' => 'Staf Ahli II',
+            'pengurus_1' => 'Ketua Pengurus I',
+            'pengurus_2' => 'Ketua Pengurus II',
+            'pengurus_3' => 'Ketua Pengurus III',
+            'pengurus_4' => 'Ketua Pengurus IV',
         ];
 
         foreach ($validated['target_roles'] as $role) {
-            // Cari user berdasarkan role
             $targetUser = \App\Models\User::where('sidongan_role', $role)->first();
             
             if ($targetUser) {
@@ -399,14 +477,14 @@ class AdminDocumentController extends Controller
                     'user_id' => $targetUser->id,
                     'type' => 'disposisi.received',
                     'title' => 'Disposisi Baru',
-                    'message' => "Anda menerima disposisi dari Ketua PKK untuk surat {$document->agenda_number}: {$document->subject}. Tindakan: {$validated['action']}",
+                    'message' => "Anda menerima disposisi dari Ketua PKK untuk surat {$document->agenda_number}: {$document->subject}. Tindakan: {$finalAction}",
                     'related_id' => $document->id,
                     'related_type' => \App\Models\Document::class,
                 ]);
             }
         }
         
-        // 4. REDIRECT KE HALAMAN DISPOSISI DENGAN PESAN SUKSES
+        // 5. REDIRECT
         return redirect()->route('sidongan.disposisi')
             ->with('success', 'Disposisi surat berhasil dikirim!');
     }
@@ -467,53 +545,121 @@ class AdminDocumentController extends Controller
     {
         $user = auth()->guard('sidongan')->user();
         
-        $query = Document::with(['category', 'creator'])
-            ->whereIn('status', ['selesai', 'diarsipkan']);
+        // HANYA ambil surat yang sudah diarsipkan (status = 'diarsipkan')
+        $query = Document::with(['category', 'creator', 'activityReports' => function($q) {
+            $q->with('creator')->latest();
+        }])
+        ->where('status', 'diarsipkan');
         
-        if ($user->hasSidonganRole('sekretaris')) {
-            $query->where('created_by', $user->id);
+        // Filter
+        if (request('search')) {
+            $query->search(request('search'));
+        }
+        if (request('category')) {
+            $query->where('category_id', request('category'));
+        }
+        if (request('year')) {
+            $query->whereYear('document_date', request('year'));
         }
         
         $documents = $query->latest()->paginate(15);
         
-        return view('sidongan.arsip.index', compact('documents'));
+        // Stats
+        $totalArsip = (clone $query)->count();
+        $arsipBulanIni = (clone $query)->whereMonth('created_at', now()->month)->count();
+        $arsipTahunIni = (clone $query)->whereYear('created_at', now()->year)->count();
+        
+        $categories = DocumentCategory::where('is_active', true)->orderBy('name')->get();
+        
+        return view('sidongan.arsip.index', compact(
+            'documents', 
+            'totalArsip', 
+            'arsipBulanIni', 
+            'arsipTahunIni',
+            'categories'
+        ));
     }
 
     /**
-     * Halaman Notifikasi
+     * Archive document (hanya untuk Sekretaris)
+     */
+    public function archive(Document $document)
+    {
+        $user = auth()->guard('sidongan')->user();
+        
+        // Cek akses - hanya Sekretaris yang bisa archive
+        if (!$user || !$user->hasSidonganRole('sekretaris')) {
+            abort(403, 'Akses ditolak. Hanya Sekretaris yang dapat mengarsipkan surat.');
+        }
+        
+        // Hanya dokumen yang statusnya 'selesai' yang bisa diarsipkan
+        if ($document->status !== 'selesai') {
+            return back()->with('error', 'Hanya dokumen yang sudah selesai yang dapat diarsipkan.');
+        }
+        
+        // Update status menjadi diarsipkan
+        $document->update([
+            'status' => 'diarsipkan',
+            'updated_by' => $user->id,
+        ]);
+        
+        // Buat notifikasi
+        \App\Models\Notification::create([
+            'user_id' => $user->id,
+            'type' => 'document.archived',
+            'title' => 'Surat Diarsipkan',
+            'message' => "Surat {$document->agenda_number} berhasil diarsipkan.",
+            'related_id' => $document->id,
+            'related_type' => Document::class,
+        ]);
+        
+        return redirect()->route('sidongan.documents.show', $document)
+            ->with('success', 'Surat berhasil diarsipkan!');
+    }
+
+    /**
+     * Print Lembar Disposisi
+     */
+    public function printDisposisi(Document $document)
+    {
+        return view('sidongan.documents.disposisi-print', compact('document'));
+    }
+
+    /**
+     * Halaman Notifikasi - HANYA tampilkan yang belum dibaca
      */
     public function notifications()
     {
         $user = auth()->guard('sidongan')->user();
         
+        // ✅ HANYA ambil notifikasi yang BELUM dibaca (read_at = null)
         $notifications = Notification::where('user_id', $user->id)
+            ->whereNull('read_at')  // ← Filter hanya yang belum dibaca
             ->latest()
             ->paginate(15);
 
-        // Kirim $unreadCount ke view
-        $unreadCount = Notification::where('user_id', $user->id)
-            ->whereNull('read_at')
-            ->count();
+        // Count = total yang ditampilkan (karena hanya unread)
+        $unreadCount = $notifications->total();
 
         return view('sidongan.notifications.index', compact('notifications', 'unreadCount'));
     }
 
     /**
-     * Mark all notifications as read
+     * Mark ALL notifications as read + AUTO DELETE ALL
      */
     public function markAllNotificationsAsRead()
     {
         $user = auth()->guard('sidongan')->user();
         
         if ($user) {
-            // Update semua notifikasi user menjadi sudah dibaca
+            // ✅ HAPUS SEMUA notifikasi user ini yang belum dibaca
             $count = Notification::where('user_id', $user->id)
-                ->whereNull('read_at')
-                ->update(['read_at' => now()]);
+                ->whereNull('read_at')  // Hanya yang belum dibaca
+                ->delete();             // Langsung hapus
             
             return response()->json([
                 'success' => true,
-                'message' => "{$count} notifikasi ditandai sebagai sudah dibaca",
+                'message' => "{$count} notifikasi dihapus",
                 'count' => $count
             ]);
         }

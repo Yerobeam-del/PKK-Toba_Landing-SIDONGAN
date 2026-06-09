@@ -95,13 +95,18 @@
             </small>
         </div>
 
-        {{-- Publish Checkbox --}}
+        {{-- Publish Checkbox - Custom Style --}}
         <div style="margin-bottom:2rem">
-            <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer">
-                <input type="checkbox" name="is_published" value="1" {{ old('is_published', $berita->is_published) ? 'checked' : '' }} style="width:18px;height:18px;cursor:pointer">
-                <span style="font-weight:600;font-size:0.95rem">Publikasikan</span>
+            <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.75rem 1rem;background:#f8fafc;border-radius:10px;transition:all 0.2s;width:fit-content" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                <input type="checkbox" name="is_published" id="isPublished" value="1" {{ old('is_published', $berita->is_published) ? 'checked' : '' }} style="display:none">
+                <div id="isPublishedBox" style="width:22px;height:22px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                    <svg id="isPublishedCheck" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)">
+                        <polyline points="20 6 9 17 4 12"/>
+                    </svg>
+                </div>
+                <span style="font-weight:600;color:#334155;font-size:0.9rem;user-select:none">Publikasikan</span>
             </label>
-            <small style="color:var(--text-muted);display:block;margin-top:0.4rem;margin-left:25px;font-size:0.85rem">
+            <small style="color:var(--text-muted);display:block;margin-top:0.5rem;font-size:0.85rem">
                 Jika tidak dicentang, berita akan tersimpan sebagai draft
             </small>
         </div>
@@ -242,6 +247,44 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
             document.getElementById('newImagePreview').style.display = 'block';
         };
         reader.readAsDataURL(file);
+    }
+});
+
+// ==========================================
+// CHECKBOX ANIMATION HANDLER
+// ==========================================
+function updateCheckboxStyle(boxId, checkId, isChecked) {
+    const box = document.getElementById(boxId);
+    const check = document.getElementById(checkId);
+    
+    if (!box || !check) return;
+    
+    if (isChecked) {
+        box.style.background = 'linear-gradient(135deg, #14b8a6, #0d9488)';
+        box.style.borderColor = '#14b8a6';
+        box.style.boxShadow = '0 2px 8px rgba(20,184,166,0.3)';
+        check.style.opacity = '1';
+        check.style.transform = 'scale(1)';
+    } else {
+        box.style.background = '#fff';
+        box.style.borderColor = '#cbd5e1';
+        box.style.boxShadow = 'none';
+        check.style.opacity = '0';
+        check.style.transform = 'scale(0.5)';
+    }
+}
+
+// Initialize checkbox state saat DOM ready
+document.addEventListener('DOMContentLoaded', function() {
+    const isPublishedCheckbox = document.getElementById('isPublished');
+    if (isPublishedCheckbox) {
+        // Set initial state sesuai data dari database
+        updateCheckboxStyle('isPublishedBox', 'isPublishedCheck', isPublishedCheckbox.checked);
+        
+        // On change
+        isPublishedCheckbox.addEventListener('change', function() {
+            updateCheckboxStyle('isPublishedBox', 'isPublishedCheck', this.checked);
+        });
     }
 });
 </script>

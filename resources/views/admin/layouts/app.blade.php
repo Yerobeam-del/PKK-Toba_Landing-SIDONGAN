@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>@yield('title', 'Admin Panel - PKK Kabupaten Toba')</title>
     
     <!-- Google Fonts -->
@@ -13,7 +14,7 @@
     
     <!-- Cropper.js -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" integrity="sha512-...">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js" integrity="sha512-..."></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
 
     <style>
         :root {
@@ -93,6 +94,7 @@
             height: 100%;
             object-fit: contain;
             display: block;
+            filter: brightness(0) invert(1);
         }
 
         .sidebar-title {
@@ -599,6 +601,42 @@
             }
         });
     </script>
+    
+    {{-- Toast Notification System --}}
+    <script src="{{ asset('assets/admin/js/toast.js') }}"></script>
+
+    {{-- Auto Show Session Messages --}}
+    @if(session('success'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Toast.success('{{ session('success') }}');
+        });
+    </script>
+    @endif
+
+    @if(session('error'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Toast.error('{{ session('error') }}');
+        });
+    </script>
+    @endif
+
+    @if(session('warning'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Toast.warning('{{ session('warning') }}');
+        });
+    </script>
+    @endif
+
+    @if(session('info'))
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            Toast.info('{{ session('info') }}');
+        });
+    </script>
+    @endif
 
     @stack('scripts')
 </body>

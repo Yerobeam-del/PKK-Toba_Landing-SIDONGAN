@@ -87,6 +87,11 @@ class Document extends Model
         return $this->belongsTo(User::class, 'created_by');
     }
 
+    public function activityReports()
+    {
+        return $this->hasMany(ActivityReport::class, 'document_id');
+    }
+
     // Scope: Hanya dokumen published & public
     public function scopePublished($query)
     {
@@ -126,41 +131,63 @@ class Document extends Model
 
     /**
      * Generate nomor agenda otomatis
-     * Format: AG/Bulan/Tahun/Urut (contoh: AG/05/2026/002)
+     * Format BARU: NNN/SM/PKK-T/BULAN(ROMAWI)/TAHUN
+     * Contoh: 001/SM/PKK-T/VI/2026
      * Reset nomor urut setiap ganti bulan
      */
     public static function generateAgendaNumber()
     {
-        $month = date('m');
-        $year = date('Y');
+        $month = now()->month; // 1-12
+        $year = now()->year;   // 2026
         
-        // Cari dokumen terakhir (termasuk yang soft-deleted) di bulan & tahun ini
+        // Cari dokumen terakhir di bulan & tahun ini untuk dapat nomor urut terakhir
         $lastDocument = self::withTrashed()
             ->whereYear('created_at', $year)
             ->whereMonth('created_at', $month)
+            ->whereNotNull('agenda_number')
             ->orderBy('id', 'desc')
             ->first();
         
         // Hitung nomor urut berikutnya
+        $nextSequence = 1;
+        
         if ($lastDocument && $lastDocument->agenda_number) {
-            // Parse nomor agenda: AG/05/2026/001
+            // Parse format baru: 001/SM/PKK-T/VI/2026
+            // Ambil bagian pertama (nomor urut)
             $parts = explode('/', $lastDocument->agenda_number);
-            $lastSequence = intval(end($parts));
-            $nextSequence = $lastSequence + 1;
-        } else {
-            $nextSequence = 1;
+            if (!empty($parts[0])) {
+                $nextSequence = intval($parts[0]) + 1;
+            }
         }
         
         // Format nomor urut dengan 3 digit
         $sequence = str_pad($nextSequence, 3, '0', STR_PAD_LEFT);
         
+        // Konversi bulan ke Romawi
+        $bulanRomawi = self::toRomanMonth($month);
+        
+        // Format final: 001/SM/PKK-T/VI/2026
+        $agendaNumber = "{$sequence}/SM/PKK-T/{$bulanRomawi}/{$year}";
+        
         // Pastikan nomor agenda unik (loop sampai dapat yang belum dipakai)
-        $agendaNumber = "AG/{$month}/{$year}/{$sequence}";
         while (self::withTrashed()->where('agenda_number', $agendaNumber)->exists()) {
             $sequence = str_pad(intval($sequence) + 1, 3, '0', STR_PAD_LEFT);
-            $agendaNumber = "AG/{$month}/{$year}/{$sequence}";
+            $agendaNumber = "{$sequence}/SM/PKK-T/{$bulanRomawi}/{$year}";
         }
         
         return $agendaNumber;
+    }
+
+    /**
+     * Helper: Ubah angka bulan (1-12) ke Romawi
+     */
+    private static function toRomanMonth($month)
+    {
+        $roman = [
+            1 => 'I',   2 => 'II',  3 => 'III', 4 => 'IV',
+            5 => 'V',   6 => 'VI',  7 => 'VII', 8 => 'VIII',
+            9 => 'IX',  10 => 'X',  11 => 'XI',  12 => 'XII'
+        ];
+        return $roman[$month] ?? 'I';
     }
 }

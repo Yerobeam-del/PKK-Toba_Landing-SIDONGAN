@@ -106,38 +106,21 @@ Route::get('/api/v1/struktur', function () {
 // ================= API: APPLICATIONS =================
 Route::get('/api/v1/applications', function () {
     try {
-        // Aplikasi Aktif
-        $activeApps = \App\Models\Application::aplikasi()
-            ->active()
-            ->where('status', 'active')
+        // Ambil SEMUA aplikasi kategori 'aplikasi' dengan status active ATAU maintenance
+        $allApps = \App\Models\Application::where('category', 'aplikasi')
+            ->whereIn('status', ['active', 'maintenance'])
             ->orderBy('sort_order')
-            ->get(['id', 'name', 'short_name', 'description', 'url', 'icon', 'category', 'status', 'features', 'sort_order', 'is_active']);
-        
-        // Aplikasi Dalam Pengembangan
-        $developmentApps = \App\Models\Application::aplikasi()
-            ->where('status', 'development')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'short_name', 'description', 'url', 'icon', 'category', 'status', 'features', 'sort_order', 'is_active']);
-        
-        // Aplikasi Maintenance
-        $maintenanceApps = \App\Models\Application::aplikasi()
-            ->where('status', 'maintenance')
-            ->orderBy('sort_order')
-            ->get(['id', 'name', 'short_name', 'description', 'url', 'icon', 'category', 'status', 'features', 'sort_order', 'is_active']);
+            ->get();
         
         return response()->json([
             'success' => true,
             'data' => [
-                'active' => $activeApps,
-                'development' => $developmentApps,
-                'maintenance' => $maintenanceApps,
+                'active' => $allApps->filter(fn($app) => $app->status === 'active')->values(),
+                'maintenance' => $allApps->filter(fn($app) => $app->status === 'maintenance')->values(),
             ]
         ]);
     } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => $e->getMessage()
-        ], 500);
+        return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 });
 
@@ -575,10 +558,9 @@ Route::post('/sidongan-login', [App\Http\Controllers\Sidongan\AuthController::cl
 Route::post('/sidongan-logout', [App\Http\Controllers\Sidongan\AuthController::class, 'logout'])->name('sidongan.logout');
 
 // ================= SIDONGAN ADMIN - SEMUA ROUTE PRIVATE =================
-// Semua route SIDONGAN sekarang menggunakan prefix 'sidongan' dan middleware 'sidongan.auth'
 Route::middleware(['sidongan.auth'])->prefix('sidongan')->name('sidongan.')->group(function () {
     
-    // Dashboard (akses via /sidongan)
+    // Dashboard
     Route::get('/', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'dashboard'])->name('dashboard');
     
     // Documents
@@ -590,20 +572,31 @@ Route::middleware(['sidongan.auth'])->prefix('sidongan')->name('sidongan.')->gro
     Route::put('/documents/{document}', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'update'])->name('documents.update');
     Route::delete('/documents/{document}', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'destroy'])->name('documents.destroy');
     Route::get('/documents/{document}/download', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'download'])->name('documents.download');
+
+    // Cetak Lembar Disposisi
+    Route::get('/documents/{document}/disposisi-print', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'printDisposisi'])
+        ->name('documents.disposisi-print');
     
     // Disposisi
     Route::get('/disposisi', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'disposisi'])->name('disposisi');
     Route::get('/disposisi/{document}', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'showDisposisiForm'])->name('disposisi.form');
     Route::post('/disposisi/{document}', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'storeDisposisi'])->name('disposisi.store');
     
-    // Verifikasi
-    Route::get('/verifikasi', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'verifikasi'])->name('verifikasi');
-    Route::post('/verifikasi/{document}', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'storeVerifikasi'])->name('verifikasi.store');
+    // VERIFIKASI - HANYA SATU DEFINISI (Gunakan VerificationController)
+    Route::get('/verifikasi', [App\Http\Controllers\Sidongan\VerificationController::class, 'index'])->name('verifikasi');
+    Route::get('/verifikasi/{id}/form', [App\Http\Controllers\Sidongan\VerificationController::class, 'form'])->name('verifikasi.form');
+    
+    // FIX: Terima POST dan PUT, parameter konsisten {id}
+    Route::match(['post', 'put'], '/verifikasi/{id}', [App\Http\Controllers\Sidongan\VerificationController::class, 'store'])->name('verifikasi.store');
     
     // Arsip
     Route::get('/arsip', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'arsip'])->name('arsip');
+
+    // Archive Document (PATCH sesuai dengan @method('PATCH') di view)
+    Route::patch('/documents/{document}/archive', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'archive'])
+        ->name('documents.archive');
     
-    // Routes untuk Lapor Kegiatan (Sekretaris)
+    // Lapor Kegiatan (Sekretaris)
     Route::get('/lapor-kegiatan', [App\Http\Controllers\Sidongan\ActivityReportController::class, 'index'])->name('lapor_kegiatan.index');
     Route::get('/lapor-kegiatan/create/{document_id?}', [App\Http\Controllers\Sidongan\ActivityReportController::class, 'create'])->name('lapor_kegiatan.create');
     Route::post('/lapor-kegiatan', [App\Http\Controllers\Sidongan\ActivityReportController::class, 'store'])->name('lapor_kegiatan.store');
@@ -612,26 +605,11 @@ Route::middleware(['sidongan.auth'])->prefix('sidongan')->name('sidongan.')->gro
     Route::put('/lapor-kegiatan/{id}', [App\Http\Controllers\Sidongan\ActivityReportController::class, 'update'])->name('lapor_kegiatan.update');
     Route::delete('/lapor-kegiatan/{id}', [App\Http\Controllers\Sidongan\ActivityReportController::class, 'destroy'])->name('lapor_kegiatan.destroy');
 
-    // Routes untuk Verifikasi Laporan Kegiatan (Ketua PKK)
-    Route::get('/verifikasi', [App\Http\Controllers\Sidongan\VerificationController::class, 'index'])
-        ->name('verifikasi');
+    // Notifikasi
+    Route::get('/notifications', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'notifications'])->name('notifications');
+    Route::post('/notifications/{id}/read', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'markNotificationAsRead'])->name('notifications.read');
+    Route::post('/notifications/mark-all-read', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'markAllNotificationsAsRead'])->name('notifications.mark-all-read');
 
-    Route::get('/verifikasi/{id}/form', [App\Http\Controllers\Sidongan\VerificationController::class, 'form'])
-        ->name('verifikasi.form');
-
-    Route::post('/verifikasi/{id}', [App\Http\Controllers\Sidongan\VerificationController::class, 'store'])
-        ->name('verifikasi.store');
-
-    // Halaman notifikasi list
-    Route::get('/notifications', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'notifications'])
-        ->name('notifications');
-
-    Route::post('/notifications/{id}/read', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'markNotificationAsRead'])
-        ->name('notifications.read');
-
-    // Route untuk mark all notifications as read
-    Route::post('/notifications/mark-all-read', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'markAllNotificationsAsRead'])
-        ->name('notifications.mark-all-read');
 });
 
 

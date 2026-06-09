@@ -107,8 +107,16 @@
                     <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Embed Code Google Maps *</label>
                     <textarea name="maps_embed_code" class="form-control" rows="4" required 
                               placeholder='<iframe src="https://www.google.com/maps/embed?pb=..." width="600" height="450" style="border:0;"></iframe>'>{{ old('maps_embed_code', $tentang->maps_embed_code) }}</textarea>
-                    <small style="color:var(--text-muted);display:block;margin-top:0.5rem;font-size:0.85rem">
-                        💡 Cara mendapatkan: Buka Google Maps → Cari lokasi → Share → Embed a map → Copy HTML
+                    <small style="color:var(--text-muted);display:block;margin-top:0.5rem;font-size:0.85rem;display:flex;align-items:flex-start;gap:0.5rem">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:2px">
+                            <path d="M9 18h6"/>
+                            <path d="M10 22h4"/>
+                            <path d="M12 2v2"/>
+                            <path d="M12 6a6 6 0 0 1 6 6c0 3.31-2.69 6-6 6s-6-2.69-6-6a6 6 0 0 1 6-6z"/>
+                            <path d="M12 10v4"/>
+                            <path d="M10 12h4"/>
+                        </svg>
+                        <span>Cara mendapatkan: Buka Google Maps → Cari lokasi → Share → Embed a map → Copy HTML</span>
                     </small>
                 </div>
                 

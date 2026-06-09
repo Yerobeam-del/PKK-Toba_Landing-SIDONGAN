@@ -116,11 +116,32 @@ class DesaController extends Controller
 
     public function destroy(Desa $desa)
     {
-        if ($desa->image) {
-            Storage::disk('public')->delete($desa->image);
+        try {
+            if ($desa->image) {
+                Storage::disk('public')->delete($desa->image);
+            }
+            
+            $desa->delete();
+            
+            // Check if request is AJAX/Fetch
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Desa berhasil dihapus'
+                ]);
+            }
+            
+            return redirect()->route('admin.desa.index')->with('success', 'Desa berhasil dihapus.');
+        } catch (\Exception $e) {
+            // Check if request is AJAX/Fetch
+            if (request()->expectsJson() || request()->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Gagal menghapus desa: ' . $e->getMessage()
+                ], 422);
+            }
+            
+            return redirect()->route('admin.desa.index')->with('error', 'Gagal menghapus desa.');
         }
-        $desa->delete();
-        
-        return redirect()->route('admin.desa.index')->with('success', 'Desa berhasil dihapus.');
     }
 }

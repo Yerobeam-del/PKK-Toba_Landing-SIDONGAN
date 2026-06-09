@@ -263,17 +263,32 @@
             box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             min-width: 220px;
             z-index: 1000;
-            animation: slideIn 0.2s ease;
+            transform-origin: top right; /* ← PENTING: animasi dari atas */
         }
 
-        @keyframes slideIn {
-            from { 
-                opacity: 0; 
-                transform: translateY(-8px); 
+        /* Style untuk notification popup */
+        #notificationPopup {
+            transform-origin: top right; /* ← Animasi dari atas */
+        }
+
+        #notificationPopup.show {
+            animation: dropdownSlideIn 0.15s ease-out;
+        }
+
+        /* Class untuk trigger animasi */
+        .user-menu.show {
+            display: block;
+            animation: dropdownSlideIn 0.15s ease-out;
+        }
+
+        @keyframes dropdownSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(-12px) scale(0.98);
             }
-            to { 
-                opacity: 1; 
-                transform: translateY(0); 
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1);
             }
         }
 
@@ -430,13 +445,6 @@
                     </div>
                     <span class="nav-text">Arsip Surat</span>
                 </a>
-                
-                <a href="{{ route('sidongan.notifications') }}" class="nav-item {{ request()->routeIs('sidongan.notifications') ? 'active' : '' }}">
-                    <div class="nav-icon-box">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-                    </div>
-                    <span class="nav-text">Notifikasi</span>
-                </a>
             </nav>
 
             {{-- Tombol "Keluar" dihapus dari sidebar. Gunakan dropdown di header kanan atas. --}}
@@ -452,15 +460,18 @@
                 </button>
                 <div class="header-right" style="position:relative">
                     
-                    {{-- NOTIFIKASI POPUP --}}
                     @php
                         // Query langsung notifikasi
                         $user = auth()->guard('sidongan')->user();
                         if ($user) {
+                            // UPDATE: Tambahkan ->whereNull('read_at')
+                            // Agar popup hanya menampilkan notifikasi yang BELUM DIBACA
                             $sidonganNotifications = \App\Models\Notification::where('user_id', $user->id)
+                                ->whereNull('read_at') // <--- PENTING
                                 ->latest()
                                 ->take(5)
                                 ->get();
+                                
                             $sidonganUnreadCount = \App\Models\Notification::where('user_id', $user->id)
                                 ->whereNull('read_at')
                                 ->count();
@@ -484,7 +495,7 @@
                         </button>
                         
                         {{-- Popup Notifikasi --}}
-                        <div id="notificationPopup" style="display: none; position: absolute; right: 0; top: calc(100% + 0.5rem); width: 400px; background: white; border-radius: 0.75rem; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; z-index: 1000; animation: slideIn 0.2s ease;">
+                        <div id="notificationPopup" style="display: none; position: absolute; right: 0; top: calc(100% + 0.5rem); width: 400px; background: white; border-radius: 0.75rem; box-shadow: 0 10px 40px rgba(0,0,0,0.15); border: 1px solid #e2e8f0; z-index: 1000;">
                             
                             {{-- Header Popup --}}
                             <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center;">
@@ -497,34 +508,35 @@
                             {{-- List Notifikasi --}}
                             <div style="max-height: 350px; overflow-y: auto;">
                                 @forelse($sidonganNotifications as $notif)
-                                <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: {{ $notif->read_at ? '#ffffff' : '#eff6ff' }}; cursor: pointer; transition: background 0.2s;" 
-                                    onmouseover="this.style.background='{{ $notif->read_at ? '#f8fafc' : '#dbeafe' }}'" 
-                                    onmouseout="this.style.background='{{ $notif->read_at ? '#ffffff' : '#eff6ff' }}'"
-                                    @if(!$notif->read_at && $notif->related_id) onclick="window.location.href='{{ route('sidongan.documents.show', $notif->related_id) }}'" @endif>
+                                <div style="padding: 1rem 1.25rem; border-bottom: 1px solid #f1f5f9; background: #eff6ff; cursor: pointer; transition: background 0.2s;" 
+                                    onmouseover="this.style.background='#dbeafe'" 
+                                    onmouseout="this.style.background='#eff6ff'"
+                                    onclick="markNotificationReadAndRedirect({{ $notif->id }}, '{{ route('sidongan.documents.show', $notif->related_id) }}')">
                                     <div style="display: flex; gap: 0.75rem; align-items: start;">
-                                        <div style="width: 2rem; height: 2rem; background: {{ $notif->read_at ? '#f1f5f9' : '#dbeafe' }}; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                                            <i class="fas fa-bell" style="color: {{ $notif->read_at ? '#94a3b8' : '#3b82f6' }}; font-size: 0.85rem;"></i>
+                                        <div style="width: 2rem; height: 2rem; background: #dbeafe; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                                            <i class="fas fa-bell" style="color: #3b82f6; font-size: 0.85rem;"></i>
                                         </div>
                                         <div style="flex: 1; min-width: 0;">
                                             <p style="font-size: 0.85rem; font-weight: 500; color: #0f172a; margin: 0 0 0.25rem 0; line-height: 1.4;">
-                                                {{ $notif->message }}
+                                                {{ Str::limit($notif->message, 80) }}
                                             </p>
                                             <span style="font-size: 0.7rem; color: #94a3b8;">
-                                                {{ \Carbon\Carbon::parse($notif->created_at)->locale('id')->translatedFormat('d M Y, H.i') }}
+                                                {{ $notif->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
                                             </span>
                                         </div>
-                                        @if(!$notif->read_at)
-                                        <div style="width: 0.5rem; height: 0.5rem; background: #3b82f6; border-radius: 50%; flex-shrink: 0; margin-top: 0.4rem;"></div>
-                                        @endif
+                                        <div style="width: 0.5rem; height: 0.5rem; background: #3b82f6; border-radius: 50%; flex-shrink: 0; margin-top: 0.5rem;"></div>
                                     </div>
                                 </div>
                                 @empty
+                                {{-- Empty State untuk Popup --}}
                                 <div style="padding: 3rem 1.25rem; text-align: center;">
-                                    <div style="width: 64px; height: 64px; background: #f1f5f9; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
-                                        <i class="fas fa-bell-slash" style="color: #94a3b8; font-size: 1.75rem;"></i>
+                                    <div style="width: 64px; height: 64px; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1rem;">
+                                        <svg style="width: 2rem; height: 2rem; stroke: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
                                     </div>
-                                    <p style="font-size: 0.95rem; color: #64748b; margin: 0 0 0.5rem 0; font-weight: 500;">Tidak ada notifikasi</p>
-                                    <p style="font-size: 0.8rem; color: #94a3b8; margin: 0;">Notifikasi akan muncul di sini</p>
+                                    <p style="font-size: 0.9rem; color: #1e293b; margin: 0; font-weight: 600;">Semua Notifikasi Sudah Dibaca</p>
+                                    <p style="font-size: 0.8rem; color: #64748b; margin: 0.25rem 0 0 0;">Tidak ada notifikasi baru</p>
                                 </div>
                                 @endforelse
                             </div>
@@ -543,11 +555,22 @@
                             <span style="font-weight:600;font-size:0.9rem;color:#334155;line-height:1.2">{{ $currentUser->name }}</span>
                             <span style="font-size:0.7rem;color:#94a3b8">{{ $currentUser->sidongan_role_name }}</span>
                         </div>
+                        @php
+                            $nameParts = explode(' ', $currentUser->name);
+                            $initials = count($nameParts) >= 2 
+                                ? strtoupper(substr($nameParts[0], 0, 1) . substr($nameParts[1], 0, 1))
+                                : strtoupper(substr($currentUser->name, 0, 2));
+                        @endphp
                         <div style="width:36px;height:36px;border-radius:50%;overflow:hidden;background:linear-gradient(135deg,{{ $currentUser->sidongan_role === 'ketua' ? '#dc2626' : ($currentUser->sidongan_role === 'sekretaris' ? '#2563eb' : '#4f46e5') }},#14b8a6);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.1)">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
-                                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                                <circle cx="12" cy="7" r="4"/>
-                            </svg>
+                            @if($currentUser->avatar)
+                                <img src="{{ asset('storage/' . $currentUser->avatar) }}" 
+                                    alt="{{ $currentUser->name }}" 
+                                    style="width:100%;height:100%;object-fit:cover" 
+                                    onerror="this.style.display='none';this.nextElementSibling.style.display='flex';">
+                                <span style="display:none;color:#fff;font-weight:700;font-size:0.85rem;letter-spacing:0.5px;">{{ $initials }}</span>
+                            @else
+                                <span style="color:#fff;font-weight:700;font-size:0.85rem;letter-spacing:0.5px;">{{ $initials }}</span>
+                            @endif
                         </div>
                         <svg id="userMenuArrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#64748b" stroke-width="2" style="transition:transform 0.2s">
                             <polyline points="6 9 12 15 18 9"/>
@@ -652,13 +675,33 @@
         function toggleUserMenu() {
             const menu = document.getElementById('userMenu');
             const arrow = document.getElementById('userMenuArrow');
+            const notificationPopup = document.getElementById('notificationPopup');
             
-            if (menu.style.display === 'block') {
-                menu.style.display = 'none';
-                arrow.style.transform = 'rotate(0deg)';
+            // Close notification popup if open
+            if (notificationPopup) {
+                notificationPopup.classList.remove('show');
+                setTimeout(() => {
+                    if (!notificationPopup.classList.contains('show')) {
+                        notificationPopup.style.display = 'none';
+                    }
+                }, 150);
+            }
+            
+            // Toggle user menu
+            if (menu.classList.contains('show')) {
+                menu.classList.remove('show');
+                setTimeout(() => {
+                    if (!menu.classList.contains('show')) {
+                        menu.style.display = 'none';
+                    }
+                }, 150);
+                if (arrow) arrow.style.transform = 'rotate(0deg)';
             } else {
                 menu.style.display = 'block';
-                arrow.style.transform = 'rotate(180deg)';
+                // Force reflow agar animasi jalan
+                void menu.offsetWidth;
+                menu.classList.add('show');
+                if (arrow) arrow.style.transform = 'rotate(180deg)';
             }
         }
 
@@ -686,17 +729,30 @@
             const userMenu = document.getElementById('userMenu');
             
             // Close user menu if open
-            if (userMenu && userMenu.style.display === 'block') {
-                userMenu.style.display = 'none';
+            if (userMenu && userMenu.classList.contains('show')) {
+                userMenu.classList.remove('show');
+                setTimeout(() => {
+                    if (!userMenu.classList.contains('show')) {
+                        userMenu.style.display = 'none';
+                    }
+                }, 150);
                 const arrow = document.getElementById('userMenuArrow');
                 if (arrow) arrow.style.transform = 'rotate(0deg)';
             }
             
             // Toggle notification popup
-            if (popup.style.display === 'block') {
-                popup.style.display = 'none';
+            if (popup.classList.contains('show')) {
+                popup.classList.remove('show');
+                setTimeout(() => {
+                    if (!popup.classList.contains('show')) {
+                        popup.style.display = 'none';
+                    }
+                }, 150);
             } else {
                 popup.style.display = 'block';
+                // Force reflow agar animasi jalan
+                void popup.offsetWidth;
+                popup.classList.add('show');
             }
         }
 
@@ -733,21 +789,57 @@
             const userBtn = e.target.closest('.user-profile-btn');
             
             // Close notification popup
-            if (!notificationBtn && notificationPopup && notificationPopup.style.display === 'block') {
+            if (!notificationBtn && notificationPopup && notificationPopup.classList.contains('show')) {
                 if (!notificationPopup.contains(e.target)) {
-                    notificationPopup.style.display = 'none';
+                    notificationPopup.classList.remove('show');
+                    setTimeout(() => {
+                        if (!notificationPopup.classList.contains('show')) {
+                            notificationPopup.style.display = 'none';
+                        }
+                    }, 150);
                 }
             }
             
             // Close user menu
-            if (!userBtn && userMenu && userMenu.style.display === 'block') {
+            if (!userBtn && userMenu && userMenu.classList.contains('show')) {
                 if (!userMenu.contains(e.target)) {
-                    userMenu.style.display = 'none';
+                    userMenu.classList.remove('show');
+                    setTimeout(() => {
+                        if (!userMenu.classList.contains('show')) {
+                            userMenu.style.display = 'none';
+                        }
+                    }, 150);
                     const arrow = document.getElementById('userMenuArrow');
                     if (arrow) arrow.style.transform = 'rotate(0deg)';
                 }
             }
         });
+
+        function markNotificationReadAndRedirect(notificationId, redirectUrl) {
+            // Mark as read via AJAX
+            fetch(`/sidongan/notifications/${notificationId}/read`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                }
+            })
+            .then(res => res.json())
+            .then(data => {
+                if (data.success) {
+                    // Close popup
+                    const popup = document.getElementById('notificationPopup');
+                    if(popup) popup.style.display = 'none';
+                    
+                    // Update counter di header
+                    const countEl = document.getElementById('notifCountBadge'); // Sesuaikan ID jika ada
+                    if(countEl) countEl.style.display = 'none';
+
+                    // Redirect
+                    window.location.href = redirectUrl;
+                }
+            });
+        }
 
         // Close popups on Escape key
         document.addEventListener('keydown', function(e) {
@@ -770,23 +862,33 @@
             
             if (!submenu || !arrow) return;
             
-            // Check if sidebar is collapsed
             const isCollapsed = layout.classList.contains('collapsed');
+            const isSubmenuOpen = submenu.style.display === 'block';
+            
             if (isCollapsed) {
-                // Expand sidebar first
+                // Sidebar dalam keadaan minimize
+                // Buka sidebar DAN buka submenu sekaligus
                 layout.classList.remove('collapsed');
                 localStorage.setItem('sidebarCollapsed', 'false');
-            }
-            
-            // Toggle submenu
-            if (submenu.style.display === 'none' || submenu.style.display === '') {
+                
+                // Buka submenu
                 submenu.style.display = 'block';
                 arrow.style.transform = 'rotate(180deg)';
                 localStorage.setItem('suratMenuOpen', 'true');
+                
             } else {
-                submenu.style.display = 'none';
-                arrow.style.transform = 'rotate(0deg)';
-                localStorage.setItem('suratMenuOpen', 'false');
+                // Sidebar sudah terbuka, toggle submenu seperti biasa
+                if (isSubmenuOpen) {
+                    // Tutup submenu
+                    submenu.style.display = 'none';
+                    arrow.style.transform = 'rotate(0deg)';
+                    localStorage.setItem('suratMenuOpen', 'false');
+                } else {
+                    // Buka submenu
+                    submenu.style.display = 'block';
+                    arrow.style.transform = 'rotate(180deg)';
+                    localStorage.setItem('suratMenuOpen', 'true');
+                }
             }
         }
 

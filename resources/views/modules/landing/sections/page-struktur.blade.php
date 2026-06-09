@@ -55,29 +55,29 @@
                                 <div class="org-position">Staf Ahli</div>
                                 <div class="staff-duo-grid">
                                     <div class="staff-duo-item" id="staf-ahli-1">
-                                        <div class="staff-duo-avatar">
-                                            <img id="img-staf-1" src="" alt="Staf Ahli 1" onerror="this.style.display='none'">
-                                            <div class="avatar-placeholder" id="placeholder-staf-1" style="display:none; width:100%;height:100%; background:linear-gradient(135deg,#cbd5e1,#94a3b8); display:flex;align-items:center;justify-content:center;color:#fff;">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <div class="staff-duo-avatar" style="position:relative;width:60px;height:60px;border-radius:50%;overflow:hidden;margin:0 auto 0.75rem;background:linear-gradient(135deg,#cbd5e1,#94a3b8);">
+                                            <img id="img-staf-1" src="" alt="Staf Ahli 1" style="width:100%;height:100%;object-fit:cover;display:none !important;">
+                                            <div id="placeholder-staf-1" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex !important;align-items:center;justify-content:center;background:linear-gradient(135deg,#cbd5e1,#94a3b8);">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                                                     <circle cx="12" cy="7" r="4"/>
                                                 </svg>
                                             </div>
                                         </div>
-                                        <div class="staff-duo-role">Staf Ahli 1</div>
+                                        <div class="staff-duo-role">STAF AHLI 1</div>
                                         <div class="staff-duo-name" id="name-staf-1">Data belum diisi</div>
                                     </div>
                                     <div class="staff-duo-item" id="staf-ahli-2">
-                                        <div class="staff-duo-avatar">
-                                            <img id="img-staf-2" src="" alt="Staf Ahli 2" onerror="this.style.display='none'">
-                                            <div class="avatar-placeholder" id="placeholder-staf-2" style="display:none; width:100%;height:100%; background:linear-gradient(135deg,#cbd5e1,#94a3b8); display:flex;align-items:center;justify-content:center;color:#fff;">
-                                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <div class="staff-duo-avatar" style="position:relative;width:60px;height:60px;border-radius:50%;overflow:hidden;margin:0 auto 0.75rem;background:linear-gradient(135deg,#cbd5e1,#94a3b8);">
+                                            <img id="img-staf-2" src="" alt="Staf Ahli 2" style="width:100%;height:100%;object-fit:cover;display:none !important;">
+                                            <div id="placeholder-staf-2" style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex !important;align-items:center;justify-content:center;background:linear-gradient(135deg,#cbd5e1,#94a3b8);">
+                                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
                                                     <circle cx="12" cy="7" r="4"/>
                                                 </svg>
                                             </div>
                                         </div>
-                                        <div class="staff-duo-role">Staf Ahli 2</div>
+                                        <div class="staff-duo-role">STAF AHLI 2</div>
                                         <div class="staff-duo-name" id="name-staf-2">Data belum diisi</div>
                                     </div>
                                 </div>
@@ -266,16 +266,30 @@ function populateStrukturDOM(pengurus, pokjaList) {
         const imgEl = document.getElementById(imgId);
         const phEl = document.getElementById(placeholderId);
         
+        // Jika ada data dan nama
         if (data && data.name) {
             nameEl.textContent = data.name;
+            
             if (data.photo) {
+                // Ada foto → tampilkan foto, sembunyikan placeholder
                 imgEl.src = data.photo;
                 imgEl.style.display = 'block';
                 phEl.style.display = 'none';
+                
+                // Jika foto gagal load, tampilkan placeholder
+                imgEl.onerror = function() {
+                    this.style.display = 'none';
+                    phEl.style.display = 'flex';
+                };
             } else {
+                // Tidak ada foto → tampilkan placeholder
                 imgEl.style.display = 'none';
                 phEl.style.display = 'flex';
             }
+        } else {
+            // Tidak ada data sama sekali → tampilkan placeholder default
+            if (imgEl) imgEl.style.display = 'none';
+            if (phEl) phEl.style.display = 'flex';
         }
     };
 

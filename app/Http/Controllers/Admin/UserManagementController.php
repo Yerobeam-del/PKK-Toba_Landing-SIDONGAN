@@ -191,18 +191,19 @@ class UserManagementController extends Controller
             return response()->json(['success' => false, 'message' => 'Akses ditolak!'], 403);
         }
         
-        // Tidak bisa toggle status akun sendiri
-        if ($user->id === auth()->id()) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak bisa mengubah status akun sendiri!'], 403);
+        // Cek apakah akan menonaktifkan (email_verified_at ada → akan dihapus)
+        $willDeactivate = $user->email_verified_at !== null;
+        
+        // Super Admin TIDAK BISA menonaktifkan dirinya sendiri (tapi BISA mengaktifkan)
+        if ($user->id === auth()->id() && $willDeactivate) {
+            return response()->json([
+                'success' => false, 
+                'message' => 'Anda tidak bisa menonaktifkan akun sendiri! Minta Super Admin lain untuk melakukannya.'
+            ], 403);
         }
         
-        // Tidak bisa nonaktifkan super_admin lain
-        if ($user->sidongan_role === 'super_admin' && auth()->user()->id !== $user->id) {
-            return response()->json(['success' => false, 'message' => 'Anda tidak bisa mengubah status akun Super Admin!'], 403);
-        }
-        
-        // Toggle verified status (digunakan sebagai active/inactive)
-        if ($user->email_verified_at) {
+        // Toggle status
+        if ($willDeactivate) {
             $user->email_verified_at = null;
             $action = 'dinonaktifkan';
         } else {

@@ -72,14 +72,15 @@ class User extends Authenticatable
     public static function getSidonganRoles()
     {
         return [
-            'bupati' => 'Bupati Toba',
             'ketua' => 'Ketua PKK',
             'sekretaris' => 'Sekretaris PKK',
             'bendahara' => 'Bendahara PKK',
-            'pokja1' => 'Ketua POKJA 1',
-            'pokja2' => 'Ketua POKJA 2',
-            'pokja3' => 'Ketua POKJA 3',
-            'pokja4' => 'Ketua POKJA 4',
+            'staf_ahli_1' => 'Staf Ahli I',
+            'staf_ahli_2' => 'Staf Ahli II',
+            'pengurus_1' => 'Ketua Pengurus I',
+            'pengurus_2' => 'Ketua Pengurus II',
+            'pengurus_3' => 'Ketua Pengurus III',
+            'pengurus_4' => 'Ketua Pengurus IV',
         ];
     }
 

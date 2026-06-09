@@ -16,14 +16,6 @@
     </a>
 </div>
 
-{{-- Success Message --}}
-@if(session('success'))
-<div style="background:#f0fdf4;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#166534;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
 {{-- Filter Form --}}
 <div class="card" style="margin-bottom:1.5rem;padding:1.25rem">
     <form id="filterForm" method="GET" action="{{ route('admin.template.index') }}" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
@@ -73,7 +65,7 @@
                     <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Tanggal</th>
                     <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Ukuran</th>
                     <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Status</th>
-                    <th style="padding:0.875rem 1rem;text-align:center;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06);width:140px">Aksi</th>
+                    <th style="padding:0.875rem 1rem;text-align:right;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06);width:140px">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -84,10 +76,9 @@
                         <div style="display:flex;align-items:center;gap:0.75rem">
                             <div style="width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                    <line x1="16" y1="13" x2="8" y2="13"/>
-                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <line x1="3" y1="9" x2="21" y2="9"/>
+                                    <line x1="9" y1="21" x2="9" y2="9"/>
                                 </svg>
                             </div>
                             <div style="flex:1;min-width:0">
@@ -113,19 +104,29 @@
                             </span>
                         @endif
                     </td>
-                    <td style="padding:0.875rem 1rem;text-align:center">
-                        <div class="actions" style="justify-content:center;gap:0.5rem;display:flex">
-                            <a href="{{ $t->file_url }}" target="_blank" class="btn-view" title="Preview" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <td style="padding:0.875rem 1rem;text-align:right">
+                        <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex;align-items:center">
+                            <a href="{{ $t->file_url }}" target="_blank" title="Preview" 
+                               style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                               onmouseover="this.style.background='#dbeafe';this.style.transform='translateY(-2px)'"
+                               onmouseout="this.style.background='#eff6ff';this.style.transform='translateY(0)'">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             </a>
-                            <a href="{{ route('admin.template.edit', $t) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <a href="{{ route('admin.template.edit', $t) }}" title="Edit" 
+                               style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                               onmouseover="this.style.background='#dbeafe';this.style.transform='translateY(-2px)'"
+                               onmouseout="this.style.background='#eff6ff';this.style.transform='translateY(0)'">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </a>
-                            <form action="{{ route('admin.template.destroy', $t) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus template ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;transition:all 0.2s;border:none;cursor:pointer">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                </button>
+                            <button type="button" onclick="confirmDeleteTemplate({{ $t->id }}, '{{ addslashes(Str::limit($t->name, 40)) }}')" title="Hapus" 
+                                    style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;transition:all 0.2s;border:none;cursor:pointer"
+                                    onmouseover="this.style.background='#fee2e2';this.style.transform='translateY(-2px)'"
+                                    onmouseout="this.style.background='#fef2f2';this.style.transform='translateY(0)'">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </button>
+                            <form id="delete-template-{{ $t->id }}" action="{{ route('admin.template.destroy', $t) }}" method="POST" style="display:none">
+                                @csrf 
+                                @method('DELETE')
                             </form>
                         </div>
                     </td>
@@ -136,10 +137,9 @@
                         <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">
                             <div style="width:64px;height:64px;background:#f8fafc;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
                                 <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                    <line x1="16" y1="13" x2="8" y2="13"/>
-                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                    <rect x="3" y="3" width="18" height="18" rx="2"/>
+                                    <line x1="3" y1="9" x2="21" y2="9"/>
+                                    <line x1="9" y1="21" x2="9" y2="9"/>
                                 </svg>
                             </div>
                             <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark);margin:0 0 0.5rem">Belum ada template</h3>
@@ -166,5 +166,40 @@
     </div>
     @endif
 </div>
+
+<script>
+// ==========================================
+// DELETE CONFIRMATION DENGAN TOAST
+// ==========================================
+async function confirmDeleteTemplate(id, name) {
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            const confirmed = await Toast.confirm(
+                `Template <strong>"${name}"</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+                {
+                    title: 'Hapus Template?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal',
+                    type: 'danger'
+                }
+            );
+            
+            if (confirmed) {
+                document.getElementById('delete-template-' + id).submit();
+            }
+        } else {
+            // Fallback
+            if (confirm(`Hapus template "${name}"?`)) {
+                document.getElementById('delete-template-' + id).submit();
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (confirm(`Hapus template "${name}"?`)) {
+            document.getElementById('delete-template-' + id).submit();
+        }
+    }
+}
+</script>
 
 @endsection

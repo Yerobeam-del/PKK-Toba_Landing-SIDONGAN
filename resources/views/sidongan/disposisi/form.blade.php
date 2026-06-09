@@ -69,6 +69,17 @@
         border: 2px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.9rem; background: white;
     }
     .arrow-icon { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); pointer-events: none; color: #64748b; }
+
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
 </style>
 
 <div class="full-wrapper">
@@ -161,10 +172,12 @@
                             $roles = [
                                 'sekretaris' => 'Sekretaris PKK',
                                 'bendahara' => 'Bendahara PKK',
-                                'pokja1' => 'Ketua POKJA 1',
-                                'pokja2' => 'Ketua POKJA 2',
-                                'pokja3' => 'Ketua POKJA 3',
-                                'pokja4' => 'Ketua POKJA 4',
+                                'staf_ahli_1' => 'Staf Ahli I',
+                                'staf_ahli_2' => 'Staf Ahli II',
+                                'pengurus_1' => 'Ketua Pengurus I',
+                                'pengurus_2' => 'Ketua Pengurus II',
+                                'pengurus_3' => 'Ketua Pengurus III',
+                                'pengurus_4' => 'Ketua Pengurus IV',
                             ];
                         @endphp
                         @foreach($roles as $value => $label)
@@ -187,17 +200,34 @@
                         Tindakan/Instruksi <span style="color: #ef4444;">*</span>
                     </label>
                     <div class="custom-select-wrapper">
-                        <select name="action" id="action" required>
-                            <option value="" disabled selected>Pilih Tindakan</option>
-                            <option value="Untuk diketahui">Untuk diketahui</option>
-                            <option value="Untuk dilaksanakan">Untuk dilaksanakan</option>
-                            <option value="Untuk diproses lebih lanjut">Untuk diproses lebih lanjut</option>
-                            <option value="Untuk diarsipkan">Untuk diarsipkan</option>
-                            <option value="Untuk dikoordinasikan">Untuk dikoordinasikan</option>
+                        <select name="action" id="action" required onchange="toggleCustomAction()">
+                            <option value="" disabled {{ old('action') ? '' : 'selected' }}>Pilih Tindakan</option>
+                            <option value="Untuk diketahui" {{ old('action') == 'Untuk diketahui' ? 'selected' : '' }}>Untuk diketahui</option>
+                            <option value="Untuk dilaksanakan" {{ old('action') == 'Untuk dilaksanakan' ? 'selected' : '' }}>Untuk dilaksanakan</option>
+                            <option value="Untuk diproses lebih lanjut" {{ old('action') == 'Untuk diproses lebih lanjut' ? 'selected' : '' }}>Untuk diproses lebih lanjut</option>
+                            <option value="Untuk diarsipkan" {{ old('action') == 'Untuk diarsipkan' ? 'selected' : '' }}>Untuk diarsipkan</option>
+                            <option value="Untuk dikoordinasikan" {{ old('action') == 'Untuk dikoordinasikan' ? 'selected' : '' }}>Untuk dikoordinasikan</option>
+                            <option value="Lainnya" {{ old('action') == 'Lainnya' ? 'selected' : '' }}>Lainnya</option>
                         </select>
                         <div class="arrow-icon">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
                         </div>
+                    </div>
+                    
+                    {{-- Input Custom untuk "Lainnya" --}}
+                    <div id="customActionContainer" style="display: {{ old('action') == 'Lainnya' ? 'block' : 'none' }}; margin-top: 0.85rem; animation: slideDown 0.3s ease;">
+                        <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">
+                            <i class="fas fa-edit" style="margin-right: 0.35rem;"></i> Masukkan Tindakan/Instruksi Lainnya:
+                        </label>
+                        <input type="text" name="custom_action" id="customActionInput" 
+                            value="{{ old('custom_action') }}"
+                            placeholder="Ketik tindakan/instruksi lainnya..."
+                            style="width: 100%; padding: 0.75rem 1rem; border: 2px solid #f97316; border-radius: 0.5rem; font-size: 0.9rem; background: #fff7ed; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#ea580c'; this.style.boxShadow='0 0 0 3px rgba(249,115,22,0.1)'"
+                            onblur="this.style.borderColor='#f97316'; this.style.boxShadow='none'">
+                        <p style="font-size: 0.75rem; color: #94a3b8; margin-top: 0.35rem;">
+                            <i class="fas fa-info-circle"></i> Teks ini akan digunakan sebagai tindakan disposisi
+                        </p>
                     </div>
                 </div>
 
@@ -234,10 +264,48 @@ function toggleRoleStyle(checkbox) {
     if (checkbox.checked) label.classList.add('active');
     else label.classList.remove('active');
 }
-document.querySelector('form').addEventListener('submit', function(e) {
-    if (document.querySelectorAll('input[name="target_roles[]"]:checked').length === 0) {
-        e.preventDefault(); alert('Pilih minimal satu tujuan disposisi!');
+
+// Toggle Custom Action Input
+function toggleCustomAction() {
+    const actionSelect = document.getElementById('action');
+    const customContainer = document.getElementById('customActionContainer');
+    const customInput = document.getElementById('customActionInput');
+    
+    if (actionSelect.value === 'Lainnya') {
+        customContainer.style.display = 'block';
+        customInput.required = true;
+        setTimeout(() => customInput.focus(), 100);
+    } else {
+        customContainer.style.display = 'none';
+        customInput.required = false;
+        customInput.value = '';
     }
+}
+
+// Validasi form sebelum submit
+document.querySelector('form').addEventListener('submit', function(e) {
+    // Cek target roles
+    if (document.querySelectorAll('input[name="target_roles[]"]:checked').length === 0) {
+        e.preventDefault();
+        alert('Pilih minimal satu tujuan disposisi!');
+        return false;
+    }
+    
+    // Cek custom action jika "Lainnya" dipilih
+    const actionSelect = document.getElementById('action');
+    const customInput = document.getElementById('customActionInput');
+    
+    if (actionSelect.value === 'Lainnya' && !customInput.value.trim()) {
+        e.preventDefault();
+        alert('Silakan masukkan tindakan/instruksi lainnya!');
+        customInput.focus();
+        return false;
+    }
+});
+
+// Jalankan saat halaman load (untuk handle old input)
+document.addEventListener('DOMContentLoaded', function() {
+    toggleCustomAction();
 });
 </script>
 @endsection

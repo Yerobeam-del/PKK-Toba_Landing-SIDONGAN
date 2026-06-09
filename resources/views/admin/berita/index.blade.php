@@ -17,14 +17,6 @@
     </a>
 </div>
 
-{{-- Success Message --}}
-@if(session('success'))
-<div style="background:#f0fdf4;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#166534;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
 {{-- Stats Cards --}}
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem">
     {{-- Total Berita --}}
@@ -87,7 +79,7 @@
                     <th style="padding:1rem;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">Kategori</th>
                     <th style="padding:1rem;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">Tanggal</th>
                     <th style="padding:1rem;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px">Status</th>
-                    <th style="padding:1rem;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;text-align:center">Aksi</th>
+                    <th style="padding:1rem;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;text-align:right">Aksi</th>
                 </tr>
             </thead>
             <tbody id="newsTableBody">
@@ -127,16 +119,17 @@
                         </span>
                         @endif
                     </td>
-                    <td style="padding:1rem;text-align:center">
-                        <div class="actions" style="justify-content:center;gap:0.5rem">
-                            <a href="{{ route('admin.berita.edit', $item) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    <td style="padding:1rem;text-align:right">
+                        <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex">
+                            <a href="{{ route('admin.berita.edit', $item) }}" class="btn-edit" title="Edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </a>
-                            <form action="{{ route('admin.berita.destroy', $item) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin ingin menghapus berita ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;transition:all 0.2s;border:none;cursor:pointer">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                </button>
+                            <button type="button" onclick="confirmDeleteNews({{ $item->id }}, '{{ addslashes($item->title) }}')" class="btn-del" title="Hapus">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </button>
+                            <form id="delete-news-{{ $item->id }}" action="{{ route('admin.berita.destroy', $item) }}" method="POST" style="display:none">
+                                @csrf 
+                                @method('DELETE')
                             </form>
                         </div>
                     </td>
@@ -181,5 +174,37 @@ document.getElementById('searchInput')?.addEventListener('input', function(e) {
         row.style.display = (title.includes(term) || excerpt.includes(term)) ? '' : 'none';
     });
 });
+
+// Delete confirmation dengan Toast
+async function confirmDeleteNews(id, title) {
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            const confirmed = await Toast.confirm(
+                `Berita <strong>"${title}"</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+                {
+                    title: 'Hapus Berita?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal',
+                    type: 'danger'
+                }
+            );
+            
+            if (confirmed) {
+                document.getElementById('delete-news-' + id).submit();
+            }
+        } else {
+            // Fallback
+            if (confirm(`Hapus berita "${title}"?`)) {
+                document.getElementById('delete-news-' + id).submit();
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (confirm(`Hapus berita "${title}"?`)) {
+            document.getElementById('delete-news-' + id).submit();
+        }
+    }
+}
 </script>
+
 @endsection

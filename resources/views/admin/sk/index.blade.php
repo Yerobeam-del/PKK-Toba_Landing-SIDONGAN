@@ -16,14 +16,6 @@
     </a>
 </div>
 
-{{-- Success Message --}}
-@if(session('success'))
-<div style="background:#f0fdf4;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#166534;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
 {{-- Filter Form --}}
 <div class="card" style="margin-bottom:1.5rem;padding:1.25rem">
     <form id="filterForm" method="GET" action="{{ route('admin.sk.index') }}" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
@@ -78,7 +70,7 @@
                     <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Tanggal</th>
                     <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Ukuran</th>
                     <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Status</th>
-                    <th style="padding:0.875rem 1rem;text-align:center;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06);width:140px">Aksi</th>
+                    <th style="padding:0.875rem 1rem;text-align:right;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06);width:140px">Aksi</th>
                 </tr>
             </thead>
             <tbody id="tableBody">
@@ -119,19 +111,20 @@
                             </span>
                         @endif
                     </td>
-                    <td style="padding:0.875rem 1rem;text-align:center">
-                        <div class="actions" style="justify-content:center;gap:0.5rem;display:flex">
-                            <a href="{{ $doc->file_url }}" target="_blank" class="btn-view" title="Preview" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    <td style="padding:0.875rem 1rem;text-align:right">
+                        <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex">
+                            <a href="{{ $doc->file_url }}" target="_blank" class="btn-view" title="Preview">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                             </a>
-                            <a href="{{ route('admin.sk.edit', $doc) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            <a href="{{ route('admin.sk.edit', $doc) }}" class="btn-edit" title="Edit">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                             </a>
-                            <form action="{{ route('admin.sk.destroy', $doc) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus dokumen ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;transition:all 0.2s;border:none;cursor:pointer">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                </button>
+                            <button type="button" onclick="confirmDeleteSk({{ $doc->id }}, '{{ addslashes(Str::limit($doc->name, 40)) }}')" class="btn-del" title="Hapus">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                            </button>
+                            <form id="delete-sk-{{ $doc->id }}" action="{{ route('admin.sk.destroy', $doc) }}" method="POST" style="display:none">
+                                @csrf 
+                                @method('DELETE')
                             </form>
                         </div>
                     </td>
@@ -174,8 +167,10 @@
     @endif
 </div>
 
-{{-- JavaScript for Filter --}}
 <script>
+// ==========================================
+// FILTER FUNCTIONALITY
+// ==========================================
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('filterForm');
     const searchInput = document.getElementById('searchInput');
@@ -204,6 +199,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// ==========================================
+// DELETE CONFIRMATION DENGAN TOAST
+// ==========================================
+async function confirmDeleteSk(id, name) {
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            const confirmed = await Toast.confirm(
+                `Dokumen <strong>"${name}"</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+                {
+                    title: 'Hapus Dokumen?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal',
+                    type: 'danger'
+                }
+            );
+            
+            if (confirmed) {
+                document.getElementById('delete-sk-' + id).submit();
+            }
+        } else {
+            // Fallback
+            if (confirm(`Hapus dokumen "${name}"?`)) {
+                document.getElementById('delete-sk-' + id).submit();
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (confirm(`Hapus dokumen "${name}"?`)) {
+            document.getElementById('delete-sk-' + id).submit();
+        }
+    }
+}
 </script>
 
 @endsection

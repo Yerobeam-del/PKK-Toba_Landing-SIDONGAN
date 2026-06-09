@@ -81,7 +81,7 @@
                             <label style="display: block; font-size: 0.8rem; font-weight: 500; color: #475569; margin-bottom: 0.375rem;">Nomor Agenda</label>
                             <input type="text" value="{{ $previewAgenda }}" readonly 
                                 style="width: 100%; padding: 0.625rem 0.875rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; background: #f8fafc; color: #64748b; cursor: not-allowed; font-family: monospace;">
-                            <small style="color: #94a3b8; display: block; margin-top: 0.25rem;">Format: AG/Bulan/Tahun/Urut</small>
+                            <small style="color: #94a3b8; display: block; margin-top: 0.25rem;">Format: No. Urut/SM/PKK-T/Bulan/Tahun</small>
                         </div>
                         <div>
                             <label style="display: block; font-size: 0.8rem; font-weight: 500; color: #475569; margin-bottom: 0.375rem;">Tanggal Diterima</label>

@@ -38,11 +38,12 @@
                         </a>
                         @endif
                         @if($deleteRoute)
-                        <form action="{{ route($deleteRoute, $item) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus data ini?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="btn-del" title="Hapus">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                            </button>
+                        <button type="button" onclick="confirmDeleteItem({{ $item->id }}, '{{ addslashes($item->name) }}')" class="btn-del" title="Hapus">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                        </button>
+                        <form id="delete-form-{{ $item->id }}" action="{{ route($deleteRoute, $item) }}" method="POST" style="display:none">
+                            @csrf 
+                            @method('DELETE')
                         </form>
                         @endif
                     </div>
@@ -62,3 +63,41 @@
     </div>
     @endif
 </div>
+
+{{-- Toast Confirm Script --}}
+<script>
+// Global function untuk delete confirmation dengan Toast
+if (typeof window.confirmDeleteItem === 'undefined') {
+    window.confirmDeleteItem = function(id, name) {
+        // Cek apakah Toast tersedia
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            Toast.confirm(
+                `Data <strong>"${name}"</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+                {
+                    title: 'Hapus Data?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal',
+                    type: 'danger'
+                }
+            ).then(function(confirmed) {
+                if (confirmed) {
+                    const form = document.getElementById('delete-form-' + id);
+                    if (form) form.submit();
+                }
+            }).catch(function(error) {
+                console.error('Error:', error);
+                if (confirm(`Hapus data "${name}"?`)) {
+                    const form = document.getElementById('delete-form-' + id);
+                    if (form) form.submit();
+                }
+            });
+        } else {
+            // Fallback ke browser confirm
+            if (confirm(`Hapus data "${name}"?`)) {
+                const form = document.getElementById('delete-form-' + id);
+                if (form) form.submit();
+            }
+        }
+    };
+}
+</script>

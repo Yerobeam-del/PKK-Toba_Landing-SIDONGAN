@@ -16,14 +16,6 @@
     </a>
 </div>
 
-{{-- Success Message --}}
-@if(session('success'))
-<div style="background:#f0fdf4;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#166534;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
 {{-- Stats Cards - Redesigned --}}
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem">
     {{-- Total Aplikasi --}}
@@ -136,7 +128,6 @@
                             </span>
                         </td>
                         <td style="padding:1rem">
-                            {{-- Status Badge - Tanpa PHP Array Kompleks --}}
                             @if($app->status == 'active')
                                 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(34,197,94,0.1);color:#166534">
                                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
@@ -173,11 +164,12 @@
                                 <a href="{{ route('admin.aplikasi.edit', $app) }}" class="btn-edit" title="Edit">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
-                                <form action="{{ route('admin.aplikasi.destroy', $app) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus aplikasi ini?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del" title="Hapus">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    </button>
+                                <button type="button" onclick="confirmDeleteApp({{ $app->id }}, '{{ addslashes($app->name) }}')" class="btn-del" title="Hapus">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                                <form id="delete-app-{{ $app->id }}" action="{{ route('admin.aplikasi.destroy', $app) }}" method="POST" style="display:none">
+                                    @csrf 
+                                    @method('DELETE')
                                 </form>
                             </div>
                         </td>
@@ -239,12 +231,9 @@
                                 <a href="{{ route('admin.aplikasi.edit', $app) }}" class="btn-edit">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
-                                <form action="{{ route('admin.aplikasi.destroy', $app) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="confirmDeleteApp({{ $app->id }}, '{{ addslashes($app->name) }}')" class="btn-del">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -300,12 +289,9 @@
                                 <a href="{{ route('admin.aplikasi.edit', $app) }}" class="btn-edit">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
-                                <form action="{{ route('admin.aplikasi.destroy', $app) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="confirmDeleteApp({{ $app->id }}, '{{ addslashes($app->name) }}')" class="btn-del">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -361,12 +347,9 @@
                                 <a href="{{ route('admin.aplikasi.edit', $app) }}" class="btn-edit">
                                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
-                                <form action="{{ route('admin.aplikasi.destroy', $app) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                                    </button>
-                                </form>
+                                <button type="button" onclick="confirmDeleteApp({{ $app->id }}, '{{ addslashes($app->name) }}')" class="btn-del">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
                             </div>
                         </td>
                     </tr>
@@ -385,18 +368,45 @@
 
 <script>
 function switchTab(tabId, btn) {
-    // Reset all tabs
     document.querySelectorAll('.tab-btn').forEach(b => {
         b.style.color = 'var(--text-muted)';
         b.style.borderBottom = '2px solid transparent';
     });
-    // Hide all contents
     document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
     
-    // Activate selected
     btn.style.color = 'var(--primary)';
     btn.style.borderBottom = '2px solid var(--primary)';
     document.getElementById('tab-' + tabId).style.display = 'block';
+}
+
+// Delete confirmation dengan Toast
+async function confirmDeleteApp(id, name) {
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            const confirmed = await Toast.confirm(
+                `Aplikasi <strong>"${name}"</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+                {
+                    title: 'Hapus Aplikasi?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal',
+                    type: 'danger'
+                }
+            );
+            
+            if (confirmed) {
+                document.getElementById('delete-app-' + id).submit();
+            }
+        } else {
+            if (confirm(`Hapus aplikasi "${name}"?`)) {
+                document.getElementById('delete-app-' + id).submit();
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (confirm(`Hapus aplikasi "${name}"?`)) {
+            document.getElementById('delete-app-' + id).submit();
+        }
+    }
 }
 
 // Init first tab

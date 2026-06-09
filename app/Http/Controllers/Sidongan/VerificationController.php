@@ -78,7 +78,9 @@ class VerificationController extends Controller
             'catatan_verifikasi' => 'nullable|string|max:500',
         ]);
         
-        $report = ActivityReport::findOrFail($id);
+        $report = ActivityReport::with('document.creator')->findOrFail($id);
+        
+        // Update status laporan
         $report->update([
             'status' => $validated['status'],
             'catatan_verifikasi' => $validated['catatan_verifikasi'] ?? null,
@@ -86,12 +88,41 @@ class VerificationController extends Controller
             'verified_at' => now(),
         ]);
         
-        // Update status surat jika disetujui
-        if ($validated['status'] === 'disetujui' && $report->document) {
-            $report->document->update(['status' => 'selesai']);
+        // UPDATE STATUS SURAT BERDASARKAN HASIL VERIFIKASI
+        if ($report->document) {
+            if ($validated['status'] === 'disetujui') {
+                // Laporan disetujui → Surat selesai
+                $report->document->update(['status' => 'selesai']);
+                
+                $notifMessage = "Laporan kegiatan untuk surat {$report->document->agenda_number} telah disetujui.";
+                $notifTitle = "Laporan Disetujui";
+            } else if ($validated['status'] === 'ditolak') {
+                // Laporan ditolak → Surat kembali ke "berjalan" agar bisa dibuat laporan baru
+                $report->document->update(['status' => 'berjalan']);
+                
+                $catatan = $validated['catatan_verifikasi'] ? " Catatan: \"{$validated['catatan_verifikasi']}\"" : '';
+                $notifMessage = "Laporan kegiatan untuk surat {$report->document->agenda_number} ditolak. Silakan perbaiki dan buat laporan baru.{$catatan}";
+                $notifTitle = "Laporan Ditolak";
+            }
+            
+            // KIRIM NOTIFIKASI KE PEMBUAT LAPORAN
+            if (isset($notifMessage) && $report->created_by) {
+                \App\Models\Notification::create([
+                    'user_id' => $report->created_by,
+                    'type' => 'laporan_verifikasi',
+                    'title' => $notifTitle,
+                    'message' => $notifMessage,
+                    'related_id' => $report->document->id,
+                    'related_type' => 'document',
+                ]);
+            }
         }
         
+        $pesan = $validated['status'] === 'disetujui' 
+            ? 'Laporan berhasil disetujui!' 
+            : 'Laporan ditolak. Pembuat laporan akan diberi notifikasi.';
+        
         return redirect()->route('sidongan.verifikasi')
-            ->with('success', 'Verifikasi berhasil disimpan!');
+            ->with('success', $pesan);
     }
 }
