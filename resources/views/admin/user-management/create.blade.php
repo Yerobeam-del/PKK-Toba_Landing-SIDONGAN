@@ -2,6 +2,32 @@
 @section('title', 'Tambah Akun')
 @section('page-title', 'Tambah Akun Baru')
 
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .permission-grid {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .email-input-group {
+        flex-direction: column !important;
+    }
+    
+    .email-input-group input[type="text"] {
+        width: 100% !important;
+    }
+    
+    .email-domain {
+        width: 100% !important;
+        text-align: center !important;
+    }
+}
+</style>
+
 @section('content')
 
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
@@ -27,145 +53,205 @@
     <form action="{{ route('admin.user-management.store') }}" method="POST">
         @csrf
         
-        <div style="display:grid;gap:1.5rem;max-width:600px">
-            {{-- Nama Lengkap --}}
+        <div style="display:grid;gap:1.5rem">
+            
+            {{-- Nama Lengkap (Full Width) --}}
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem">Nama Lengkap *</label>
                 <input type="text" name="name" class="form-control" value="{{ old('name') }}" required>
             </div>
             
-            {{-- Email --}}
-            <div>
-                <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:var(--text-dark)">Email <span style="color:#ef4444">*</span></label>
-                <div style="display:flex;align-items:center;gap:0.5rem">
-                    <input type="text" id="email_username" name="email_username" placeholder="username" 
-                        value="{{ old('email_username') }}"
-                        style="flex:1;padding:0.75rem 1rem;border:2px solid #e2e8f0;border-radius:8px;font-size:0.95rem;outline:none"
-                        onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'" required>
-                    <span style="padding:0.75rem 1rem;background:#f1f5f9;border:2px solid #e2e8f0;border-radius:8px;font-size:0.95rem;color:#64748b;font-weight:600">
-                        @pkk-toba.id
-                    </span>
+            {{-- Grid 2 Kolom: Email & Phone --}}
+            <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                {{-- Email --}}
+                <div>
+                    <label style="display:block;font-weight:600;margin-bottom:0.5rem;color:var(--text-dark)">Email <span style="color:#ef4444">*</span></label>
+                    <div class="email-input-group" style="display:flex;align-items:center;gap:0.5rem">
+                        <input type="text" id="email_username" name="email_username" placeholder="username" 
+                            value="{{ old('email_username') }}"
+                            style="flex:1;padding:0.75rem 1rem;border:2px solid #e2e8f0;border-radius:8px;font-size:0.95rem;outline:none"
+                            onfocus="this.style.borderColor='var(--primary)'" onblur="this.style.borderColor='#e2e8f0'" required>
+                        <span class="email-domain" style="padding:0.75rem 1rem;background:#f1f5f9;border:2px solid #e2e8f0;border-radius:8px;font-size:0.95rem;color:#64748b;font-weight:600">
+                            @pkk-toba.id
+                        </span>
+                    </div>
+                    <input type="hidden" name="email" id="email_full">
+                    <small style="color:var(--text-muted);margin-top:0.25rem;display:block">Email otomatis: username@pkk-toba.id</small>
                 </div>
-                <input type="hidden" name="email" id="email_full">
-                <small style="color:var(--text-muted);margin-top:0.25rem;display:block">Email otomatis: username@pkk-toba.id</small>
-            </div>
-
-            {{-- Nomor Telepon --}}
-            <div>
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem">Nomor Telepon</label>
-                <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number') }}">
+                
+                {{-- Phone --}}
+                <div>
+                    <label style="font-weight:600;display:block;margin-bottom:0.5rem">Nomor Telepon</label>
+                    <input type="text" name="phone_number" class="form-control" value="{{ old('phone_number') }}">
+                </div>
             </div>
             
-            {{-- Password --}}
-            <div>
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem">Password *</label>
-                <input type="password" name="password" class="form-control" required>
-            </div>
-            
-            <div>
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem">Konfirmasi Password *</label>
-                <input type="password" name="password_confirmation" class="form-control" required>
-            </div>
-
-            {{-- 🔹 ROLE ADMIN PANEL --}}
-            <div>
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem">Role Admin Panel <span style="color:#ef4444">*</span></label>
-                <select name="role_id" id="roleSelect" class="form-control" required onchange="togglePermissionSection()">
-                    <option value="">-- Pilih Role --</option>
-                    @foreach($roles as $role)
-                        <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
-                            {{ $role->display_name }} - {{ $role->description }}
-                        </option>
-                    @endforeach
-                </select>
-                <small style="color:var(--text-muted);display:block;margin-top:0.25rem">
-                    Administrator: Akses penuh | Anggota: Akses terbatas sesuai permission
-                </small>
+            {{-- Grid 2 Kolom: Password & Confirm --}}
+            <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                <div>
+                    <label style="font-weight:600;display:block;margin-bottom:0.5rem">Password *</label>
+                    <input type="password" name="password" class="form-control" required>
+                </div>
+                
+                <div>
+                    <label style="font-weight:600;display:block;margin-bottom:0.5rem">Konfirmasi Password *</label>
+                    <input type="password" name="password_confirmation" class="form-control" required>
+                </div>
             </div>
 
-            {{-- 🔹 PERMISSION SECTION (Hanya untuk Anggota) --}}
-            <div id="permissionSection" style="display:none;border:1px solid var(--border);border-radius:8px;padding:1rem;background:#f8fafc">
+            {{-- Grid 2 Kolom: Role & SIDONGAN Role --}}
+            <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem">
+                {{-- Role Admin Panel --}}
+                <div>
+                    <label style="font-weight:600;display:block;margin-bottom:0.5rem">Role Admin Panel <span style="color:#ef4444">*</span></label>
+                    <select name="role_id" id="roleSelect" class="form-control" required onchange="togglePermissionSection()">
+                        <option value="">-- Pilih Role --</option>
+                        @foreach($roles as $role)
+                            <option value="{{ $role->id }}" {{ old('role_id') == $role->id ? 'selected' : '' }}>
+                                {{ $role->display_name }} - {{ $role->description }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small style="color:var(--text-muted);display:block;margin-top:0.25rem">
+                        Administrator: Akses penuh | Anggota: Akses terbatas
+                    </small>
+                </div>
+                
+                {{-- SIDONGAN Role (Conditional) --}}
+                <div id="sidonganRoleSection" style="display:none">
+                    <label style="font-weight:600;display:block;margin-bottom:0.5rem">Peran di SIDONGAN <span style="color:#ef4444">*</span></label>
+                    <select name="sidongan_role" id="sidonganRole" class="form-control">
+                        <option value="">-- Pilih Peran --</option>
+                        @foreach($sidonganRoles as $key => $label)
+                            <option value="{{ $key }}" {{ old('sidongan_role') == $key ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <small style="color:var(--text-muted);display:block;margin-top:0.25rem">
+                        Pilih peran untuk akses SIDONGAN
+                    </small>
+                </div>
+            </div>
+
+            {{-- Permission Section (Hanya untuk Anggota) --}}
+            <div id="permissionSection" style="display:none;border:1px solid var(--border);border-radius:8px;padding:1.25rem;background:#f8fafc">
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem">Permission Akses <span style="color:#ef4444">*</span></label>
                 <small style="color:var(--text-muted);display:block;margin-bottom:1rem">Pilih modul yang bisa diakses user ini</small>
                 
-                @foreach($permissions as $group => $perms)
-                    <div style="margin-bottom:1rem;padding:0.75rem;background:#fff;border-radius:6px">
-                        <h4 style="font-size:0.9rem;font-weight:700;color:var(--text-dark);margin-bottom:0.5rem;text-transform:capitalize">
-                            {{ ucfirst(str_replace('-', ' ', $group)) }}
-                        </h4>
-                        @foreach($perms as $perm)
-                            {{-- SKIP permission 'publish-berita' --}}
-                            @if($perm->name !== 'publish-berita')
-                                <label style="display:flex;align-items:center;gap:0.5rem;padding:0.3rem 0;cursor:pointer">
-                                    <input type="checkbox" name="permissions[]" value="{{ $perm->id }}" class="permission-checkbox" data-group="{{ $group }}">
-                                    <span style="font-size:0.9rem">{{ $perm->display_name }}</span>
-                                </label>
-                            @endif
-                        @endforeach
-                    </div>
-                @endforeach
+                <div class="permission-grid" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:1rem">
+                    @foreach($permissions as $group => $perms)
+                        <div style="padding:1rem;background:#fff;border-radius:8px;border:1px solid var(--border)">
+                            <h4 style="font-size:0.9rem;font-weight:700;color:var(--primary);margin-bottom:0.75rem;text-transform:capitalize;padding-bottom:0.5rem;border-bottom:1px solid var(--border)">
+                                {{ ucfirst(str_replace('-', ' ', $group)) }}
+                            </h4>
+                            <div style="display:grid;gap:0.5rem">
+                                @foreach($perms as $perm)
+                                    @if($perm->name !== 'publish-berita')
+                                    <label class="custom-checkbox-label" style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.4rem 0.5rem;border-radius:6px;transition:all 0.2s" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                                        <input type="checkbox" name="permissions[]" value="{{ $perm->id }}" class="permission-checkbox custom-checkbox-input" data-group="{{ $group }}" style="display:none">
+                                        <div class="custom-checkbox-box" style="width:20px;height:20px;border:2px solid #cbd5e1;border-radius:5px;background:#fff;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                            <svg class="custom-checkbox-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)">
+                                                <polyline points="20 6 9 17 4 12"/>
+                                            </svg>
+                                        </div>
+                                        <span style="font-size:0.9rem;color:#334155;user-select:none">{{ $perm->display_name }}</span>
+                                    </label>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
             </div>
             
             {{-- Aplikasi yang Diakses --}}
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem">Aplikasi yang Diakses</label>
-                <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;max-height:200px;overflow-y:auto">
+                <div style="border:1px solid var(--border);border-radius:8px;padding:1rem;max-height:250px;overflow-y:auto;background:#f8fafc">
                     @forelse($applications as $app)
-                    <label style="display:flex;align-items:center;gap:0.5rem;padding:0.4rem 0;cursor:pointer">
-                        <input 
-                            type="checkbox" 
-                            name="applications[]" 
-                            value="{{ $app->id }}"
-                            class="application-checkbox"
-                            data-app-name="{{ $app->name }}"
-                            data-app-short="{{ $app->short_name }}"
-                        >
-                        <span>{{ $app->name }}</span>
+                    <label class="custom-checkbox-label" style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.5rem;border-radius:6px;transition:all 0.2s;margin-bottom:0.25rem" onmouseover="this.style.background='#fff'" onmouseout="this.style.background='transparent'">
+                        <input type="checkbox" name="applications[]" value="{{ $app->id }}" class="application-checkbox custom-checkbox-input" data-app-name="{{ $app->name }}" data-app-short="{{ $app->short_name }}" style="display:none">
+                        <div class="custom-checkbox-box" style="width:20px;height:20px;border:2px solid #cbd5e1;border-radius:5px;background:#fff;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                            <svg class="custom-checkbox-check" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)">
+                                <polyline points="20 6 9 17 4 12"/>
+                            </svg>
+                        </div>
+                        <span style="font-size:0.9rem;color:#334155;user-select:none">{{ $app->name }}</span>
                     </label>
                     @empty
-                    <p style="color:var(--text-muted)">Belum ada aplikasi</p>
+                    <p style="color:var(--text-muted);margin:0;text-align:center;padding:1rem">Belum ada aplikasi</p>
                     @endforelse
                 </div>
             </div>
-            
-            {{-- SIDONGAN Role Selection (Conditional) --}}
-            <div id="sidonganRoleSection" style="display:none;border:1px solid var(--border);border-radius:8px;padding:1rem;margin-top:0.5rem;background:#f8fafc">
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem">Peran di SIDONGAN <span style="color:#ef4444">*</span></label>
-                <select name="sidongan_role" id="sidonganRole" class="form-control">
-                    <option value="">-- Pilih Peran --</option>
-                    @foreach($sidonganRoles as $key => $label)
-                        <option value="{{ $key }}" {{ old('sidongan_role') == $key ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-                <small style="color:var(--text-muted);display:block;margin-top:0.25rem">
-                    Pilih peran yang sesuai untuk akses SIDONGAN
-                </small>
-            </div>
         </div>
         
-        <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:flex-end">
-            <a href="{{ route('admin.user-management.index') }}" class="btn">Batal</a>
-            <button type="submit" class="btn btn-primary">Simpan Akun</button>
+        <div style="margin-top:1.5rem;display:flex;gap:0.75rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid var(--border)">
+            <a href="{{ route('admin.user-management.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">Batal</a>
+            <button type="submit" class="btn btn-primary">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                    <polyline points="17 21 17 13 7 13 7 21"/>
+                    <polyline points="7 3 7 8 15 8"/>
+                </svg>
+                Simpan Akun
+            </button>
         </div>
     </form>
 </div>
 
 <script>
-// Auto-generate email dengan domain wajib @pkk-toba.id
-function updateEmail() {
-    const username = document.getElementById('email_username').value.trim();
-    const fullEmail = document.getElementById('email_full');
+// ==========================================
+// CUSTOM CHECKBOX HANDLER
+// ==========================================
+function initCustomCheckboxes() {
+    const checkboxes = document.querySelectorAll('.custom-checkbox-input');
     
-    if (username) {
-        fullEmail.value = username + '@pkk-toba.id';
+    checkboxes.forEach(checkbox => {
+        const label = checkbox.closest('.custom-checkbox-label');
+        const box = label.querySelector('.custom-checkbox-box');
+        const check = label.querySelector('.custom-checkbox-check');
+        
+        // Set initial state
+        updateCustomCheckbox(box, check, checkbox.checked);
+        
+        // On change
+        checkbox.addEventListener('change', function() {
+            updateCustomCheckbox(box, check, this.checked);
+        });
+    });
+}
+
+function updateCustomCheckbox(box, check, isChecked) {
+    if (!box || !check) return;
+    
+    if (isChecked) {
+        box.style.background = 'linear-gradient(135deg, #14b8a6, #0d9488)';
+        box.style.borderColor = '#14b8a6';
+        box.style.boxShadow = '0 2px 8px rgba(20,184,166,0.3)';
+        check.style.opacity = '1';
+        check.style.transform = 'scale(1)';
     } else {
-        fullEmail.value = '';
+        box.style.background = '#fff';
+        box.style.borderColor = '#cbd5e1';
+        box.style.boxShadow = 'none';
+        check.style.opacity = '0';
+        check.style.transform = 'scale(0.5)';
     }
 }
 
-// Toggle Permission Section berdasarkan Role
+// ==========================================
+// EMAIL GENERATOR
+// ==========================================
+function updateEmail() {
+    const username = document.getElementById('email_username').value.trim();
+    const fullEmail = document.getElementById('email_full');
+    fullEmail.value = username ? username + '@pkk-toba.id' : '';
+}
+
+// ==========================================
+// TOGGLE PERMISSION SECTION
+// ==========================================
 function togglePermissionSection() {
     const roleSelect = document.getElementById('roleSelect');
     const permissionSection = document.getElementById('permissionSection');
@@ -176,12 +262,20 @@ function togglePermissionSection() {
         permissionSection.style.display = 'block';
     } else {
         permissionSection.style.display = 'none';
-        // Uncheck semua permission untuk administrator
         const checkboxes = document.querySelectorAll('#permissionSection input[type="checkbox"]');
-        checkboxes.forEach(cb => cb.checked = false);
+        checkboxes.forEach(cb => {
+            cb.checked = false;
+            const label = cb.closest('.custom-checkbox-label');
+            const box = label.querySelector('.custom-checkbox-box');
+            const check = label.querySelector('.custom-checkbox-check');
+            updateCustomCheckbox(box, check, false);
+        });
     }
 }
 
+// ==========================================
+// INITIALIZATION
+// ==========================================
 document.getElementById('email_username').addEventListener('input', updateEmail);
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -190,6 +284,9 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Init permission section
     togglePermissionSection();
+    
+    // Init custom checkboxes
+    initCustomCheckboxes();
     
     // SIDONGAN Role Logic
     const checkboxes = document.querySelectorAll('input[name="applications[]"]');

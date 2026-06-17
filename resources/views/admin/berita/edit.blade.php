@@ -3,14 +3,41 @@
 @section('page-title', 'Edit Berita')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .berita-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .berita-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .berita-header .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .ck-editor__editable {
+        min-height: 300px !important;
+    }
+}
+</style>
 
 {{-- Header --}}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-    <div>
+<div class="berita-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem">
+    <div style="flex:1;min-width:0">
         <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0">Edit Berita</h1>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Perbarui konten berita yang sudah ada</p>
     </div>
-    <a href="{{ route('admin.berita.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">← Kembali</a>
+    <a href="{{ route('admin.berita.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark);white-space:nowrap;flex-shrink:0">← Kembali</a>
 </div>
 
 {{-- Form Card --}}
@@ -26,7 +53,7 @@
         </div>
 
         {{-- Kategori & Tanggal --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Kategori *</label>
                 <input type="text" name="category" class="form-control" value="{{ old('category', $berita->category) }}" required placeholder="Contoh: Kegiatan, Program, Prestasi">
@@ -43,7 +70,6 @@
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Ringkasan (Excerpt) *</label>
             
-            <!-- maxlength="160" membatasi input secara native di browser -->
             <textarea 
                 name="excerpt" 
                 id="excerptInput" 
@@ -54,14 +80,13 @@
                 placeholder="Ringkasan singkat yang akan muncul di listing berita"
             >{{ old('excerpt', $berita->excerpt ?? '') }}</textarea>
             
-            <!-- Counter Container -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-top:0.4rem;">
                 <small style="color:var(--text-muted); font-size:0.8rem">Maksimal 160 karakter untuk preview optimal</small>
                 <span id="excerptCounter" style="font-size:0.8rem; font-weight:600; color:var(--text-muted); transition: color 0.2s;">0/160</span>
             </div>
         </div>
 
-        {{-- Content dengan TinyMCE --}}
+        {{-- Content dengan CKEditor --}}
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Konten Lengkap *</label>
             <textarea name="content" id="contentEditor" class="form-control" rows="10" placeholder="Tulis konten berita lengkap di sini...">{{ old('content', $berita->content) }}</textarea>
@@ -154,18 +179,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     ClassicEditor
         .create(document.querySelector('#contentEditor'), {
-            // Toolbar dengan Alignment
             toolbar: [
                 'heading', '|',
                 'bold', 'italic', 'link', '|',
                 'bulletedList', 'numberedList', '|',
-                'alignment',  // ✅ Tombol Alignment
+                'alignment',
                 '|',
                 'blockQuote', '|',
                 'undo', 'redo'
             ],
             
-            // Heading options
             heading: {
                 options: [
                     { model: 'paragraph', title: 'Paragraph', class: 'ck-heading_paragraph' },
@@ -175,19 +198,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 ]
             },
             
-            // Alignment configuration
             alignment: alignmentConfig,
-            
-            // Height
             height: 500,
-            
-            // Allowed content
             allowedContent: true
         })
         .then(editor => {
             console.log('✅ CKEditor 5 initialized with alignment!', editor);
-            
-            // Simpan instance ke window untuk debugging
             window.editor = editor;
         })
         .catch(error => {
@@ -196,41 +212,33 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 });
 
-{{-- Script Character Counter untuk Excerpt --}}
+// Character Counter untuk Excerpt
 document.addEventListener('DOMContentLoaded', function() {
     const textarea = document.getElementById('excerptInput');
     const counter = document.getElementById('excerptCounter');
     const maxLength = 160;
 
-    // Fungsi update counter
     function updateCounter() {
         const currentLength = textarea.value.length;
         counter.textContent = `${currentLength}/${maxLength}`;
 
-        // Ubah warna berdasarkan jumlah karakter
         if (currentLength >= maxLength) {
-            counter.style.color = '#ef4444'; // Merah saat penuh
+            counter.style.color = '#ef4444';
         } else if (currentLength >= maxLength * 0.85) {
-            counter.style.color = '#f59e0b'; // Kuning/Orange saat mendekati batas
+            counter.style.color = '#f59e0b';
         } else {
-            counter.style.color = 'var(--text-muted, #6b7280)'; // Normal
+            counter.style.color = 'var(--text-muted, #6b7280)';
         }
     }
 
-    // Jalankan saat mengetik
     textarea.addEventListener('input', updateCounter);
-    
-    // Jalankan saat halaman dimuat (penting untuk halaman Edit agar counter awal benar)
     updateCounter();
 });
 
-// ==========================================
-// IMAGE PREVIEW FUNCTIONALITY
-// ==========================================
+// Image Preview Functionality
 document.getElementById('imageInput')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
-        // Validate file size
         if (file.size > 2 * 1024 * 1024) {
             alert('Ukuran gambar terlalu besar. Maksimal 2MB.');
             e.target.value = '';
@@ -239,7 +247,6 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
         
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Hide existing image, show new preview
             const existingImg = document.getElementById('existingImage');
             if (existingImg) existingImg.style.display = 'none';
             
@@ -250,9 +257,7 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
     }
 });
 
-// ==========================================
-// CHECKBOX ANIMATION HANDLER
-// ==========================================
+// Checkbox Animation Handler
 function updateCheckboxStyle(boxId, checkId, isChecked) {
     const box = document.getElementById(boxId);
     const check = document.getElementById(checkId);
@@ -274,14 +279,12 @@ function updateCheckboxStyle(boxId, checkId, isChecked) {
     }
 }
 
-// Initialize checkbox state saat DOM ready
+// Initialize checkbox state
 document.addEventListener('DOMContentLoaded', function() {
     const isPublishedCheckbox = document.getElementById('isPublished');
     if (isPublishedCheckbox) {
-        // Set initial state sesuai data dari database
         updateCheckboxStyle('isPublishedBox', 'isPublishedCheck', isPublishedCheckbox.checked);
         
-        // On change
         isPublishedCheckbox.addEventListener('change', function() {
             updateCheckboxStyle('isPublishedBox', 'isPublishedCheck', this.checked);
         });

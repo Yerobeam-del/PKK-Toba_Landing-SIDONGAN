@@ -3,14 +3,46 @@
 @section('page-title', 'Edit Aplikasi')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .aplikasi-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .aplikasi-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .aplikasi-header .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .feature-item {
+        flex-direction: column !important;
+    }
+    
+    .feature-item button {
+        width: 100% !important;
+        margin-top: 0.5rem !important;
+    }
+}
+</style>
 
 {{-- Header --}}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-    <div>
+<div class="aplikasi-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem">
+    <div style="flex:1;min-width:0">
         <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0">Edit Aplikasi</h1>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Perbarui data aplikasi yang sudah ada</p>
     </div>
-    <a href="{{ route('admin.aplikasi.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">← Kembali</a>
+    <a href="{{ route('admin.aplikasi.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark);white-space:nowrap;flex-shrink:0">← Kembali</a>
 </div>
 
 {{-- Form Card --}}
@@ -26,7 +58,7 @@
         </div>
 
         {{-- Short Name & Category --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Nama Singkat *</label>
                 <input type="text" name="short_name" class="form-control" value="{{ old('short_name', $aplikasi->short_name) }}" required placeholder="Contoh: SIEDA" style="text-transform:uppercase">
@@ -92,7 +124,7 @@
         </div>
 
         {{-- Status & URL --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Status Aplikasi *</label>
                 <select name="status" class="form-control" required onchange="toggleUrlField(this.value)">
@@ -108,7 +140,7 @@
         </div>
 
         {{-- Icon & Sort Order --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Icon/Logo Aplikasi</label>
                 <input type="file" name="icon" class="form-control" accept="image/*">

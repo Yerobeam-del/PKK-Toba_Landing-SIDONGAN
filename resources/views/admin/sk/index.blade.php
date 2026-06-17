@@ -3,14 +3,164 @@
 @section('page-title', 'SK & Dokumen')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .sk-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .sk-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .sk-header .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .filter-form {
+        flex-direction: column !important;
+    }
+    
+    .filter-form > div,
+    .filter-form select {
+        width: 100% !important;
+        min-width: 100% !important;
+    }
+    
+    /* Hide desktop table, show mobile cards */
+    .desktop-table-view {
+        display: none !important;
+    }
+    
+    .mobile-card-view {
+        display: block !important;
+    }
+    
+    .mobile-card-view .doc-card {
+        padding: 1rem;
+        margin-bottom: 0.75rem;
+        background: #fff;
+        border-radius: 10px;
+        border: 1px solid rgba(0,0,0,0.06);
+    }
+    
+    .mobile-card-view .doc-card-header {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+    
+    .mobile-card-view .doc-card-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 10px;
+        background: rgba(139,92,246,0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    
+    .mobile-card-view .doc-card-info {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .mobile-card-view .doc-card-name {
+        font-weight: 600;
+        color: var(--text-dark);
+        margin-bottom: 0.15rem;
+        font-size: 0.95rem;
+    }
+    
+    .mobile-card-view .doc-card-filename {
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        word-break: break-all;
+    }
+    
+    .mobile-card-view .doc-card-meta {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.5rem;
+        margin-bottom: 0.75rem;
+        font-size: 0.85rem;
+    }
+    
+    .mobile-card-view .doc-card-meta-item {
+        display: flex;
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+    
+    .mobile-card-view .doc-card-meta-label {
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        text-transform: uppercase;
+    }
+    
+    .mobile-card-view .doc-card-meta-value {
+        font-weight: 600;
+        color: var(--text-dark);
+    }
+    
+    .mobile-card-view .doc-card-actions {
+        display: flex;
+        gap: 0.5rem;
+        padding-top: 0.75rem;
+        border-top: 1px solid rgba(0,0,0,0.06);
+    }
+    
+    .mobile-card-view .doc-card-actions a,
+    .mobile-card-view .doc-card-actions button {
+        flex: 1;
+        height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        color: #94a3b8;
+        border-radius: 8px;
+        transition: all 0.2s;
+        cursor: pointer;
+        border: none;
+    }
+    
+    .mobile-card-view .doc-card-actions a:hover {
+        background: #eff6ff;
+        color: #2563eb;
+    }
+    
+    .mobile-card-view .doc-card-actions button:hover {
+        background: #fef2f2;
+        color: #ef4444;
+    }
+}
+
+/* Desktop: show table, hide card */
+@media (min-width: 769px) {
+    .desktop-table-view {
+        display: block !important;
+    }
+    
+    .mobile-card-view {
+        display: none !important;
+    }
+}
+</style>
 
 {{-- Header Section --}}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
-    <div>
+<div class="sk-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;flex-wrap:wrap;gap:1rem">
+    <div style="flex:1;min-width:0">
         <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0;letter-spacing:-0.5px">SK & Dokumen</h1>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Kelola surat keputusan dan dokumen dari pusat</p>
     </div>
-    <a href="{{ route('admin.sk.create') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
+    <a href="{{ route('admin.sk.create') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem;white-space:nowrap;flex-shrink:0">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         Tambah Dokumen
     </a>
@@ -18,7 +168,7 @@
 
 {{-- Filter Form --}}
 <div class="card" style="margin-bottom:1.5rem;padding:1.25rem">
-    <form id="filterForm" method="GET" action="{{ route('admin.sk.index') }}" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
+    <form id="filterForm" method="GET" action="{{ route('admin.sk.index') }}" class="filter-form" style="display:flex;gap:1rem;flex-wrap:wrap;align-items:center">
         
         {{-- Search Input with Icon --}}
         <div style="position:relative;flex:1;min-width:250px">
@@ -59,108 +209,206 @@
     </form>
 </div>
 
-{{-- Table Card --}}
-<div class="card" style="padding:0;overflow:hidden">
-    <div class="table-container" style="padding:1rem">
-        <table style="width:100%;border-collapse:collapse">
-            <thead style="background:#f8fafc">
-                <tr>
-                    <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06);width:60px">No</th>
-                    <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Nama Dokumen</th>
-                    <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Tanggal</th>
-                    <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Ukuran</th>
-                    <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06)">Status</th>
-                    <th style="padding:0.875rem 1rem;text-align:right;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:1px solid rgba(0,0,0,0.06);width:140px">Aksi</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody">
-                @forelse($dokumens as $index => $doc)
-                <tr style="border-bottom:1px solid rgba(0,0,0,0.04);transition:background 0.2s" onmouseover="this.style.background='#fafbfc'" onmouseout="this.style.background='transparent'">
-                    <td style="padding:0.875rem 1rem;color:var(--text-muted);font-size:0.9rem">{{ ($dokumens->currentPage()-1)*$dokumens->perPage() + $index+1 }}</td>
-                    <td style="padding:0.875rem 1rem">
-                        <div style="display:flex;align-items:center;gap:0.75rem">
-                            <div style="width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                    <line x1="16" y1="13" x2="8" y2="13"/>
-                                    <line x1="16" y1="17" x2="8" y2="17"/>
-                                    <polyline points="10 9 9 9 8 9"/>
-                                </svg>
+{{-- Desktop Table View --}}
+<div class="desktop-table-view">
+    <div class="card" style="padding:0;overflow:hidden;border:1px solid rgba(0,0,0,0.06);border-radius:12px">
+        <div class="table-container" style="padding:1rem">
+            <table style="width:100%;border-collapse:collapse">
+                <thead style="background:#f8fafc">
+                    <tr>
+                        <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid rgba(0,0,0,0.08);width:60px">No</th>
+                        <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid rgba(0,0,0,0.08)">Nama Dokumen</th>
+                        <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid rgba(0,0,0,0.08)">Tanggal</th>
+                        <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid rgba(0,0,0,0.08)">Ukuran</th>
+                        <th style="padding:0.875rem 1rem;text-align:left;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid rgba(0,0,0,0.08)">Status</th>
+                        <th style="padding:0.875rem 1rem;text-align:right;color:var(--text-muted);font-weight:600;font-size:0.75rem;text-transform:uppercase;letter-spacing:0.5px;border-bottom:2px solid rgba(0,0,0,0.08);width:140px">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody">
+                    @forelse($dokumens as $index => $doc)
+                    <tr style="border-bottom:1px solid rgba(0,0,0,0.06);transition:background 0.2s" onmouseover="this.style.background='#fafbfc'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:0.875rem 1rem;color:var(--text-muted);font-size:0.9rem">{{ ($dokumens->currentPage()-1)*$dokumens->perPage() + $index+1 }}</td>
+                        <td style="padding:0.875rem 1rem">
+                            <div style="display:flex;align-items:center;gap:0.75rem">
+                                <div style="width:40px;height:40px;border-radius:10px;background:rgba(139,92,246,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                </div>
+                                <div style="flex:1;min-width:0">
+                                    <div style="font-weight:600;color:var(--text-dark);margin-bottom:0.15rem">{{ Str::limit($doc->name, 50) }}</div>
+                                    <div style="font-size:0.8rem;color:var(--text-muted)">{{ $doc->file_name }}</div>
+                                </div>
                             </div>
-                            <div style="flex:1;min-width:0">
-                                <div style="font-weight:600;color:var(--text-dark);margin-bottom:0.15rem">{{ Str::limit($doc->name, 50) }}</div>
-                                <div style="font-size:0.8rem;color:var(--text-muted)">{{ $doc->file_name }}</div>
+                        </td>
+                        <td style="padding:0.875rem 1rem;color:var(--text-muted);font-size:0.9rem">{{ $doc->document_date?->format('d M Y') ?? '-' }}</td>
+                        <td style="padding:0.875rem 1rem">
+                            <span style="background:#f1f5f9;padding:0.35rem 0.65rem;border-radius:6px;font-size:0.8rem;color:var(--text-muted);font-weight:500">{{ $doc->file_size }}</span>
+                        </td>
+                        <td style="padding:0.875rem 1rem">
+                            @if($doc->status === 'published')
+                                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(34,197,94,0.1);color:#166534">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                                    Published
+                                </span>
+                            @else
+                                <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(234,179,8,0.1);color:#92400e">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="12" x2="16" y2="12"/></svg>
+                                    Draft
+                                </span>
+                            @endif
+                        </td>
+                        <td style="padding:0.875rem 1rem;text-align:right">
+                            <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex">
+                                <a href="{{ $doc->file_url }}" target="_blank" class="btn-view" title="Preview" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer" onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                </a>
+                                <a href="{{ route('admin.sk.edit', $doc) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer" onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                </a>
+                                <button type="button" onclick="confirmDeleteSk({{ $doc->id }}, '{{ addslashes(Str::limit($doc->name, 40)) }}')" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;border:none;cursor:pointer" onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                                <form id="delete-sk-{{ $doc->id }}" action="{{ route('admin.sk.destroy', $doc) }}" method="POST" style="display:none">
+                                    @csrf 
+                                    @method('DELETE')
+                                </form>
                             </div>
-                        </div>
-                    </td>
-                    <td style="padding:0.875rem 1rem;color:var(--text-muted);font-size:0.9rem">{{ $doc->document_date?->format('d M Y') ?? '-' }}</td>
-                    <td style="padding:0.875rem 1rem">
-                        <span style="background:#f1f5f9;padding:0.35rem 0.65rem;border-radius:6px;font-size:0.8rem;color:var(--text-muted);font-weight:500">{{ $doc->file_size }}</span>
-                    </td>
-                    <td style="padding:0.875rem 1rem">
-                        @if($doc->status === 'published')
-                            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(34,197,94,0.1);color:#166534">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-                                Published
-                            </span>
-                        @else
-                            <span style="display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(234,179,8,0.1);color:#92400e">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="12" x2="16" y2="12"/></svg>
-                                Draft
-                            </span>
-                        @endif
-                    </td>
-                    <td style="padding:0.875rem 1rem;text-align:right">
-                        <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex">
-                            <a href="{{ $doc->file_url }}" target="_blank" class="btn-view" title="Preview">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
-                            </a>
-                            <a href="{{ route('admin.sk.edit', $doc) }}" class="btn-edit" title="Edit">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                            </a>
-                            <button type="button" onclick="confirmDeleteSk({{ $doc->id }}, '{{ addslashes(Str::limit($doc->name, 40)) }}')" class="btn-del" title="Hapus">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-                            </button>
-                            <form id="delete-sk-{{ $doc->id }}" action="{{ route('admin.sk.destroy', $doc) }}" method="POST" style="display:none">
-                                @csrf 
-                                @method('DELETE')
-                            </form>
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="6">
-                        <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">
-                            <div style="width:64px;height:64px;background:#f8fafc;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
-                                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
-                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                    <line x1="16" y1="13" x2="8" y2="13"/>
-                                    <line x1="16" y1="17" x2="8" y2="17"/>
-                                    <polyline points="10 9 9 9 8 9"/>
-                                </svg>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="6">
+                            <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">
+                                <div style="width:64px;height:64px;background:#f8fafc;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+                                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                        <line x1="16" y1="13" x2="8" y2="13"/>
+                                        <line x1="16" y1="17" x2="8" y2="17"/>
+                                        <polyline points="10 9 9 9 8 9"/>
+                                    </svg>
+                                </div>
+                                <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark);margin:0 0 0.5rem">Belum ada dokumen</h3>
+                                <p style="font-size:0.9rem;margin:0 0 1rem">Mulai tambahkan dokumen pertama Anda</p>
+                                <a href="{{ route('admin.sk.create') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                                    Tambah Dokumen Pertama
+                                </a>
                             </div>
-                            <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark);margin:0 0 0.5rem">Belum ada dokumen</h3>
-                            <p style="font-size:0.9rem;margin:0 0 1rem">Mulai tambahkan dokumen pertama Anda</p>
-                            <a href="{{ route('admin.sk.create') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                                Tambah Dokumen Pertama
-                            </a>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
+        </div>
+        
+        {{-- Pagination --}}
+        @if($dokumens->hasPages())
+        <div style="padding:1rem 1.5rem;border-top:1px solid rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
+            <div style="color:var(--text-muted);font-size:0.9rem">
+                Menampilkan {{ $dokumens->firstItem() }}-{{ $dokumens->lastItem() }} dari {{ $dokumens->total() }} dokumen
+            </div>
+            {!! $dokumens->withQueryString()->links() !!}
+        </div>
+        @endif
     </div>
+</div>
+
+{{-- Mobile Card View --}}
+<div class="mobile-card-view" style="padding:0">
+    @forelse($dokumens as $index => $doc)
+    <div class="doc-card">
+        <div class="doc-card-header">
+            <div class="doc-card-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                    <polyline points="14 2 14 8 20 8"/>
+                    <line x1="16" y1="13" x2="8" y2="13"/>
+                    <line x1="16" y1="17" x2="8" y2="17"/>
+                    <polyline points="10 9 9 9 8 9"/>
+                </svg>
+            </div>
+            <div class="doc-card-info">
+                <div class="doc-card-name">{{ Str::limit($doc->name, 50) }}</div>
+                <div class="doc-card-filename">{{ $doc->file_name }}</div>
+            </div>
+        </div>
+        <div class="doc-card-meta">
+            <div class="doc-card-meta-item">
+                <span class="doc-card-meta-label">Tanggal</span>
+                <span class="doc-card-meta-value">{{ $doc->document_date?->format('d M Y') ?? '-' }}</span>
+            </div>
+            <div class="doc-card-meta-item">
+                <span class="doc-card-meta-label">Ukuran</span>
+                <span class="doc-card-meta-value">{{ $doc->file_size }}</span>
+            </div>
+            <div class="doc-card-meta-item">
+                <span class="doc-card-meta-label">Status</span>
+                <span class="doc-card-meta-value">
+                    @if($doc->status === 'published')
+                        <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;background:rgba(34,197,94,0.1);color:#166534">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+                            Published
+                        </span>
+                    @else
+                        <span style="display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;font-size:0.7rem;font-weight:600;background:rgba(234,179,8,0.1);color:#92400e">
+                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="12" y1="12" x2="16" y2="12"/></svg>
+                            Draft
+                        </span>
+                    @endif
+                </span>
+            </div>
+            <div class="doc-card-meta-item">
+                <span class="doc-card-meta-label">No. Urut</span>
+                <span class="doc-card-meta-value">{{ ($dokumens->currentPage()-1)*$dokumens->perPage() + $index+1 }}</span>
+            </div>
+        </div>
+        <div class="doc-card-actions">
+            <a href="{{ $doc->file_url }}" target="_blank" title="Preview" onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            </a>
+            <a href="{{ route('admin.sk.edit', $doc) }}" title="Edit" onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            </a>
+            <button type="button" onclick="confirmDeleteSk({{ $doc->id }}, '{{ addslashes(Str::limit($doc->name, 40)) }}')" title="Hapus" onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'" onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+            </button>
+            <form id="delete-sk-{{ $doc->id }}" action="{{ route('admin.sk.destroy', $doc) }}" method="POST" style="display:none">
+                @csrf 
+                @method('DELETE')
+            </form>
+        </div>
+    </div>
+    @empty
+    <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">
+        <div style="width:64px;height:64px;background:#f8fafc;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#94a3b8" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                <polyline points="14 2 14 8 20 8"/>
+                <line x1="16" y1="13" x2="8" y2="13"/>
+                <line x1="16" y1="17" x2="8" y2="17"/>
+                <polyline points="10 9 9 9 8 9"/>
+            </svg>
+        </div>
+        <h3 style="font-size:1rem;font-weight:700;color:var(--text-dark);margin:0 0 0.5rem">Belum ada dokumen</h3>
+        <p style="font-size:0.9rem;margin:0 0 1rem">Mulai tambahkan dokumen pertama Anda</p>
+        <a href="{{ route('admin.sk.create') }}" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Tambah Dokumen Pertama
+        </a>
+    </div>
+    @endforelse
     
-    {{-- Pagination --}}
+    {{-- Pagination for Mobile --}}
     @if($dokumens->hasPages())
     <div style="padding:1rem 1.5rem;border-top:1px solid rgba(0,0,0,0.06);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.5rem">
-        <div style="color:var(--text-muted);font-size:0.9rem">
-            Menampilkan {{ $dokumens->firstItem() }}-{{ $dokumens->lastItem() }} dari {{ $dokumens->total() }} dokumen
+        <div style="color:var(--text-muted);font-size:0.85rem">
+            {{ $dokumens->firstItem() }}-{{ $dokumens->lastItem() }} dari {{ $dokumens->total() }}
         </div>
         {!! $dokumens->withQueryString()->links() !!}
     </div>

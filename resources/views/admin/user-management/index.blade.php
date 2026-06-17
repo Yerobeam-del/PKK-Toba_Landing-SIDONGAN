@@ -16,21 +16,6 @@
     </a>
 </div>
 
-{{-- Success Message --}}
-@if(session('success'))
-<div style="background:#f0fdf4;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#166534;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <span>{{ session('success') }}</span>
-</div>
-@endif
-
-@if(session('error'))
-<div style="background:#fef2f2;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#dc2626;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
-    <span>{{ session('error') }}</span>
-</div>
-@endif
-
 {{-- Stats Cards --}}
 <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem">
     {{-- Total Pengguna --}}
@@ -151,58 +136,61 @@
                         <td style="padding:1rem">
                             @if($user->email_verified_at)
                                 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(34,197,94,0.1);color:#166534">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <polyline points="20 6 9 17 4 12"/>
-                                    </svg>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
                                     Aktif
                                 </span>
                             @else
                                 <span style="display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:0.75rem;font-weight:600;background:rgba(239,68,68,0.1);color:#dc2626">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                        <circle cx="12" cy="12" r="10"/>
-                                        <line x1="12" y1="8" x2="12" y2="12"/>
-                                        <line x1="12" y1="16" x2="12.01" y2="16"/>
-                                    </svg>
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                                     Nonaktif
                                 </span>
                             @endif
                         </td>
                         <td style="padding:1rem;color:var(--text-muted);font-size:0.9rem">{{ $user->created_at->format('d M Y') }}</td>
                         <td style="padding:1rem;text-align:right">
-                            <div class="actions" style="justify-content:flex-end;gap:0.5rem">
+                            <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex;align-items:center">
                                 {{-- Tombol View --}}
-                                <a href="{{ route('admin.user-management.show', $user) }}" class="btn-view" title="Lihat" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#f8fafc;color:#64748b;border-radius:6px;transition:all 0.2s">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                <a href="{{ route('admin.user-management.show', $user) }}" title="Lihat" 
+                                   style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                                   onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'"
+                                   onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                 </a>
                                 
-                                {{-- Tombol Edit & Delete HANYA untuk Super Admin --}}
+                                {{-- Tombol untuk Super Admin --}}
                                 @if(auth()->user()->sidongan_role === 'super_admin')
                                     
-                                    {{-- TOMBOL TOGGLE STATUS --}}
-                                    <button type="button" onclick="toggleStatus({{ $user->id }})" 
+                                    {{-- Tombol Toggle Status --}}
+                                    <button type="button" onclick="toggleStatus({{ $user->id }}, '{{ addslashes($user->name) }}', {{ $user->email_verified_at ? 'true' : 'false' }})" 
                                             title="{{ $user->email_verified_at ? 'Nonaktifkan Akun' : 'Aktifkan Akun' }}" 
-                                            style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:{{ $user->email_verified_at ? '#fef3c7' : '#f0fdf4' }};color:{{ $user->email_verified_at ? '#d97706' : '#16a34a' }};border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
-                                            onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 4px 12px rgba(0,0,0,0.1)'"
-                                            onmouseout="this.style.transform='';this.style.boxShadow='none'">
+                                            style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                            onmouseover="this.style.background='{{ $user->email_verified_at ? '#fef3c7' : '#f0fdf4' }}';this.style.color='{{ $user->email_verified_at ? '#d97706' : '#16a34a' }}'"
+                                            onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
                                         @if($user->email_verified_at)
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                         @else
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                         @endif
                                     </button>
                                     
                                     {{-- Tombol Edit --}}
-                                    <a href="{{ route('admin.user-management.edit', $user) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                    <a href="{{ route('admin.user-management.edit', $user) }}" title="Edit" 
+                                       style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                                       onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'"
+                                       onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                     </a>
                                     
                                     {{-- Tombol Delete --}}
                                     @if($user->id !== auth()->id() && $user->sidongan_role !== 'super_admin')
-                                    <form action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:inline" onsubmit="return confirm('Yakin ingin menghapus akun {{ $user->name }}?')">
+                                    <button type="button" onclick="confirmDeleteUser({{ $user->id }}, '{{ addslashes($user->name) }}')" title="Hapus" 
+                                            style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                            onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'"
+                                            onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                    </button>
+                                    <form id="delete-user-{{ $user->id }}" action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:none">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;transition:all 0.2s;border:none;cursor:pointer">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                        </button>
                                     </form>
                                     @endif
                                     
@@ -266,23 +254,31 @@
                             @endif
                         </td>
                         <td style="padding:1rem;text-align:right">
-                            <div class="actions" style="justify-content:flex-end;gap:0.5rem">
+                            <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex;align-items:center">
                                 @if(auth()->user()->sidongan_role === 'super_admin')
-                                <button type="button" onclick="toggleStatus({{ $user->id }})" title="Nonaktifkan Akun" 
-                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef3c7;color:#d97706;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                <button type="button" onclick="toggleStatus({{ $user->id }}, '{{ addslashes($user->name) }}', true)" title="Nonaktifkan Akun" 
+                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                        onmouseover="this.style.background='#fef3c7';this.style.color='#d97706'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                 </button>
-                                @endif
-                                <a href="{{ route('admin.user-management.edit', $user) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <a href="{{ route('admin.user-management.edit', $user) }}" title="Edit" 
+                                   style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                                   onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'"
+                                   onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
                                 @if($user->id !== auth()->id() && $user->sidongan_role !== 'super_admin')
-                                <form action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus akun {{ $user->name }}?')">
+                                <button type="button" onclick="confirmDeleteUser({{ $user->id }}, '{{ addslashes($user->name) }}')" title="Hapus" 
+                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                        onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                                <form id="delete-user-{{ $user->id }}" action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:none">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    </button>
                                 </form>
+                                @endif
                                 @endif
                             </div>
                         </td>
@@ -338,23 +334,31 @@
                             </span>
                         </td>
                         <td style="padding:1rem;text-align:right">
-                            <div class="actions" style="justify-content:flex-end;gap:0.5rem">
+                            <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex;align-items:center">
                                 @if(auth()->user()->sidongan_role === 'super_admin')
-                                <button type="button" onclick="toggleStatus({{ $user->id }})" title="Aktifkan Akun" 
-                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#f0fdf4;color:#16a34a;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                <button type="button" onclick="toggleStatus({{ $user->id }}, '{{ addslashes($user->name) }}', false)" title="Aktifkan Akun" 
+                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                        onmouseover="this.style.background='#f0fdf4';this.style.color='#16a34a'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                 </button>
-                                @endif
-                                <a href="{{ route('admin.user-management.edit', $user) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <a href="{{ route('admin.user-management.edit', $user) }}" title="Edit" 
+                                   style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                                   onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'"
+                                   onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
                                 @if($user->id !== auth()->id() && $user->sidongan_role !== 'super_admin')
-                                <form action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus akun {{ $user->name }}?')">
+                                <button type="button" onclick="confirmDeleteUser({{ $user->id }}, '{{ addslashes($user->name) }}')" title="Hapus" 
+                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                        onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                                <form id="delete-user-{{ $user->id }}" action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:none">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    </button>
                                 </form>
+                                @endif
                                 @endif
                             </div>
                         </td>
@@ -416,28 +420,36 @@
                             </div>
                         </td>
                         <td style="padding:1rem;text-align:right">
-                            <div class="actions" style="justify-content:flex-end;gap:0.5rem">
+                            <div class="actions" style="justify-content:flex-end;gap:0.5rem;display:flex;align-items:center">
                                 @if(auth()->user()->sidongan_role === 'super_admin')
-                                <button type="button" onclick="toggleStatus({{ $user->id }})" 
+                                <button type="button" onclick="toggleStatus({{ $user->id }}, '{{ addslashes($user->name) }}', {{ $user->email_verified_at ? 'true' : 'false' }})" 
                                         title="{{ $user->email_verified_at ? 'Nonaktifkan' : 'Aktifkan' }}" 
-                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:{{ $user->email_verified_at ? '#fef3c7' : '#f0fdf4' }};color:{{ $user->email_verified_at ? '#d97706' : '#16a34a' }};border-radius:6px;border:none;cursor:pointer;transition:all 0.2s">
+                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                        onmouseover="this.style.background='{{ $user->email_verified_at ? '#fef3c7' : '#f0fdf4' }}';this.style.color='{{ $user->email_verified_at ? '#d97706' : '#16a34a' }}'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
                                     @if($user->email_verified_at)
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
                                     @else
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
                                     @endif
                                 </button>
-                                @endif
-                                <a href="{{ route('admin.user-management.edit', $user) }}" class="btn-edit" title="Edit" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#eff6ff;color:#2563eb;border-radius:6px;transition:all 0.2s">
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                                <a href="{{ route('admin.user-management.edit', $user) }}" title="Edit" 
+                                   style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;transition:all 0.2s;cursor:pointer"
+                                   onmouseover="this.style.background='#eff6ff';this.style.color='#2563eb'"
+                                   onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
                                 </a>
                                 @if($user->id !== auth()->id() && $user->sidongan_role !== 'super_admin')
-                                <form action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:inline" onsubmit="return confirm('Hapus akun {{ $user->name }}?')">
+                                <button type="button" onclick="confirmDeleteUser({{ $user->id }}, '{{ addslashes($user->name) }}')" title="Hapus" 
+                                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"
+                                        onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444'"
+                                        onmouseout="this.style.background='transparent';this.style.color='#94a3b8'">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                                </button>
+                                <form id="delete-user-{{ $user->id }}" action="{{ route('admin.user-management.destroy', $user) }}" method="POST" style="display:none">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="btn-del" title="Hapus" style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
-                                    </button>
                                 </form>
+                                @endif
                                 @endif
                             </div>
                         </td>
@@ -457,152 +469,32 @@
 
 <script>
 // ==========================================
-// TOAST NOTIFICATION SYSTEM (INLINE)
-// ==========================================
-const Toast = {
-    container: null,
-    
-    init() {
-        if (this.container) return;
-        this.container = document.createElement('div');
-        this.container.id = 'toast-container';
-        this.container.style.cssText = 'position:fixed;top:20px;right:20px;z-index:9999;display:flex;flex-direction:column;gap:10px;pointer-events:none;';
-        document.body.appendChild(this.container);
-        
-        if (!document.getElementById('toast-styles')) {
-            const style = document.createElement('style');
-            style.id = 'toast-styles';
-            style.textContent = `
-                @keyframes toastSlideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-                @keyframes toastSlideOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
-                @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
-                @keyframes modalSlideIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
-                .toast-item { pointer-events: auto; cursor: pointer; transition: all 0.3s ease; }
-                .toast-item:hover { transform: translateX(-5px); box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important; }
-                .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.5); z-index: 10000; display: flex; align-items: center; justify-content: center; animation: modalFadeIn 0.2s ease; }
-                .modal-content { background: white; border-radius: 12px; padding: 1.5rem; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3); animation: modalSlideIn 0.3s ease; }
-                .modal-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin-bottom: 0.75rem; }
-                .modal-message { color: #64748b; margin-bottom: 1.5rem; line-height: 1.6; }
-                .modal-actions { display: flex; gap: 0.75rem; justify-content: flex-end; }
-                .btn-modal { padding: 0.6rem 1.25rem; border-radius: 8px; font-weight: 600; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; border: none; }
-                .btn-modal:hover { transform: translateY(-2px); }
-                .btn-cancel { background: #f1f5f9; color: #475569; }
-                .btn-cancel:hover { background: #e2e8f0; }
-                .btn-confirm { background: #dc2626; color: white; }
-                .btn-confirm:hover { background: #b91c1c; }
-            `;
-            document.head.appendChild(style);
-        }
-    },
-    
-    show(message, type = 'info', duration = 4000) {
-        this.init();
-        const configs = {
-            success: { bg: '#f0fdf4', border: '#22c55e', text: '#166534', icon: '<polyline points="20 6 9 17 4 12"/>' },
-            error: { bg: '#fef2f2', border: '#ef4444', text: '#dc2626', icon: '<circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>' },
-            warning: { bg: '#fffbeb', border: '#f59e0b', text: '#92400e', icon: '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>' },
-            info: { bg: '#eff6ff', border: '#3b82f6', text: '#1e40af', icon: '<circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>' }
-        };
-        
-        const config = configs[type] || configs.info;
-        const toast = document.createElement('div');
-        toast.className = 'toast-item';
-        toast.style.cssText = `background:${config.bg};border-left:4px solid ${config.border};color:${config.text};padding:1rem 1.25rem;border-radius:8px;box-shadow:0 4px 12px rgba(0,0,0,0.15);display:flex;align-items:center;gap:0.75rem;min-width:300px;max-width:500px;animation:toastSlideIn 0.3s ease;`;
-        
-        toast.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${config.border}" stroke-width="2" style="flex-shrink:0">${config.icon}</svg>
-            <span style="font-weight:500;font-size:0.9rem;flex:1;">${message}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${config.text}" stroke-width="2" style="opacity:0.5;cursor:pointer;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        `;
-        
-        toast.querySelector('svg:last-child').addEventListener('click', () => this.remove(toast));
-        this.container.appendChild(toast);
-        
-        if (duration > 0) {
-            setTimeout(() => this.remove(toast), duration);
-        }
-        
-        return toast;
-    },
-    
-    remove(toast) {
-        toast.style.animation = 'toastSlideOut 0.3s ease';
-        setTimeout(() => toast.remove(), 300);
-    },
-    
-    confirm(message, options = {}) {
-        return new Promise((resolve) => {
-            this.init();
-            const title = options.title || 'Konfirmasi';
-            const confirmText = options.confirmText || 'Ya';
-            const cancelText = options.cancelText || 'Batal';
-            const type = options.type || 'warning';
-            
-            const colors = {
-                warning: { button: '#dc2626' },
-                danger: { button: '#dc2626' },
-                info: { button: '#3b82f6' },
-                success: { button: '#22c55e' }
-            };
-            
-            const color = colors[type] || colors.warning;
-            
-            const overlay = document.createElement('div');
-            overlay.className = 'modal-overlay';
-            overlay.innerHTML = `
-                <div class="modal-content">
-                    <div class="modal-title">${title}</div>
-                    <div class="modal-message">${message}</div>
-                    <div class="modal-actions">
-                        <button class="btn-modal btn-cancel">${cancelText}</button>
-                        <button class="btn-modal btn-confirm" style="background:${color.button}">${confirmText}</button>
-                    </div>
-                </div>
-            `;
-            
-            document.body.appendChild(overlay);
-            
-            const handleResponse = (confirmed) => {
-                overlay.style.animation = 'modalFadeIn 0.2s ease reverse';
-                setTimeout(() => overlay.remove(), 200);
-                resolve(confirmed);
-            };
-            
-            overlay.querySelector('.btn-cancel').addEventListener('click', () => handleResponse(false));
-            overlay.querySelector('.btn-confirm').addEventListener('click', () => handleResponse(true));
-            overlay.addEventListener('click', (e) => {
-                if (e.target === overlay) handleResponse(false);
-            });
-        });
-    },
-    
-    success(message, duration = 4000) { return this.show(message, 'success', duration); },
-    error(message, duration = 5000) { return this.show(message, 'error', duration); },
-    warning(message, duration = 4000) { return this.show(message, 'warning', duration); },
-    info(message, duration = 4000) { return this.show(message, 'info', duration); }
-};
-
-// ==========================================
 // TOGGLE STATUS FUNCTION
 // ==========================================
-async function toggleStatus(userId) {
-    const confirmed = await Toast.confirm(
-        'Apakah Anda yakin ingin mengubah status akun ini?',
-        {
-            title: 'Konfirmasi Perubahan Status',
-            confirmText: 'Ya, Ubah',
-            cancelText: 'Batal',
-            type: 'warning'
-        }
-    );
-    
-    if (!confirmed) return;
+async function toggleStatus(userId, userName, currentStatus) {
+    const action = currentStatus ? 'menonaktifkan' : 'mengaktifkan';
     
     try {
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            const confirmed = await Toast.confirm(
+                `Apakah Anda yakin ingin <strong>${action}</strong> akun <strong>"${userName}"</strong>?`,
+                {
+                    title: 'Konfirmasi Perubahan Status',
+                    confirmText: 'Ya, Ubah',
+                    cancelText: 'Batal',
+                    type: 'warning'
+                }
+            );
+            
+            if (!confirmed) return;
+        } else {
+            if (!confirm(`Apakah Anda yakin ingin ${action} akun "${userName}"?`)) return;
+        }
+        
         const response = await fetch(`/admin/user-management/${userId}/toggle-status`, {
             method: 'POST',
             headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}',
                 'Accept': 'application/json',
                 'Content-Type': 'application/json'
             }
@@ -611,14 +503,56 @@ async function toggleStatus(userId) {
         const data = await response.json();
         
         if (data.success) {
-            Toast.success(data.message);
+            if (typeof Toast !== 'undefined') {
+                Toast.success(data.message);
+            }
             setTimeout(() => location.reload(), 1000);
         } else {
-            Toast.error(data.message);
+            if (typeof Toast !== 'undefined') {
+                Toast.error(data.message);
+            } else {
+                alert(data.message);
+            }
         }
     } catch (error) {
         console.error('Error:', error);
-        Toast.error('Terjadi kesalahan saat mengubah status akun');
+        if (typeof Toast !== 'undefined') {
+            Toast.error('Terjadi kesalahan saat mengubah status akun');
+        } else {
+            alert('Terjadi kesalahan saat mengubah status akun');
+        }
+    }
+}
+
+// ==========================================
+// DELETE CONFIRMATION
+// ==========================================
+async function confirmDeleteUser(id, name) {
+    try {
+        if (typeof Toast !== 'undefined' && typeof Toast.confirm === 'function') {
+            const confirmed = await Toast.confirm(
+                `Akun <strong>"${name}"</strong> akan dihapus secara permanen. Tindakan ini tidak dapat dibatalkan.`,
+                {
+                    title: 'Hapus Akun?',
+                    confirmText: 'Ya, Hapus',
+                    cancelText: 'Batal',
+                    type: 'danger'
+                }
+            );
+            
+            if (confirmed) {
+                document.getElementById('delete-user-' + id).submit();
+            }
+        } else {
+            if (confirm(`Hapus akun "${name}"?`)) {
+                document.getElementById('delete-user-' + id).submit();
+            }
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        if (confirm(`Hapus akun "${name}"?`)) {
+            document.getElementById('delete-user-' + id).submit();
+        }
     }
 }
 

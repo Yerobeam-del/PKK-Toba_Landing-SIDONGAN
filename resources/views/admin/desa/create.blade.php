@@ -3,14 +3,41 @@
 @section('page-title', 'Tambah Desa Baru')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .desa-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .desa-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .desa-header .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .form-grid-3 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 
 {{-- Header --}}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-    <div>
+<div class="desa-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem">
+    <div style="flex:1;min-width:0">
         <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0">Tambah Desa</h1>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Tambahkan data desa/kelurahan baru ke dalam sistem</p>
     </div>
-    <a href="{{ route('admin.desa.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">← Kembali</a>
+    <a href="{{ route('admin.desa.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark);white-space:nowrap;flex-shrink:0">← Kembali</a>
 </div>
 
 {{-- Form Card --}}
@@ -22,14 +49,12 @@
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Kecamatan *</label>
             <div style="position:relative">
-                {{-- Ganti SVG ini dengan Pin Lokasi --}}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
                     style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:10">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                 </svg>
                 
-                {{-- Select Element dengan Padding yang Aman --}}
                 <select name="kecamatan_id" id="kecamatanSelect" class="form-control" required 
                         style="width:100%;padding:0.75rem 2.5rem 0.75rem 3rem;border:1px solid rgba(0,0,0,0.06);border-radius:8px;background:#fff;font-family:inherit;font-size:0.9rem;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 0.85rem center;background-size:18px;cursor:pointer;line-height:1.5">
                     <option value="">Memuat data kecamatan...</option>
@@ -42,14 +67,12 @@
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Desa / Kelurahan *</label>
             <div style="position:relative">
-                {{-- Icon SVG --}}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
                      style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:10">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
                     <polyline points="9 22 9 12 15 12 15 22"/>
                 </svg>
                 
-                {{-- Select Element --}}
                 <select name="desa_code" id="desaSelect" class="form-control" required disabled
                         style="width:100%;padding:0.7rem 2.5rem 0.7rem 2.8rem;border:1px solid rgba(0,0,0,0.06);border-radius:8px;background:#fff;font-family:inherit;font-size:0.9rem;appearance:none;-webkit-appearance:none;-moz-appearance:none;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E&quot;);background-repeat:no-repeat;background-position:right 0.85rem center;background-size:18px;cursor:not-allowed;opacity:0.6;line-height:1.5">
                     <option value="">Pilih Kecamatan Terlebih Dahulu</option>
@@ -61,7 +84,7 @@
         </div>
 
         {{-- Population, Households & Sort Order --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-3" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Jumlah Penduduk</label>
                 <input type="number" name="population" class="form-control" value="{{ old('population', 0) }}" min="0" placeholder="0">
@@ -84,7 +107,6 @@
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Foto Desa</label>
             <input type="file" name="image" class="form-control" accept="image/*" id="imageInput">
             
-            {{-- Preview --}}
             <div id="imagePreview" style="margin-top:1rem;display:none">
                 <img id="previewImg" src="" style="width:100%;max-width:200px;height:auto;border-radius:12px;object-fit:cover;background:#f8fafc">
                 <span style="display:block;font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Preview Foto</span>
@@ -132,10 +154,9 @@ const desaSelect = document.getElementById('desaSelect');
 const desaNameInput = document.getElementById('desaNameInput');
 const desaError = document.getElementById('desaError');
 const desaHelp = document.getElementById('desaHelp');
-const kecamatanError = document.getElementById('kecamatanError');
 const sortOrderInput = document.getElementById('sortOrderInput');
 
-// 1. Load Max Sort Order (Auto-fill Urutan)
+// 1. Load Max Sort Order
 async function loadMaxSortOrder() {
     try {
         const res = await fetch('/api/v1/desas/max-sort-order');
@@ -145,7 +166,7 @@ async function loadMaxSortOrder() {
             const maxOrder = json.data?.max_sort_order ?? 0;
             sortOrderInput.value = maxOrder + 1;
         } else {
-            sortOrderInput.value = 1; // Default jika error
+            sortOrderInput.value = 1;
         }
     } catch (error) {
         console.error('Error loading max sort order:', error);
@@ -155,10 +176,8 @@ async function loadMaxSortOrder() {
 
 // 2. Load Kecamatan from our API
 document.addEventListener('DOMContentLoaded', async () => {
-    // Load max sort order first
     await loadMaxSortOrder();
     
-    // Load kecamatan
     try {
         const res = await fetch('/api/v1/kecamatans');
         const json = await res.json();
@@ -179,8 +198,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     } catch (error) {
         console.error('Error loading kecamatan:', error);
         kecamatanSelect.innerHTML = '<option value="">Gagal memuat kecamatan</option>';
-        kecamatanError.style.display = 'block';
-        kecamatanError.textContent = 'Error: ' + error.message;
     }
 });
 
@@ -190,7 +207,6 @@ kecamatanSelect.addEventListener('change', async function() {
     const wilayahCode = selectedOption.dataset.wilayahCode;
     const kecName = selectedOption.textContent;
     
-    // Reset
     desaSelect.innerHTML = '<option value="">Memuat data desa...</option>';
     desaSelect.disabled = true;
     desaSelect.style.opacity = '0.6';
@@ -225,7 +241,6 @@ kecamatanSelect.addEventListener('change', async function() {
             return;
         }
         
-        // Populate dropdown
         desaSelect.innerHTML = '<option value="">-- Pilih Desa --</option>';
         desaSelect.disabled = false;
         desaSelect.style.opacity = '1';
@@ -276,9 +291,7 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
     }
 });
 
-// ==========================================
-// CHECKBOX ANIMATION HANDLER
-// ==========================================
+// Checkbox animation handler
 function updateCheckboxStyle(boxId, checkId, isChecked) {
     const box = document.getElementById(boxId);
     const check = document.getElementById(checkId);
@@ -303,10 +316,8 @@ function updateCheckboxStyle(boxId, checkId, isChecked) {
 // Initialize checkbox state
 const isActiveCheckbox = document.getElementById('isActive');
 if (isActiveCheckbox) {
-    // Set initial state (checked by default)
     updateCheckboxStyle('isActiveBox', 'isActiveCheck', isActiveCheckbox.checked);
     
-    // On change
     isActiveCheckbox.addEventListener('change', function() {
         updateCheckboxStyle('isActiveBox', 'isActiveCheck', this.checked);
     });

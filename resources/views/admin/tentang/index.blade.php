@@ -3,14 +3,60 @@
 @section('page-title', 'Tentang Kami')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .tentang-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .tentang-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .section-title {
+        font-size: 1rem !important;
+    }
+    
+    .program-item {
+        flex-direction: column !important;
+        align-items: stretch !important;
+    }
+    
+    .program-item button {
+        width: 100% !important;
+        margin-top: 0.5rem !important;
+    }
+    
+    .maps-preview-container {
+        overflow: hidden !important;
+    }
+    
+    .maps-preview-container iframe {
+        width: 100% !important;
+        height: 300px !important;
+    }
+    
+    .action-buttons {
+        flex-direction: column-reverse !important;
+    }
+    
+    .action-buttons .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+}
+</style>
 
-{{-- Success Message --}}
-@if(session('success'))
-<div style="background:#f0fdf4;padding:1rem;margin-bottom:1.5rem;border-radius:10px;color:#166534;display:flex;align-items:center;gap:0.75rem">
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-    <span>{{ session('success') }}</span>
+{{-- Header Section --}}
+<div class="tentang-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem">
+    <div style="flex:1;min-width:0">
+        <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0;letter-spacing:-0.5px">Tentang Kami</h1>
+        <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Kelola informasi halaman tentang kami</p>
+    </div>
 </div>
-@endif
 
 {{-- Form Card --}}
 <div class="card" style="padding:0;overflow:hidden">
@@ -26,7 +72,7 @@
                     <line x1="16" y1="13" x2="8" y2="13"/>
                     <line x1="16" y1="17" x2="8" y2="17"/>
                 </svg>
-                <h3 style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:0">Informasi Umum</h3>
+                <h3 class="section-title" style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:0">Informasi Umum</h3>
             </div>
             <p style="color:var(--text-muted);font-size:0.9rem;margin:0 0 1rem 0">Edit judul dan deskripsi halaman</p>
             
@@ -64,7 +110,7 @@
                     <line x1="3" y1="12" x2="3.01" y2="12"/>
                     <line x1="3" y1="18" x2="3.01" y2="18"/>
                 </svg>
-                <h3 style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:0">Daftar Program</h3>
+                <h3 class="section-title" style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:0">Daftar Program</h3>
             </div>
             <p style="color:var(--text-muted);font-size:0.9rem;margin:0 0 1rem 0">Tambahkan atau edit program-program PKK</p>
             
@@ -73,19 +119,21 @@
                 <div class="program-item" style="display:flex;gap:0.75rem;align-items:center">
                     <input type="text" name="programs[]" class="form-control" value="{{ $program }}" 
                            placeholder="Nama program" required style="flex:1">
-                    <button type="button" onclick="this.parentElement.remove()" 
-                            style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s"
-                            title="Hapus program">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+                    <button type="button" onclick="removeProgram(this)" 
+                            title="Hapus program"
+                            style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s"
+                            onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444';this.style.transform='translateY(-2px)'"
+                            onmouseout="this.style.background='transparent';this.style.color='#94a3b8';this.style.transform='translateY(0)'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
                     </button>
                 </div>
                 @endforeach
             </div>
             
             <button type="button" onclick="addProgram()" 
-                    style="padding:0.6rem 1rem;background:#f8fafc;color:var(--text-dark);border:1px solid rgba(0,0,0,0.06);border-radius:8px;cursor:pointer;margin-top:1rem;display:inline-flex;align-items:center;gap:0.5rem;font-weight:500;transition:all 0.2s"
-                    onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)'"
-                    onmouseout="this.style.borderColor='rgba(0,0,0,0.06)';this.style.color='var(--text-dark)'">
+                    style="padding:0.6rem 1rem;background:transparent;color:var(--text-muted);border:1px dashed rgba(0,0,0,0.15);border-radius:8px;cursor:pointer;margin-top:1rem;display:inline-flex;align-items:center;gap:0.5rem;font-weight:500;transition:all 0.2s;width:100%;justify-content:center"
+                    onmouseover="this.style.borderColor='var(--primary)';this.style.color='var(--primary)';this.style.background='rgba(20,184,166,0.05)'"
+                    onmouseout="this.style.borderColor='rgba(0,0,0,0.15)';this.style.color='var(--text-muted)';this.style.background='transparent'">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
                 Tambah Program
             </button>
@@ -98,7 +146,7 @@
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
                     <circle cx="12" cy="10" r="3"/>
                 </svg>
-                <h3 style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:0">Lokasi Google Maps</h3>
+                <h3 class="section-title" style="font-size:1.1rem;font-weight:700;color:var(--primary);margin:0">Lokasi Google Maps</h3>
             </div>
             <p style="color:var(--text-muted);font-size:0.9rem;margin:0 0 1rem 0">Embed peta lokasi kantor PKK</p>
             
@@ -127,7 +175,7 @@
                 </div>
                 
                 {{-- Preview Maps --}}
-                <div style="margin-top:0.5rem;padding:1rem;background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,0.06)">
+                <div class="maps-preview-container" style="margin-top:0.5rem;padding:1rem;background:#fff;border-radius:10px;border:1px solid rgba(0,0,0,0.06);overflow:hidden">
                     <label style="font-weight:600;margin-bottom:0.75rem;display:block;font-size:0.9rem">Preview Peta:</label>
                     <div style="border-radius:8px;overflow:hidden">
                         {!! $tentang->maps_embed_code !!}
@@ -137,7 +185,7 @@
         </div>
         
         {{-- Action Buttons --}}
-        <div style="padding:1.5rem;display:flex;gap:0.75rem;justify-content:flex-end;background:#f8fafc">
+        <div class="action-buttons" style="padding:1.5rem;display:flex;gap:0.75rem;justify-content:flex-end;background:#f8fafc">
             <a href="{{ route('admin.dashboard') }}" class="btn" style="background:#fff;color:var(--text-dark)">Batal</a>
             <button type="submit" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:0.5rem">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -159,13 +207,36 @@ function addProgram() {
     div.style.cssText = 'display:flex;gap:0.75rem;align-items:center';
     div.innerHTML = `
         <input type="text" name="programs[]" class="form-control" placeholder="Nama program" required style="flex:1">
-        <button type="button" onclick="this.parentElement.remove()" 
-                style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:#fef2f2;color:#ef4444;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s"
-                title="Hapus program">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
+        <button type="button" onclick="removeProgram(this)" 
+                title="Hapus program"
+                style="width:36px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#94a3b8;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s"
+                onmouseover="this.style.background='#fef2f2';this.style.color='#ef4444';this.style.transform='translateY(-2px)'"
+                onmouseout="this.style.background='transparent';this.style.color='#94a3b8';this.style.transform='translateY(0)'">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
         </button>
     `;
     container.appendChild(div);
+    
+    // Focus ke input baru
+    const newInput = div.querySelector('input');
+    if (newInput) newInput.focus();
+}
+
+function removeProgram(btn) {
+    const container = document.getElementById('programsContainer');
+    const items = container.querySelectorAll('.program-item');
+    
+    if (items.length <= 1) {
+        if (typeof Toast !== 'undefined') {
+            Toast.warning('Minimal harus ada 1 program');
+        } else {
+            alert('Minimal harus ada 1 program');
+        }
+        return;
+    }
+    
+    btn.parentElement.remove();
 }
 </script>
+
 @endsection

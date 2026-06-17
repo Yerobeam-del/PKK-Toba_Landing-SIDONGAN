@@ -10,12 +10,20 @@ use Illuminate\Support\Facades\Storage;
 class HeroSliderController extends Controller
 {
     /**
+     * Batas maksimal gambar yang bisa diupload
+     */
+    const MAX_SLIDERS = 10;
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
-        $sliders = HeroSlider::orderBy('sort_order')->get();
-        return view('admin.hero-sliders.index', compact('sliders'));
+        $sliders = HeroSlider::orderBy('sort_order')->paginate(5); // Pagination 5 item per halaman
+        $totalSliders = HeroSlider::count();
+        $maxSliders = self::MAX_SLIDERS;
+        
+        return view('admin.hero-sliders.index', compact('sliders', 'totalSliders', 'maxSliders'));
     }
 
     /**
@@ -23,6 +31,13 @@ class HeroSliderController extends Controller
      */
     public function store(Request $request)
     {
+        // VALIDASI MAKSIMAL 10 GAMBAR
+        $currentCount = HeroSlider::count();
+        if ($currentCount >= self::MAX_SLIDERS) {
+            return redirect()->route('admin.hero-sliders.index')
+                ->with('error', 'Batas maksimal ' . self::MAX_SLIDERS . ' gambar sudah tercapai. Hapus beberapa gambar terlebih dahulu untuk mengupload yang baru.');
+        }
+
         $validated = $request->validate([
             'image' => 'required|image|max:5120', // 5MB
             'display_duration' => 'nullable|integer|min:3|max:30',

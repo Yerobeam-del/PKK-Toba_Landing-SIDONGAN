@@ -3,14 +3,45 @@
 @section('page-title', 'Tambah Template Baru')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .template-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .template-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .template-header .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+    
+    .status-options {
+        flex-direction: column !important;
+    }
+    
+    .status-options label {
+        width: 100% !important;
+    }
+}
+</style>
 
 {{-- Header --}}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-    <div>
+<div class="template-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem">
+    <div style="flex:1;min-width:0">
         <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0">Tambah Template</h1>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Unggah template dokumen baru untuk PKK</p>
     </div>
-    <a href="{{ route('admin.template.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">← Kembali</a>
+    <a href="{{ route('admin.template.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark);white-space:nowrap;flex-shrink:0">← Kembali</a>
 </div>
 
 {{-- Form Card --}}
@@ -55,7 +86,7 @@
         </div>
 
         {{-- Date & Sort Order --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Tanggal Upload *</label>
                 <input type="date" name="upload_date" class="form-control" value="{{ old('upload_date', date('Y-m-d')) }}" required>
@@ -71,7 +102,7 @@
         {{-- Status Radio Buttons --}}
         <div style="margin-bottom:2rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Status *</label>
-            <div style="display:flex;gap:1rem;flex-wrap:wrap">
+            <div class="status-options" style="display:flex;gap:1rem;flex-wrap:wrap">
                 <label style="display:flex;align-items:center;gap:0.5rem;padding:0.65rem 1rem;background:#f8fafc;border:1px solid rgba(0,0,0,0.06);border-radius:8px;cursor:pointer;transition:all 0.2s" onmouseover="this.style.borderColor='rgba(34,197,94,0.5)'" onmouseout="this.style.borderColor='rgba(0,0,0,0.06)'">
                     <input type="radio" name="status" value="published" {{ old('status', 'published')==='published'?'checked':'' }} style="width:18px;height:18px;cursor:pointer">
                     <span style="display:inline-flex;align-items:center;gap:0.4rem;font-weight:500;font-size:0.9rem">
@@ -148,5 +179,4 @@ function clearFile() {
     fileSize.textContent = '';
 }
 </script>
-
 @endsection

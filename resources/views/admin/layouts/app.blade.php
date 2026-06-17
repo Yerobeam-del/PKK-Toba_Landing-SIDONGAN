@@ -291,6 +291,81 @@
             margin: 0.5rem 0 !important;
             line-height: 1.8 !important;
         }
+
+        /* ==========================================
+        ADMIN FOOTER
+        ========================================== */
+        .admin-footer {
+            background: #fff;
+            border-top: 1px solid #e2e8f0;
+            padding: 1.5rem 2rem;
+            margin-top: auto;
+        }
+
+        .admin-footer-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .admin-footer-left {
+            color: #64748b;
+            font-size: 0.875rem;
+        }
+
+        .admin-footer-left strong {
+            color: #334155;
+            font-weight: 600;
+        }
+
+        .admin-footer-right {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            color: #64748b;
+            align-items: center;
+        }
+
+        .admin-footer-right strong {
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .admin-footer-divider {
+            color: rgba(0,0,0,0.15);
+        }
+
+        .admin-footer-link {
+            color: #64748b;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .admin-footer-link:hover {
+            color: var(--primary);
+        }
+
+        @media (max-width: 768px) {
+            .admin-footer {
+                padding: 1.25rem 1.5rem;
+            }
+            
+            .admin-footer-inner {
+                flex-direction: column;
+                text-align: center;
+                gap: 0.75rem;
+            }
+            
+            .admin-footer-right {
+                flex-wrap: wrap;
+                justify-content: center;
+                gap: 1rem;
+            }
+        }
     </style>
     
     @stack('styles')
@@ -518,6 +593,22 @@
             <main class="content-area">
                 @yield('content')
             </main>
+
+            {{-- Admin Footer --}}
+            <footer class="admin-footer">
+                <div class="admin-footer-inner">
+                    <div class="admin-footer-left">
+                        &copy; {{ date('Y') }} <strong>PKK Kabupaten Toba</strong>. All rights reserved.
+                    </div>
+                    <div class="admin-footer-right">
+                        <span>Version 1.0.0</span>
+                        <span class="admin-footer-divider">|</span>
+                        <span>Developed by <strong>IT DEL</strong></span>
+                        <span class="admin-footer-divider">|</span>
+                        <a href="{{ route('admin.dashboard') }}" class="admin-footer-link">Dashboard</a>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 

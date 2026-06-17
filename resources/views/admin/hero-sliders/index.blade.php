@@ -3,63 +3,154 @@
 @section('page-title', 'Kelola Slider Beranda')
 
 @section('content')
+<style>
+@keyframes modalSlideUp {
+    from { opacity: 0; transform: translateY(20px) scale(0.95); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+}
+</style>
+
 <div style="margin-bottom:2rem">
 
-    {{-- Tambah Slide Baru --}}
-    <div class="card" style="margin-bottom:2rem">
-        <div style="padding:0 0 1rem 0;display:flex;align-items:center;gap:0.75rem">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2" style="flex-shrink:0"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            <h3 style="font-size:1.1rem;font-weight:700;color:#8b5cf6;margin:0">Tambah Slide Baru</h3>
+    {{-- NOTIFIKASI ERROR --}}
+    @if(session('error'))
+    <div class="error-alert">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="12" y1="8" x2="12" y2="12"/>
+            <line x1="12" y1="16" x2="12.01" y2="16"/>
+        </svg>
+        <div style="flex:1">
+            <strong>Batas Maksimal Tercapai</strong>
+            <p>{{ session('error') }}</p>
         </div>
-        <p style="color:var(--text-muted);margin:0 0 1.5rem 0;font-size:0.9rem;line-height:1.5">Upload gambar background untuk slider beranda. Teks konten tetap menggunakan desain yang sudah ada.</p>
+    </div>
+    @endif
+
+    {{-- INFO COUNTER & PROGRESS BAR --}}
+    <div class="capacity-card">
+        <div class="capacity-card-header">
+            <div class="capacity-card-info">
+                <div class="capacity-card-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2"/>
+                        <circle cx="8.5" cy="8.5" r="1.5"/>
+                        <polyline points="21 15 16 10 5 21"/>
+                    </svg>
+                </div>
+                <div>
+                    <div class="capacity-card-title">Kapasitas Slider Beranda</div>
+                    <div class="capacity-card-subtitle">Maksimal {{ $maxSliders }} gambar dapat diupload</div>
+                </div>
+            </div>
+            
+            <div class="capacity-counter">
+                <div class="counter-number {{ $totalSliders >= $maxSliders ? 'text-danger' : 'text-primary' }}">
+                    {{ $totalSliders }}<span style="font-size:1rem;color:var(--text-muted);font-weight:500">/{{ $maxSliders }}</span>
+                </div>
+                <div class="counter-text">
+                    @if($totalSliders >= $maxSliders)
+                        <span style="color:#ef4444;font-weight:600">Penuh</span>
+                    @else
+                        Sisa {{ $maxSliders - $totalSliders }} slot
+                    @endif
+                </div>
+            </div>
+        </div>
         
-        <form action="{{ route('admin.hero-sliders.store') }}" method="POST" enctype="multipart/form-data" style="display:grid;gap:1.5rem">
+        <div class="slider-progress-bar">
+            @php
+                $percentage = ($totalSliders / $maxSliders) * 100;
+                $progressClass = $percentage >= 80 ? 'high' : ($percentage >= 50 ? 'medium' : 'low');
+            @endphp
+            <div class="slider-progress-fill {{ $progressClass }}" style="width: {{ $percentage }}%"></div>
+        </div>
+    </div>
+
+    {{-- FORM TAMBAH SLIDE --}}
+    @if($totalSliders < $maxSliders)
+    <div class="add-slide-card">
+        <div class="add-slide-header">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8b5cf6" stroke-width="2">
+                <line x1="12" y1="5" x2="12" y2="19"/>
+                <line x1="5" y1="12" x2="19" y2="12"/>
+            </svg>
+            <h3 class="add-slide-title">Tambah Slide Baru</h3>
+        </div>
+        <p class="add-slide-description">Upload gambar background untuk slider beranda. Teks konten tetap menggunakan desain yang sudah ada.</p>
+        
+        <form action="{{ route('admin.hero-sliders.store') }}" method="POST" enctype="multipart/form-data">
             @csrf
             
-            <div style="grid-column:1/-1">
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Gambar Background <span style="color:var(--danger)">*</span></label>
+            <div class="form-group">
+                <label class="form-label">Gambar Background <span class="required">*</span></label>
                 <input type="file" name="image" class="form-control" accept="image/*" required>
-                <div style="display:flex;gap:1rem;margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted);flex-wrap:wrap">
-                    <span>Format: JPG, PNG, WebP</span><span>Maksimal: 5MB</span><span>Rekomendasi: 1920x1080px (16:9)</span>
+                <div class="form-helper">
+                    <span>Format: JPG, PNG, WebP</span>
+                    <span>Maksimal: 5MB</span>
+                    <span>Rekomendasi: 1920x1080px (16:9)</span>
                 </div>
             </div>
 
-            <div style="display:grid;grid-template-columns:1fr auto;gap:1rem;align-items:end">
-                <div>
-                    <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Durasi Tampil (detik)</label>
+            <div class="form-row">
+                <div class="form-group" style="margin-bottom:0">
+                    <label class="form-label">Durasi Tampil (detik)</label>
                     <input type="number" name="display_duration" class="form-control" value="5" min="3" max="30">
                 </div>
                 <div style="padding-bottom:0.25rem">
-                    <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.75rem 1rem;background:#f8fafc;border-radius:10px;transition:all 0.2s;width:fit-content" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                    <label class="checkbox-wrapper">
                         <input type="checkbox" name="is_active" id="isActive" value="1" checked style="display:none">
-                        <div id="isActiveBox" style="width:22px;height:22px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                            <svg id="isActiveCheck" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:1;transform:scale(1);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)">
+                        <div class="checkbox-box checked" id="isActiveBox">
+                            <svg id="isActiveCheck" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
                         </div>
-                        <span style="font-weight:600;color:#334155;font-size:0.9rem;user-select:none">Aktif</span>
+                        <span class="checkbox-label">Aktif</span>
                     </label>
                 </div>
             </div>
 
-            <div style="display:flex;justify-content:flex-end;grid-column:1/-1">
+            <div class="form-actions">
                 <button type="submit" class="btn btn-primary">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="5" x2="12" y2="19"/>
+                        <line x1="5" y1="12" x2="19" y2="12"/>
+                    </svg>
                     Tambah Slide
                 </button>
             </div>
         </form>
     </div>
+    @else
+    <div class="max-limit-warning">
+        <div class="max-limit-warning-icon">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <line x1="12" y1="8" x2="12" y2="12"/>
+                <line x1="12" y1="16" x2="12.01" y2="16"/>
+            </svg>
+        </div>
+        <h3>Batas Maksimal Tercapai</h3>
+        <p>Anda sudah mengupload <strong>{{ $totalSliders }}</strong> dari <strong>{{ $maxSliders }}</strong> gambar yang diizinkan.<br>Hapus beberapa gambar terlebih dahulu untuk dapat mengupload yang baru.</p>
+    </div>
+    @endif
 
     {{-- Daftar Slide --}}
-    <div class="card">
-        <div style="padding:0 0 1.5rem 0;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:0.75rem">
-            <div style="display:flex;align-items:center;gap:0.75rem">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#14b8a6" stroke-width="2" style="flex-shrink:0"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-                <h3 style="font-size:1.1rem;font-weight:700;color:#14b8a6;margin:0">Daftar Slide</h3>
+    <div class="slider-list-card">
+        <div class="slider-list-header">
+            <div class="slider-list-title">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="2">
+                    <line x1="8" y1="6" x2="21" y2="6"/>
+                    <line x1="8" y1="12" x2="21" y2="12"/>
+                    <line x1="8" y1="18" x2="21" y2="18"/>
+                    <line x1="3" y1="6" x2="3.01" y2="6"/>
+                    <line x1="3" y1="12" x2="3.01" y2="12"/>
+                    <line x1="3" y1="18" x2="3.01" y2="18"/>
+                </svg>
+                <h3>Daftar Slide</h3>
             </div>
-            <div style="display:flex;align-items:center;gap:1rem;font-size:0.85rem;flex-wrap:wrap">
-                <small style="color:var(--text-muted);display:flex;align-items:center;gap:0.25rem">
+            <div class="slider-list-hints">
+                <small class="desktop-only">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <line x1="8" y1="6" x2="21" y2="6"/>
                         <line x1="8" y1="12" x2="21" y2="12"/>
@@ -67,58 +158,130 @@
                     </svg>
                     Drag & drop untuk mengurutkan
                 </small>
-                <small style="color:#14b8a6;font-weight:500">
-                    • Slide baru otomatis di urutan terakhir
-                </small>
+                <small class="text-primary">• Slide baru otomatis di urutan terakhir</small>
             </div>
         </div>
         
         <div id="slidersList">
             @forelse($sliders as $slider)
-            <div class="slider-item" data-id="{{ $slider->id }}" style="display:flex;gap:1rem;padding:1rem;margin-bottom:1rem;background:#fff;border-radius:12px;cursor:grab;transition:all 0.2s" onmouseover="this.style.boxShadow='0 4px 12px rgba(0,0,0,0.06)'" onmouseout="this.style.boxShadow='none'" draggable="true">
-                <div style="display:flex;align-items:center;color:var(--text-muted);padding:0 0.25rem">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>
+            <div class="slider-item" data-id="{{ $slider->id }}" draggable="true">
+                <div class="drag-handle desktop-only">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="8" y1="6" x2="21" y2="6"/>
+                        <line x1="8" y1="12" x2="21" y2="12"/>
+                        <line x1="8" y1="18" x2="21" y2="18"/>
+                    </svg>
                 </div>
-                <img src="{{ $slider->image_url }}" alt="Slide {{ $slider->id }}" style="width:100px;height:70px;object-fit:cover;border-radius:8px">
-                <div style="flex:1;min-width:0">
-                    <div style="font-weight:600;margin-bottom:0.25rem">Slide #{{ $slider->id }}</div>
-                    <div style="font-size:0.85rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{ $slider->image_path }}</div>
-                    <div style="display:flex;align-items:center;gap:1rem;margin-top:0.5rem;font-size:0.8rem;color:var(--text-muted)">
+                <img class="slider-image" src="{{ $slider->image_url }}" alt="Slide {{ $slider->id }}">
+                <div class="slider-info">
+                    <div class="slider-title">Slide #{{ $slider->id }}</div>
+                    <div class="slider-path">{{ Str::limit($slider->image_path, 40) }}</div>
+                    <div class="slider-meta">
                         <span>{{ $slider->display_duration }}s</span>
-                        <span>Urutan: {{ $slider->sort_order }}</span>
-                        @if($slider->is_active)<span style="color:#22c55e;font-weight:500">● Aktif</span>@else<span style="color:#ef4444;font-weight:500">● Nonaktif</span>@endif
+                        <span class="{{ $slider->is_active ? 'status-active' : 'status-inactive' }}">
+                            ● {{ $slider->is_active ? 'Aktif' : 'Nonaktif' }}
+                        </span>
                     </div>
                 </div>
-                <div style="display:flex;gap:0.5rem;align-items:center">
-                    <a href="{{ $slider->image_url }}" target="_blank" class="btn-edit" title="Preview"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></a>
-                    <button onclick="editSlider({{ $slider->id }})" class="btn-edit" title="Edit"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>
-                    <button onclick="confirmDeleteWithToast({{ $slider->id }}, 'Slide #{{ $slider->id }}')" class="btn-del" title="Hapus">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <div class="slider-actions">
+                    <a href="{{ $slider->image_url }}" target="_blank" title="Preview" class="btn-view">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </a>
+                    <button onclick="editSlider({{ $slider->id }})" title="Edit" class="btn-edit">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
+                            <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                        </svg>
+                    </button>
+                    <button onclick="confirmDeleteWithToast({{ $slider->id }}, 'Slide #{{ $slider->id }}')" title="Hapus" class="btn-del">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="3 6 5 6 21 6"/>
                             <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/>
                             <line x1="10" y1="11" x2="10" y2="17"/>
                             <line x1="14" y1="11" x2="14" y2="17"/>
                         </svg>
                     </button>
-
-                    {{-- Hidden form untuk delete --}}
                     <form id="delete-form-{{ $slider->id }}" action="{{ route('admin.hero-sliders.destroy', $slider) }}" method="POST" style="display:none">
-                        @csrf 
-                        @method('DELETE')
+                        @csrf @method('DELETE')
                     </form>
                 </div>
             </div>
             @empty
-            <div style="text-align:center;padding:3rem 1rem;color:var(--text-muted)">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin:0 auto 1rem;opacity:0.3">
+            <div class="empty-state">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <rect x="3" y="3" width="18" height="18" rx="2"/>
                     <line x1="3" y1="9" x2="21" y2="9"/>
                     <line x1="9" y1="21" x2="9" y2="9"/>
                 </svg>
-                <p style="margin:0;font-size:0.95rem">Belum ada slide. Tambahkan slide pertama di atas.</p>
+                <p>Belum ada slide. Tambahkan slide pertama di atas.</p>
             </div>
             @endforelse
         </div>
+        
+        {{-- PAGINATION --}}
+        @if($sliders->hasPages())
+        <div class="pagination-wrapper">
+            <div class="pagination-container">
+                @if($sliders->onFirstPage())
+                    <button class="pagination-btn" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        <span class="desktop-only">Previous</span>
+                    </button>
+                @else
+                    <a href="{{ $sliders->previousPageUrl() }}" class="pagination-btn">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="15 18 9 12 15 6"/></svg>
+                        <span class="desktop-only">Previous</span>
+                    </a>
+                @endif
+
+                @php
+                    $currentPage = $sliders->currentPage();
+                    $lastPage = $sliders->lastPage();
+                    
+                    if ($lastPage <= 5) {
+                        $pages = range(1, $lastPage);
+                    } else {
+                        if ($currentPage <= 3) {
+                            $pages = [1, 2, 3, 4, '...', $lastPage];
+                        } elseif ($currentPage >= $lastPage - 2) {
+                            $pages = [1, '...', $lastPage - 3, $lastPage - 2, $lastPage - 1, $lastPage];
+                        } else {
+                            $pages = [1, '...', $currentPage - 1, $currentPage, $currentPage + 1, '...', $lastPage];
+                        }
+                    }
+                @endphp
+                
+                @foreach($pages as $page)
+                    @if($page === '...')
+                        <span style="padding: 0.5rem 0.25rem; color: var(--text-muted); font-size: 0.875rem;">...</span>
+                    @elseif($page == $currentPage)
+                        <button class="pagination-btn active">{{ $page }}</button>
+                    @else
+                        <a href="{{ $sliders->url($page) }}" class="pagination-btn">{{ $page }}</a>
+                    @endif
+                @endforeach
+
+                @if($sliders->hasMorePages())
+                    <a href="{{ $sliders->nextPageUrl() }}" class="pagination-btn">
+                        <span class="desktop-only">Next</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                @else
+                    <button class="pagination-btn" disabled>
+                        <span class="desktop-only">Next</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+                    </button>
+                @endif
+            </div>
+            
+            <div class="pagination-info">
+                Menampilkan <strong>{{ $sliders->firstItem() }}</strong> - <strong>{{ $sliders->lastItem() }}</strong> dari <strong>{{ $totalSliders }}</strong> slide
+            </div>
+        </div>
+        @endif
     </div>
 </div>
 
@@ -140,31 +303,31 @@
             <input type="hidden" id="editId" name="id">
             
             <div>
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#334155">Gambar (kosongkan jika tidak diubah)</label>
+                <label class="form-label">Gambar (kosongkan jika tidak diubah)</label>
                 <input type="file" name="image" class="form-control" accept="image/*">
                 <img id="editImagePreview" src="" style="max-width:100%;max-height:200px;margin-top:0.75rem;border-radius:10px;display:none;object-fit:cover;box-shadow:0 4px 12px rgba(0,0,0,0.1)">
             </div>
             
             <div>
-                <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem;color:#334155">Durasi Tampil (detik)</label>
+                <label class="form-label">Durasi Tampil (detik)</label>
                 <input type="number" name="display_duration" id="editDuration" class="form-control" min="3" max="30">
             </div>
             
             <div>
-                <label style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.75rem 1rem;background:#f8fafc;border-radius:10px;transition:all 0.2s" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#f8fafc'">
+                <label class="checkbox-wrapper">
                     <input type="checkbox" name="is_active" id="editActive" value="1" style="display:none">
-                    <div id="editActiveBox" style="width:22px;height:22px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1);display:flex;align-items:center;justify-content:center;flex-shrink:0">
-                        <svg id="editActiveCheck" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s cubic-bezier(0.4, 0, 0.2, 1)">
+                    <div class="checkbox-box" id="editActiveBox">
+                        <svg id="editActiveCheck" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="20 6 9 17 4 12"/>
                         </svg>
                     </div>
-                    <span style="font-weight:600;color:#334155;font-size:0.9rem;user-select:none">Aktif</span>
+                    <span class="checkbox-label">Aktif</span>
                 </label>
             </div>
             
             <div style="display:flex;gap:0.75rem;justify-content:flex-end;margin-top:0.5rem;padding-top:1rem;border-top:1px solid #f1f5f9">
-                <button type="button" onclick="closeEditModal()" style="padding:0.75rem 1.5rem;background:#f1f5f9;color:#475569;border:none;border-radius:10px;font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='#e2e8f0';this.style.transform='translateY(-2px)'" onmouseout="this.style.background='#f1f5f9';this.style.transform='translateY(0)'">Batal</button>
-                <button type="submit" style="padding:0.75rem 1.5rem;background:linear-gradient(135deg,#14b8a6,#0d9488);color:#fff;border:none;border-radius:10px;font-weight:600;font-size:0.9rem;cursor:pointer;transition:all 0.2s;display:flex;align-items:center;gap:0.5rem;box-shadow:0 4px 12px rgba(20,184,166,0.3)" onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 20px rgba(20,184,166,0.4)'" onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 12px rgba(20,184,166,0.3)'">
+                <button type="button" onclick="closeEditModal()" class="btn" style="background:#f1f5f9;color:#475569">Batal</button>
+                <button type="submit" class="btn btn-primary">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
                         <polyline points="17 21 17 13 7 13 7 21"/>
@@ -176,13 +339,6 @@
         </form>
     </div>
 </div>
-
-<style>
-@keyframes modalSlideUp {
-    from { opacity: 0; transform: translateY(20px) scale(0.95); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
-}
-</style>
 
 <script>
 // ==========================================
@@ -216,19 +372,65 @@ function submitDelete(id) {
 }
 
 // ==========================================
+// MOBILE REORDER FUNCTIONS
+// ==========================================
+function moveSlideUp(id) {
+    const slidersList = document.getElementById('slidersList');
+    const items = [...slidersList.querySelectorAll('.slider-item')];
+    const currentIndex = items.findIndex(item => item.dataset.id == id);
+    
+    if (currentIndex > 0) {
+        const currentItem = items[currentIndex];
+        const prevItem = items[currentIndex - 1];
+        
+        slidersList.insertBefore(currentItem, prevItem);
+        updateOrder();
+        refreshMobileReorderButtons();
+    }
+}
+
+function moveSlideDown(id) {
+    const slidersList = document.getElementById('slidersList');
+    const items = [...slidersList.querySelectorAll('.slider-item')];
+    const currentIndex = items.findIndex(item => item.dataset.id == id);
+    
+    if (currentIndex < items.length - 1) {
+        const currentItem = items[currentIndex];
+        const nextItem = items[currentIndex + 1];
+        
+        slidersList.insertBefore(nextItem, currentItem);
+        updateOrder();
+        refreshMobileReorderButtons();
+    }
+}
+
+function refreshMobileReorderButtons() {
+    const slidersList = document.getElementById('slidersList');
+    const items = slidersList.querySelectorAll('.slider-item');
+    
+    items.forEach((item, index) => {
+        const mobileReorder = item.querySelector('.mobile-reorder');
+        if (mobileReorder) {
+            const buttons = mobileReorder.querySelectorAll('button');
+            buttons[0].disabled = index === 0;
+            buttons[1].disabled = index === items.length - 1;
+        }
+    });
+}
+
+// ==========================================
 // EDIT SLIDER
 // ==========================================
 function editSlider(id) {
     const item = document.querySelector(`.slider-item[data-id="${id}"]`);
     if (!item) return;
     
-    // Set form action dengan ID yang benar
     const form = document.getElementById('editForm');
     form.action = `/admin/hero-sliders/${id}`;
     
     document.getElementById('editId').value = id;
     
-    const infoText = item.querySelector('div[style*="font-size:0.8rem"]').textContent;
+    const infoText = item.querySelector('.slider-meta').parentElement.textContent;
     document.getElementById('editDuration').value = infoText.match(/(\d+)s/)?.[1] || '5';
     
     const isActive = infoText.includes('Aktif') && !infoText.includes('Nonaktif');
@@ -256,17 +458,9 @@ function updateCheckboxStyle(boxId, checkId, isChecked) {
     if (!box || !check) return;
     
     if (isChecked) {
-        box.style.background = 'linear-gradient(135deg, #14b8a6, #0d9488)';
-        box.style.borderColor = '#14b8a6';
-        box.style.boxShadow = '0 2px 8px rgba(20,184,166,0.3)';
-        check.style.opacity = '1';
-        check.style.transform = 'scale(1)';
+        box.classList.add('checked');
     } else {
-        box.style.background = '#fff';
-        box.style.borderColor = '#cbd5e1';
-        box.style.boxShadow = 'none';
-        check.style.opacity = '0';
-        check.style.transform = 'scale(0.5)';
+        box.classList.remove('checked');
     }
 }
 
@@ -274,7 +468,6 @@ function updateCheckboxStyle(boxId, checkId, isChecked) {
 // INITIALIZATION
 // ==========================================
 document.addEventListener('DOMContentLoaded', function() {
-    // Checkbox form Tambah Slide
     const isActiveCheckbox = document.getElementById('isActive');
     if (isActiveCheckbox) {
         updateCheckboxStyle('isActiveBox', 'isActiveCheck', isActiveCheckbox.checked);
@@ -283,7 +476,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Checkbox modal Edit Slide
     const editActiveCheckbox = document.getElementById('editActive');
     if (editActiveCheckbox) {
         editActiveCheckbox.addEventListener('change', function() {
@@ -291,55 +483,147 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close modal on ESC
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeEditModal();
     });
+    
+    addMobileReorderButtons();
+    initDragAndDrop();
 });
 
+function addMobileReorderButtons() {
+    const slidersList = document.getElementById('slidersList');
+    const items = slidersList.querySelectorAll('.slider-item');
+    
+    items.forEach((item, index) => {
+        if (item.querySelector('.mobile-reorder')) return;
+        
+        const actionsDiv = item.querySelector('.slider-actions');
+        const mobileReorder = document.createElement('div');
+        mobileReorder.className = 'mobile-reorder';
+        mobileReorder.innerHTML = `
+            <button onclick="moveSlideUp(${item.dataset.id})" ${index === 0 ? 'disabled' : ''}>
+                Geser ke Atas
+            </button>
+            <button onclick="moveSlideDown(${item.dataset.id})" ${index === items.length - 1 ? 'disabled' : ''}>
+                Geser ke Bawah
+            </button>
+        `;
+        
+        actionsDiv.after(mobileReorder);
+    });
+}
+
 // ==========================================
-// DRAG AND DROP
+// DRAG AND DROP (Desktop Only)
 // ==========================================
 let draggedItem = null;
-const slidersList = document.getElementById('slidersList');
 
-if (slidersList) {
-    slidersList.addEventListener('dragstart', e => { 
-        if(e.target.classList.contains('slider-item')) { 
-            draggedItem = e.target; 
-            setTimeout(() => e.target.style.opacity = '0.5', 0); 
-        } 
+function initDragAndDrop() {
+    if (window.innerWidth <= 768) return;
+    
+    const slidersList = document.getElementById('slidersList');
+    if (!slidersList) return;
+    
+    const items = slidersList.querySelectorAll('.slider-item');
+    
+    items.forEach(item => {
+        item.setAttribute('draggable', 'true');
+        
+        item.addEventListener('dragstart', function(e) {
+            draggedItem = this;
+            setTimeout(() => {
+                this.classList.add('dragging');
+            }, 0);
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', this.dataset.id);
+        });
+        
+        item.addEventListener('dragend', function(e) {
+            this.classList.remove('dragging');
+            draggedItem = null;
+            
+            document.querySelectorAll('.slider-item').forEach(el => {
+                el.classList.remove('drag-over');
+            });
+            
+            updateOrder();
+        });
+        
+        item.addEventListener('dragover', function(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            if (this === draggedItem) return;
+            
+            this.classList.add('drag-over');
+        });
+        
+        item.addEventListener('dragleave', function(e) {
+            this.classList.remove('drag-over');
+        });
+        
+        item.addEventListener('drop', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (this === draggedItem) return;
+            
+            this.classList.remove('drag-over');
+            
+            const rect = this.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            
+            if (e.clientY < midpoint) {
+                slidersList.insertBefore(draggedItem, this);
+            } else {
+                if (this.nextSibling) {
+                    slidersList.insertBefore(draggedItem, this.nextSibling);
+                } else {
+                    slidersList.appendChild(draggedItem);
+                }
+            }
+        });
     });
-
-    slidersList.addEventListener('dragend', e => { 
-        if(draggedItem) { 
-            draggedItem.style.opacity = '1'; 
-            updateOrder(); 
-            draggedItem = null; 
-        } 
-    });
-
-    slidersList.addEventListener('dragover', e => {
+    
+    slidersList.addEventListener('dragover', function(e) {
         e.preventDefault();
-        const afterElement = [...slidersList.querySelectorAll('.slider-item:not(.dragging)')].reduce((closest, child) => {
-            const box = child.getBoundingClientRect(); 
-            const offset = e.clientY - box.top - box.height/2;
-            return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
-        }, { offset: Number.NEGATIVE_INFINITY }).element;
-        afterElement == null ? slidersList.appendChild(draggedItem) : slidersList.insertBefore(draggedItem, afterElement);
+        e.dataTransfer.dropEffect = 'move';
+    });
+    
+    slidersList.addEventListener('drop', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        
+        if (draggedItem && e.target === this) {
+            this.appendChild(draggedItem);
+            updateOrder();
+        }
     });
 }
 
 async function updateOrder() {
     const order = [...document.querySelectorAll('.slider-item')].map(el => el.dataset.id);
-    await fetch('{{ route('admin.hero-sliders.reorder') }}', { 
-        method: 'POST', 
-        headers: { 
-            'Content-Type': 'application/json', 
-            'X-CSRF-TOKEN': '{{ csrf_token() }}' 
-        }, 
-        body: JSON.stringify({ order }) 
-    });
+    
+    try {
+        const response = await fetch('{{ route('admin.hero-sliders.reorder') }}', { 
+            method: 'POST', 
+            headers: { 
+                'Content-Type': 'application/json', 
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Accept': 'application/json'
+            }, 
+            body: JSON.stringify({ order }) 
+        });
+        
+        if (response.ok) {
+            console.log('✅ Order updated successfully');
+        } else {
+            console.error('❌ Failed to update order');
+        }
+    } catch (error) {
+        console.error('❌ Error updating order:', error);
+    }
 }
 </script>
 @endsection

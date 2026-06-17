@@ -1,58 +1,92 @@
-<div class="page" id="page-sk" style="display: none;">
-    <div class="page-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light));">
+<div class="page" id="page-sk">
+    <div class="page-header">
         <div class="page-header-content">
             <h1>SK & Dokumen</h1>
             <p>Surat Keputusan dan dokumen resmi PKK Kabupaten Toba</p>
             <div class="breadcrumb">
-                <a onclick="navigateTo('beranda')">Beranda</a><span>/</span><span class="current">SK & Dokumen</span>
+                <a onclick="navigateTo('beranda')">Beranda</a>
+                <span>/</span>
+                <span class="current">SK & Dokumen</span>
             </div>
         </div>
     </div>
 
-    <section class="sk-section" style="padding: 4rem 2rem; background: var(--bg-light);">
-        <div class="sk-container" style="max-width: 1000px; margin: 0 auto;">
-            <div style="margin-bottom: 2rem;">
-                <h2 style="font-size: 1.5rem; font-weight: 700; color: var(--text-dark); margin-bottom: 1rem;">Daftar Dokumen</h2>
-                <div style="display: flex; gap: 1rem; align-items: center;">
-                    <div style="flex: 1; position: relative;">
-                        <input type="text" id="searchInput" placeholder="Cari dokumen..." style="width: 100%; padding: 0.75rem 1rem 0.75rem 2.5rem; border: 2px solid #e2e8f0; border-radius: 12px; font-size: 0.95rem;">
-                        <svg style="position: absolute; left: 1rem; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: var(--text-muted);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <circle cx="11" cy="11" r="8"/>
-                            <path d="m21 21-4.35-4.35"/>
-                        </svg>
-                    </div>
+    <section class="sk-section">
+        <div class="sk-container">
+            {{-- Header Section --}}
+            <div class="sk-header">
+                <h2 class="sk-section-title">Daftar Dokumen</h2>
+                <div class="sk-search-box">
+                    <svg class="sk-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/>
+                        <path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <input type="text" id="searchInput" class="sk-search-input" placeholder="Cari dokumen...">
                 </div>
             </div>
 
             {{-- Loading State --}}
-            <div id="loadingState" style="text-align: center; padding: 3rem;">
-                <div style="font-size: 1.2rem; color: var(--text-muted);">Memuat dokumen...</div>
+            <div id="loadingState" class="sk-loading">
+                <div class="sk-loading-spinner"></div>
+                <div class="sk-loading-text">Memuat dokumen...</div>
             </div>
 
-            {{-- Documents Table --}}
-            <div id="documentsTable" style="display: none; background: #fff; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.06);">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-                        <thead style="background: linear-gradient(135deg, #553c9a, #6b46c1); color: #fff;">
-                            <tr>
-                                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.85rem; font-weight: 600; width: 60px;">No</th>
-                                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.85rem; font-weight: 600; width: 40%;">Nama Dokumen</th>
-                                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.85rem; font-weight: 600; width: 120px;">Tanggal</th>
-                                <th style="padding: 1rem 1.5rem; text-align: left; font-size: 0.85rem; font-weight: 600; width: 100px;">Ukuran</th>
-                                <th style="padding: 1rem 1.5rem; text-align: center; font-size: 0.85rem; font-weight: 600; position: sticky; right: 0; background: linear-gradient(135deg, #553c9a, #6b46c1); z-index: 10; width: 100px;">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="documentsBody"></tbody>
-                    </table>
-                </div>
+            {{-- Documents Table - Desktop --}}
+            <div id="documentsTable" class="sk-table-container">
+                <table class="sk-table">
+                    <thead>
+                        <tr>
+                            <th class="sk-col-no">No</th>
+                            <th class="sk-col-name">
+                                <svg class="sk-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                    <line x1="16" y1="13" x2="8" y2="13"/>
+                                    <line x1="16" y1="17" x2="8" y2="17"/>
+                                </svg>
+                                Nama Dokumen
+                            </th>
+                            <th class="sk-col-date">
+                                <svg class="sk-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                    <line x1="16" y1="2" x2="16" y2="6"/>
+                                    <line x1="8" y1="2" x2="8" y2="6"/>
+                                    <line x1="3" y1="10" x2="21" y2="10"/>
+                                </svg>
+                                Tanggal
+                            </th>
+                            <th class="sk-col-size">
+                                <svg class="sk-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="17 8 12 3 7 8"/>
+                                    <line x1="12" y1="3" x2="12" y2="15"/>
+                                </svg>
+                                Ukuran
+                            </th>
+                            <th class="sk-col-action">
+                                <svg class="sk-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"/>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                </svg>
+                                Aksi
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody id="documentsBody">
+                        {{-- Documents will be loaded here --}}
+                    </tbody>
+                </table>
             </div>
 
-            {{-- Empty State (Consistent with Aplikasi & Berita) --}}
-            <div id="emptyState" style="display: none; text-align: center; padding: 5rem 2rem; max-width: 650px; margin: 0 auto;">
-                
-                <!-- Icon Circle (Hijau Teal) -->
-                <div style="width: 120px; height: 120px; margin: 0 auto 2rem; background: linear-gradient(135deg, rgba(15,107,99,0.1), rgba(20,184,166,0.1)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f6b63" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;">
+            {{-- Mobile Cards View --}}
+            <div id="mobileDocumentsList" class="sk-mobile-list">
+                {{-- Mobile cards will be loaded here --}}
+            </div>
+
+            {{-- Empty State --}}
+            <div id="emptyState" class="sk-empty-state">
+                <div class="sk-empty-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
                         <polyline points="14 2 14 8 20 8"/>
                         <line x1="16" y1="13" x2="8" y2="13"/>
@@ -60,22 +94,13 @@
                         <polyline points="10 9 9 9 8 9"/>
                     </svg>
                 </div>
-                
-                <h3 style="font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0 0 0.75rem 0;">
-                    Belum Ada Dokumen
-                </h3>
-                
-                <p style="color: #64748b; font-size: 1.05rem; line-height: 1.7; margin: 0 auto 2rem; max-width: 500px;">
+                <h3 class="sk-empty-title">Belum Ada Dokumen</h3>
+                <p class="sk-empty-text">
                     Dokumen SK dan surat resmi akan segera diunggah. 
                     Silakan kunjungi kembali nanti untuk update terbaru.
                 </p>
-                
-                <!-- Tombol (Hijau Teal) -->
-                <a onclick="navigateTo('beranda')" 
-                   style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 2rem; background: linear-gradient(135deg, #0f6b63, #14b8a6); color: #fff; border-radius: 12px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(15,107,99,0.3);"
-                   onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(15,107,99,0.4)'"
-                   onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(15,107,99,0.3)'">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <a onclick="navigateTo('beranda')" class="sk-back-btn">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
@@ -94,11 +119,152 @@ document.addEventListener('DOMContentLoaded', function() {
         searchInput.addEventListener('input', function(e) {
             const term = e.target.value.toLowerCase().trim();
             const rows = document.querySelectorAll('#documentsBody tr');
+            const mobileCards = document.querySelectorAll('.sk-mobile-card');
+            
             rows.forEach(row => {
                 const text = row.textContent.toLowerCase();
                 row.style.display = text.includes(term) ? '' : 'none';
             });
+            
+            mobileCards.forEach(card => {
+                const text = card.textContent.toLowerCase();
+                card.style.display = text.includes(term) ? '' : 'none';
+            });
         });
     }
 });
+
+// Render documents function
+function renderDocuments(documents) {
+    const tableBody = document.getElementById('documentsBody');
+    const mobileList = document.getElementById('mobileDocumentsList');
+    const tableContainer = document.getElementById('documentsTable');
+    const emptyState = document.getElementById('emptyState');
+    const loadingState = document.getElementById('loadingState');
+    
+    loadingState.style.display = 'none';
+    
+    if (!documents || documents.length === 0) {
+        tableContainer.style.display = 'none';
+        mobileList.style.display = 'none';
+        emptyState.style.display = 'block';
+        return;
+    }
+    
+    emptyState.style.display = 'none';
+    tableContainer.style.display = 'block';
+    mobileList.style.display = 'block';
+    
+    // Clear existing content
+    tableBody.innerHTML = '';
+    mobileList.innerHTML = '';
+    
+    documents.forEach((doc, index) => {
+        // Desktop Table Row
+        const row = document.createElement('tr');
+        row.className = 'sk-table-row';
+        row.innerHTML = `
+            <td class="sk-cell sk-cell-no">${index + 1}</td>
+            <td class="sk-cell sk-cell-name">
+                <div class="sk-doc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <div class="sk-doc-info">
+                    <div class="sk-doc-name">${doc.name}</div>
+                    <div class="sk-doc-file">${doc.file_name || ''}</div>
+                </div>
+            </td>
+            <td class="sk-cell sk-cell-date">
+                <svg class="sk-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                    <line x1="16" y1="2" x2="16" y2="6"/>
+                    <line x1="8" y1="2" x2="8" y2="6"/>
+                    <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+                ${doc.date}
+            </td>
+            <td class="sk-cell sk-cell-size">
+                <svg class="sk-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                    <polyline points="17 8 12 3 7 8"/>
+                    <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                ${doc.size}
+            </td>
+            <td class="sk-cell sk-cell-action">
+                <div class="sk-action-buttons">
+                    <button class="sk-action-btn sk-view-btn" onclick="viewDocument('${doc.id}')" title="Lihat">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                            <circle cx="12" cy="12" r="3"/>
+                        </svg>
+                    </button>
+                    <button class="sk-action-btn sk-download-btn" onclick="downloadDocument('${doc.id}')" title="Unduh">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                        </svg>
+                    </button>
+                </div>
+            </td>
+        `;
+        tableBody.appendChild(row);
+        
+        // Mobile Card
+        const mobileCard = document.createElement('div');
+        mobileCard.className = 'sk-mobile-card';
+        mobileCard.innerHTML = `
+            <div class="sk-mobile-card-header">
+                <div class="sk-mobile-doc-icon">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                    </svg>
+                </div>
+                <div class="sk-mobile-doc-info">
+                    <div class="sk-mobile-doc-name">${doc.name}</div>
+                    <div class="sk-mobile-doc-meta">
+                        <span class="sk-mobile-doc-date">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+                                <line x1="16" y1="2" x2="16" y2="6"/>
+                                <line x1="8" y1="2" x2="8" y2="6"/>
+                            </svg>
+                            ${doc.date}
+                        </span>
+                        <span class="sk-mobile-doc-size">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="17 8 12 3 7 8"/>
+                            </svg>
+                            ${doc.size}
+                        </span>
+                    </div>
+                </div>
+            </div>
+            <div class="sk-mobile-card-actions">
+                <button class="sk-mobile-action-btn sk-view-btn" onclick="viewDocument('${doc.id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                        <circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    <span>Lihat</span>
+                </button>
+                <button class="sk-mobile-action-btn sk-download-btn" onclick="downloadDocument('${doc.id}')">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                        <polyline points="7 10 12 15 17 10"/>
+                        <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>Unduh</span>
+                </button>
+            </div>
+        `;
+        mobileList.appendChild(mobileCard);
+    });
+}
 </script>

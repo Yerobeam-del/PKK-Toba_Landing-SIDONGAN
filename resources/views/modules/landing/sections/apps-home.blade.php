@@ -151,6 +151,9 @@ async function loadApps() {
                     ? `<img src="${iconUrl}" alt="${app.short_name}" style="width: 100%; height: 100%; object-fit: contain; padding: 10px; ${isMaintenance ? 'filter: grayscale(100%) brightness(1.3);' : 'filter: brightness(0) invert(1);'}">`
                     : `<div style="width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 800; font-size: 2rem;">${(app.short_name || 'A').charAt(0)}</div>`;
                 
+                // ✅ URL APLIKASI
+                const appUrl = app.url || '#';
+                
                 return `
                 <div style="${isMaintenance ? 'pointer-events: none; cursor: not-allowed;' : ''}">
                     <article style="
@@ -163,10 +166,11 @@ async function loadApps() {
                         display: flex; 
                         flex-direction: column; 
                         height: 100%;
-                        ${isMaintenance ? 'filter: grayscale(80%); opacity: 0.85;' : ''}
+                        ${isMaintenance ? 'filter: grayscale(80%); opacity: 0.85;' : 'cursor: pointer;'}
                         position: relative;
                     "
-                    ${!isMaintenance ? `onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 60px rgba(0,0,0,0.12)'"
+                    ${!isMaintenance ? `onclick="window.location.href='${appUrl}'"
+                    onmouseover="this.style.transform='translateY(-10px)'; this.style.boxShadow='0 20px 60px rgba(0,0,0,0.12)'"
                     onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 20px rgba(0,0,0,0.08)'"` : ''}>
                         
                         ${isMaintenance ? `

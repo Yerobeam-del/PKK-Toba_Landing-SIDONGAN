@@ -3,14 +3,37 @@
 @section('page-title', 'Edit Desa')
 
 @section('content')
+<style>
+/* Responsive untuk Mobile */
+@media (max-width: 768px) {
+    .desa-header {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 1rem !important;
+    }
+    
+    .desa-header h1 {
+        font-size: 1.25rem !important;
+    }
+    
+    .desa-header .btn {
+        width: 100% !important;
+        justify-content: center !important;
+    }
+    
+    .form-grid-2 {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 
 {{-- Header --}}
-<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem">
-    <div>
+<div class="desa-header" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;gap:1rem">
+    <div style="flex:1;min-width:0">
         <h1 style="font-size:1.5rem;font-weight:800;color:var(--text-dark);margin:0 0 0.25rem 0">Edit Desa</h1>
         <p style="color:var(--text-muted);margin:0;font-size:0.9rem">Perbarui data desa/kelurahan yang sudah ada</p>
     </div>
-    <a href="{{ route('admin.desa.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">← Kembali</a>
+    <a href="{{ route('admin.desa.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark);white-space:nowrap;flex-shrink:0">← Kembali</a>
 </div>
 
 {{-- Form Card --}}
@@ -22,7 +45,6 @@
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Kecamatan *</label>
             <div style="position:relative">
-                {{-- Icon Pin Lokasi --}}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
                      style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:10">
                     <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/>
@@ -41,7 +63,6 @@
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Desa / Kelurahan *</label>
             <div style="position:relative">
-                {{-- Icon Rumah/Desa --}}
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" 
                      style="position:absolute;left:1rem;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;z-index:10">
                     <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -59,7 +80,7 @@
         </div>
 
         {{-- Population & Households --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Jumlah Penduduk</label>
                 <input type="number" name="population" class="form-control" value="{{ old('population', $desa->population) }}" min="0" placeholder="0">
@@ -73,12 +94,11 @@
         </div>
 
         {{-- Image & Sort Order --}}
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
+        <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Foto Desa</label>
                 <input type="file" name="image" class="form-control" accept="image/*" id="imageInput">
                 
-                {{-- Existing Image Preview --}}
                 @if($desa->image)
                 <div id="existingImage" style="margin-top:1rem;display:flex;align-items:center;gap:1rem">
                     <img src="{{ asset('storage/'.$desa->image) }}" style="width:80px;height:60px;border-radius:8px;object-fit:cover;background:#f8fafc">
@@ -89,7 +109,6 @@
                 </div>
                 @endif
                 
-                {{-- New Image Preview (hidden by default) --}}
                 <div id="newImagePreview" style="margin-top:1rem;display:none">
                     <img id="previewImg" src="" style="width:100%;max-width:200px;height:auto;border-radius:12px;object-fit:cover;background:#f8fafc">
                     <span style="display:block;font-size:0.8rem;color:var(--text-muted);margin-top:0.4rem">Preview Foto Baru</span>
@@ -156,7 +175,6 @@ const desaNameInput = document.getElementById('desaNameInput');
 const desaError = document.getElementById('desaError');
 const desaHelp = document.getElementById('desaHelp');
 
-// Function to load desa from PROXY endpoint
 async function loadDesaByKecamatan(kecCode, preselectCode = null) {
     desaSelect.innerHTML = '<option value="">Memuat...</option>';
     desaSelect.disabled = true;
@@ -224,7 +242,6 @@ async function loadDesaByKecamatan(kecCode, preselectCode = null) {
     }
 }
 
-// Initialize on page load
 document.addEventListener('DOMContentLoaded', async () => {
     try {
         const kecRes = await fetch('/api/v1/kecamatans');
@@ -259,20 +276,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 });
 
-// Event listener when kecamatan changes
 kecamatanSelect.addEventListener('change', function() {
     const selectedOption = this.options[this.selectedIndex];
     const wilayahCode = selectedOption.dataset.wilayahCode;
     loadDesaByKecamatan(wilayahCode);
 });
 
-// Update hidden name when desa is selected
 desaSelect.addEventListener('change', function() {
     const selected = this.options[this.selectedIndex];
     desaNameInput.value = this.value ? selected.textContent : '';
 });
 
-// Image preview with toggle
 document.getElementById('imageInput')?.addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (file) {
@@ -283,7 +297,6 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
         }
         const reader = new FileReader();
         reader.onload = function(e) {
-            // Hide existing image, show new preview
             const existingImg = document.getElementById('existingImage');
             if (existingImg) existingImg.style.display = 'none';
             
@@ -294,9 +307,6 @@ document.getElementById('imageInput')?.addEventListener('change', function(e) {
     }
 });
 
-// ==========================================
-// CHECKBOX ANIMATION HANDLER
-// ==========================================
 function updateCheckboxStyle(boxId, checkId, isChecked) {
     const box = document.getElementById(boxId);
     const check = document.getElementById(checkId);
@@ -318,13 +328,10 @@ function updateCheckboxStyle(boxId, checkId, isChecked) {
     }
 }
 
-// Initialize checkbox state
 const isActiveCheckbox = document.getElementById('isActive');
 if (isActiveCheckbox) {
-    // Set initial state (checked by default)
     updateCheckboxStyle('isActiveBox', 'isActiveCheck', isActiveCheckbox.checked);
     
-    // On change
     isActiveCheckbox.addEventListener('change', function() {
         updateCheckboxStyle('isActiveBox', 'isActiveCheck', this.checked);
     });

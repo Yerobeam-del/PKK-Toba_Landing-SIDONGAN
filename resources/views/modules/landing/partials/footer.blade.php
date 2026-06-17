@@ -1,47 +1,91 @@
 <footer class="footer">
-    <div class="footer-inner">
-        <div class="footer-grid">
-            <div class="footer-about">
-                <div class="footer-brand">
-                    <img src="{{ asset('assets/landing/images/PKK-Logo.png') }}" alt="PKK Logo">
-                    <span class="footer-brand-text">PKK Kabupaten Toba</span>
+    <div class="footer-container">
+        
+        {{-- Title --}}
+        <div class="footer-title-section">
+            <h2 class="footer-title">PKK Kabupaten Toba</h2>
+        </div>
+        
+        {{-- Main Content: 2 Columns --}}
+        <div class="footer-main">
+            
+            {{-- Left Column: Logo + Info --}}
+            <div class="footer-left">
+                <div class="footer-brand-row">
+                    <img src="{{ asset('assets/landing/images/Logo-PKK-Transparent.png') }}" alt="PKK Logo" class="footer-brand-logo">
+                    
+                    <div class="footer-info">
+                        <p class="footer-address">
+                            Jl. D. I. Panjaitan, No. 1, Balige,<br>
+                            Kabupaten Toba,<br>
+                            Sumatera Utara 22311
+                        </p>
+                        
+                        <div class="footer-contact">
+                            <h3 class="footer-contact-title">Contact Us:</h3>
+                            <div class="footer-contact-links">
+                                <a href="mailto:info@pkktoba.id" class="footer-contact-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-icon">
+                                        <rect width="20" height="16" x="2" y="4" rx="2"></rect>
+                                        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"></path>
+                                    </svg>
+                                    info@pkktoba.id
+                                </a>
+                                <a href="tel:+6282120194130" class="footer-contact-link">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="contact-icon">
+                                        <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"></path>
+                                    </svg>
+                                    +62 821-2019-4130
+                                </a>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <p>Pemberdayaan Kesejahteraan Keluarga Kabupaten Toba berkomitmen mewujudkan keluarga sejahtera melalui program-program inovatif dan transformasi digital.</p>
             </div>
-            <div>
-                <h4>Layanan</h4>
-                <ul class="footer-links">
-                    <li><a onclick="navigateTo('aplikasi')">Aplikasi</a></li>
-                    <li><a onclick="navigateTo('berita')">Berita</a></li>
-                    <li><a onclick="navigateTo('desa')">Data Desa</a></li>
-                    <li><a onclick="navigateTo('sk')">SK & Dokumen</a></li>
-                    <li><a onclick="navigateTo('template')">Template</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4>Aplikasi</h4>
-                <ul class="footer-links">
-                    <li><a href="https://sieda.pkktoba.id" target="_blank">SIEDA (E-Dasawisma)</a></li>
-                    <li><a href="https://sidongan.pkktoba.id" target="_blank">SIDONGAN (Surat Menyurat)</a></li>
-                </ul>
-            </div>
-            <div>
-                <h4>Kontak</h4>
-                <ul class="footer-links">
-                    <li><a href="#">Jl. A.H. Nasution, Balige</a></li>
-                    <li><a href="#">Kabupaten Toba</a></li>
-                    <li><a href="#">Sumatera Utara 22311</a></li>
-                    <li><a href="mailto:info@pkktoba.id">info@pkktoba.id</a></li>
-                </ul>
+            
+            {{-- Right Column: Logo Kabupaten Toba --}}
+            <div class="footer-right">
+                <img src="{{ asset('assets/landing/images/Logo-Kabupaten-Toba-Transparent.png') }}" alt="Kabupaten Toba Logo" class="footer-secondary-logo">
             </div>
         </div>
+        
+        {{-- Quick Access Section - Dynamic from Database --}}
+        @php
+            // Ambil aplikasi yang aktif, maksimal 5
+            $quickAccessApps = \App\Models\Application::where('is_active', true)
+                ->where('status', 'active')
+                ->orderBy('sort_order')
+                ->limit(5)
+                ->get();
+        @endphp
+
+        @if($quickAccessApps->count() > 0)
+        <div class="footer-quick-access">
+            <h3 class="quick-access-title">Quick Access</h3>
+            <div class="quick-access-links">
+                @foreach($quickAccessApps as $app)
+                <a href="{{ $app->url ?? '#' }}" target="_blank" class="quick-access-item" title="{{ $app->name }}">
+                    @if($app->icon)
+                        <img src="{{ asset('storage/' . $app->icon) }}" alt="{{ $app->short_name }}" class="app-icon">
+                    @else
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="3" width="7" height="7"></rect>
+                            <rect x="14" y="14" width="7" height="7"></rect>
+                            <rect x="3" y="14" width="7" height="7"></rect>
+                        </svg>
+                    @endif
+                    <span>{{ $app->short_name ?? $app->name }}</span>
+                </a>
+                @endforeach
+            </div>
+        </div>
+        @endif
+        
+        {{-- Bottom Copyright --}}
         <div class="footer-bottom">
-            <p>&copy; {{ date('Y') }} IT DEL x PKK Kabupaten Toba. Hak Cipta Dilindungi.</p>
-            <div class="footer-social">
-                <a href="#" aria-label="Facebook"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
-                <a href="#" aria-label="Instagram"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
-                <a href="#" aria-label="YouTube"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-2C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 2A29 29 0 0 0 1 11.75a29 29 0 0 0 .46 5.33A2.78 2.78 0 0 0 3.4 19.1c1.72.46 8.6.46 8.6.46s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-2 29 29 0 0 0 .46-5.25 29 29 0 0 0-.46-5.43z"/><polygon points="9.75 15.02 15.5 11.75 9.75 8.48 9.75 15.02" fill="#fff"/></svg></a>
-            </div>
+            <p class="footer-copyright">Copyright © {{ date('Y') }} PKK Kabupaten Toba. All Rights Reserved.</p>
         </div>
+        
     </div>
 </footer>

@@ -68,7 +68,7 @@
 </div>
 
 {{-- Quick Actions --}}
-<div class="card">
+<div class="card" style="border: none; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
     <h2 class="card-title">Aksi Cepat</h2>
     <div class="quick-actions">
         <a href="{{ route('admin.berita.create') }}" class="quick-action-btn">
