@@ -1,95 +1,283 @@
-<div class="page" id="page-berita" style="display: none;">
-    <div class="page-header" style="background: linear-gradient(135deg, var(--primary), var(--primary-light));">
+<div class="page" id="page-berita">
+    <div class="page-header">
         <div class="page-header-content">
             <h1>Berita & Kegiatan</h1>
             <p>Informasi terbaru seputar kegiatan dan program PKK Kabupaten Toba</p>
             <div class="breadcrumb">
-                <a onclick="navigateTo('beranda')">Beranda</a><span>/</span><span class="current">Berita</span>
+                <a onclick="navigateTo('beranda')">Beranda</a>
+                <span>/</span>
+                <span class="current">Berita</span>
             </div>
         </div>
     </div>
 
-    <section class="news-full-section" style="padding: 4rem 2rem; min-height: 60vh; background: #f8fafc;">
-        
-        {{-- Loading State --}}
-        <div id="news-loading" style="text-align: center; padding: 5rem 2rem;">
-            <div style="font-size: 1.2rem; color: #64748b; font-weight: 500;">Memuat berita terbaru...</div>
-        </div>
+    <section class="news-full-section">
+        <div class="news-container">
+            {{-- Header dengan Controls --}}
+            <div class="news-header">
+                <h2 class="news-section-title">Daftar Berita</h2>
+                <div class="news-controls">
+                {{-- Sort Selector --}}
+                <div class="news-sort-selector">
+                    <label for="newsSortSelect" class="news-sort-label">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <path d="M3 6h18M6 12h12M9 18h6"/>
+                        </svg>
+                        Urutkan:
+                    </label>
+                    <select id="newsSortSelect" class="news-sort-select" onchange="changeNewsSort(this.value)" title="Pilih cara pengurutan berita">
+                        <option value="latest" selected>Terbaru</option>
+                        <option value="oldest">Terlama</option>
+                        <option value="title_asc">Judul A-Z</option>
+                        <option value="title_desc">Judul Z-A</option>
+                    </select>
+                </div>
 
-        {{-- News Grid --}}
-        <div class="news-full-grid" id="newsFullGrid" style="display: none;"></div>
+                {{-- Tambahkan info text di bawah selector --}}
+                <div class="news-sort-info">
+                    <p class="sort-description" id="sortDescription">
+                        Menampilkan berita dari yang paling baru dipublikasikan
+                    </p>
+                </div>
 
-        {{-- Beautiful Empty State --}}
-        <div id="news-empty-state" style="display: none; text-align: center; padding: 5rem 2rem; max-width: 650px; margin: 0 auto;">
-            <div style="width: 120px; height: 120px; margin: 0 auto 2rem; background: linear-gradient(135deg, rgba(15,107,99,0.1), rgba(20,184,166,0.1)); border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-                <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#0f6b63" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="opacity: 0.8;">
-                    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
-                    <path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/>
-                </svg>
+                    {{-- Per Page Selector --}}
+                    <div class="news-perpage-selector">
+                        <label for="newsPerPageSelect" class="news-perpage-label">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                <path d="M4 6h16M4 12h16M4 18h16"/>
+                            </svg>
+                            Tampilkan:
+                        </label>
+                        <select id="newsPerPageSelect" class="news-perpage-select" onchange="changeNewsPerPage(this.value)">
+                            <option value="6" selected>6</option>
+                            <option value="12">12</option>
+                            <option value="24">24</option>
+                        </select>
+                        <span class="news-perpage-text">berita</span>
+                    </div>
+                </div>
             </div>
-            <h3 style="font-size: 1.75rem; font-weight: 800; color: #1e293b; margin: 0 0 0.75rem 0;">Belum Ada Berita Terbaru</h3>
-            <p style="color: #64748b; font-size: 1.05rem; line-height: 1.7; margin: 0 auto 2rem; max-width: 500px;">Tim kami sedang mempersiapkan informasi terkini seputar kegiatan dan program PKK Kabupaten Toba. Silakan kunjungi kembali nanti untuk update terbaru.</p>
-            <a onclick="navigateTo('beranda')" style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.875rem 2rem; background: linear-gradient(135deg, #0f6b63, #14b8a6); color: #fff; border-radius: 12px; font-weight: 600; text-decoration: none; cursor: pointer; transition: all 0.3s; box-shadow: 0 4px 15px rgba(15,107,99,0.3);" onmouseover="this.style.transform='translateY(-3px)'; this.style.boxShadow='0 8px 25px rgba(15,107,99,0.4)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 4px 15px rgba(15,107,99,0.3)'">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
-                Kembali ke Beranda
-            </a>
+
+            {{-- Loading State --}}
+            <div id="news-loading" class="news-loading">
+                <div class="news-loading-text">Memuat berita terbaru...</div>
+            </div>
+
+            {{-- News Grid --}}
+            <div class="news-full-grid" id="newsFullGrid"></div>
+
+            {{-- Pagination --}}
+            <div id="newsPaginationWrapper" class="news-pagination-wrapper hidden">
+                <div class="news-pagination-container">
+                    <button id="newsPrevBtn" class="news-pagination-btn" onclick="changeNewsPage('prev')" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                        <span class="desktop-only">Sebelumnya</span>
+                    </button>
+                    <div id="newsPageNumbers" class="news-page-numbers"></div>
+                    <button id="newsNextBtn" class="news-pagination-btn" onclick="changeNewsPage('next')">
+                        <span class="desktop-only">Selanjutnya</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="news-pagination-info" id="newsPaginationInfo"></div>
+            </div>
+
+            {{-- Empty State --}}
+            <div id="news-empty-state" class="news-empty-state">
+                <div class="news-empty-icon">
+                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/>
+                        <path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/>
+                    </svg>
+                </div>
+                <h3 class="news-empty-title">Belum Ada Berita Terbaru</h3>
+                <p class="news-empty-text">Tim kami sedang mempersiapkan informasi terkini seputar kegiatan dan program PKK Kabupaten Toba. Silakan kunjungi kembali nanti untuk update terbaru.</p>
+                <a onclick="navigateTo('beranda')" class="news-back-btn">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                    </svg>
+                    Kembali ke Beranda
+                </a>
+            </div>
         </div>
     </section>
 </div>
 
 <script>
-let beritaDataLoaded = false;
+// ==========================================
+// PAGINATION & SORT STATE
+// ==========================================
+let newsCurrentPage = 1;
+let newsPerPage = 6;
+let newsTotalPages = 0;
+let newsTotalItems = 0;
+let newsSort = 'latest'; // latest, oldest, title_asc, title_desc
+let isBeritaLoading = false;
+let beritaLoaded = false;
 
 // ==========================================
-// LOAD BERITA DATA - DENGAN REDIRECT
+// INITIALIZATION
+// ==========================================
+document.addEventListener('DOMContentLoaded', function() {
+    // Load preferences
+    const savedPerPage = localStorage.getItem('news_per_page') || '6';
+    const savedSort = localStorage.getItem('news_sort') || 'latest';
+    
+    newsPerPage = parseInt(savedPerPage);
+    newsSort = savedSort;
+    
+    // Set select values
+    const perPageSelect = document.getElementById('newsPerPageSelect');
+    const sortSelect = document.getElementById('newsSortSelect');
+    
+    if (perPageSelect) perPageSelect.value = newsPerPage;
+    if (sortSelect) sortSelect.value = newsSort;
+});
+
+// ==========================================
+// CHANGE SORT
+// ==========================================
+function changeNewsSort(value) {
+    newsSort = value;
+    localStorage.setItem('news_sort', newsSort);
+    newsCurrentPage = 1;
+    loadBeritaData();
+}
+
+// ==========================================
+// CHANGE PER PAGE
+// ==========================================
+function changeNewsPerPage(value) {
+    newsPerPage = parseInt(value);
+    localStorage.setItem('news_per_page', newsPerPage);
+    newsCurrentPage = 1;
+    
+    // AUTO SCROLL KE JUDUL "Daftar Berita" DENGAN OFFSET
+    const sectionTitle = document.querySelector('.news-section-title');
+    if (sectionTitle) {
+        const navbarHeight = 165; // Tinggi navbar
+        const elementPosition = sectionTitle.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - navbarHeight;
+        
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+    }
+    
+    loadBeritaData();
+}
+
+// ==========================================
+// CHANGE PAGE
+// ==========================================
+function changeNewsPage(direction) {
+    if (isBeritaLoading) return;
+    
+    if (direction === 'prev') {
+        if (newsCurrentPage > 1) newsCurrentPage--;
+        else return;
+    } else if (direction === 'next') {
+        if (newsCurrentPage < newsTotalPages) newsCurrentPage++;
+        else return;
+    } else {
+        newsCurrentPage = parseInt(direction);
+    }
+    
+    // AUTO SCROLL KE JUDUL "Daftar Berita" DENGAN OFFSET
+    const sectionTitle = document.querySelector('.news-section-title');
+    if (sectionTitle) {
+        const navbarHeight = 165; // Tinggi navbar
+        const elementPosition = sectionTitle.getBoundingClientRect().top + window.pageYOffset;
+        const offsetPosition = elementPosition - navbarHeight;
+        
+        window.scrollTo({
+            top: offsetPosition,
+            behavior: 'smooth'
+        });
+    }
+    
+    loadBeritaData();
+}
+
+// ==========================================
+// LOAD BERITA DATA
 // ==========================================
 async function loadBeritaData() {
-    if (beritaDataLoaded) return;
+    if (isBeritaLoading) return;
+    isBeritaLoading = true;
     
     const loadingEl = document.getElementById('news-loading');
     const gridEl = document.getElementById('newsFullGrid');
     const emptyEl = document.getElementById('news-empty-state');
+    const paginationWrapper = document.getElementById('newsPaginationWrapper');
+    
+    if (!loadingEl || !gridEl) {
+        isBeritaLoading = false;
+        return;
+    }
+    
+    // Show loading
+    loadingEl.style.display = 'block';
+    loadingEl.innerHTML = '<div class="news-loading-text">Memuat berita terbaru...</div>';
+    gridEl.style.display = 'none';
+    gridEl.innerHTML = '';
+    if (emptyEl) emptyEl.style.display = 'none';
+    if (paginationWrapper) paginationWrapper.classList.add('hidden');
     
     try {
-        const response = await fetch('/api/v1/news');
+        // Build query params
+        const params = new URLSearchParams({
+            page: newsCurrentPage,
+            limit: newsPerPage,
+            sort: newsSort
+        });
+        
+        const response = await fetch(`/api/v1/news?${params.toString()}`);
         const result = await response.json();
         
         loadingEl.style.display = 'none';
         
         if (result.success && result.data && result.data.length > 0) {
+            newsTotalItems = result.total || result.data.length;
+            newsTotalPages = result.last_page || Math.ceil(newsTotalItems / newsPerPage);
+            
             gridEl.style.display = 'grid';
             
             gridEl.innerHTML = result.data.map(news => {
-                // Gunakan slug jika ada, fallback ke id
-                const newsUrl = news.slug ? `/berita/${news.slug}` : `/berita/${news.id}`;
+                const imgUrl = news.image_path 
+                    ? '/storage/' + news.image_path 
+                    : '/assets/landing/images/berita/default.jpg';
+                
+                const date = news.published_at || news.created_at;
+                const formattedDate = date ? new Date(date).toLocaleDateString('id-ID', { 
+                    day: '2-digit', month: 'short', year: 'numeric' 
+                }) : '-';
+                
+                const newsUrl = news.slug ? '/berita/' + news.slug : '/berita/' + news.id;
                 
                 return `
-                <a href="${newsUrl}" style="text-decoration: none; color: inherit; display: block;">
-                    <article class="news-card" 
-                        style="background:#fff; border-radius:16px; overflow:hidden; box-shadow:0 4px 15px rgba(0,0,0,0.06); transition:all 0.3s;" 
-                        onmouseover="this.style.transform='translateY(-5px)';this.style.boxShadow='0 8px 25px rgba(0,0,0,0.1)'" 
-                        onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='0 4px 15px rgba(0,0,0,0.06)'">
-                        
-                        <div style="position:relative; overflow:hidden;">
-                            <img src="${news.image || '/assets/landing/images/berita/default.jpg'}" 
-                                 alt="${news.title}" 
-                                 style="width:100%; height:200px; object-fit:cover; display:block;"
+                <a href="${newsUrl}" class="news-card-link">
+                    <article class="news-card-full">
+                        <div class="news-card-image-wrapper">
+                            <img src="${imgUrl}" alt="${news.title}" class="news-card-image"
                                  onerror="this.src='/assets/landing/images/berita/default.jpg'">
                         </div>
-                        
-                        <div style="padding:1.5rem;">
-                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:0.75rem;">
-                                <span style="background:rgba(39,103,73,0.1); color:#276749; padding:0.25rem 0.75rem; border-radius:50px; font-size:0.75rem; font-weight:600;">${news.category || 'Umum'}</span>
-                                <span style="color:#94a3b8; font-size:0.8rem;">${news.date || news.created_at}</span>
+                        <div class="news-card-content">
+                            <div class="news-card-meta">
+                                <span class="news-card-category">${news.category || 'Umum'}</span>
+                                <span class="news-card-date">${formattedDate}</span>
                             </div>
-                            
-                            <h3 style="font-size:1.15rem; font-weight:700; color:#1e293b; margin:0 0 0.5rem 0; line-height:1.4;">${news.title}</h3>
-                            
-                            <p style="color:#64748b; font-size:0.9rem; line-height:1.6; margin:0 0 1rem 0; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;">${news.excerpt || news.content}</p>
-                            
-                            <span style="color:#276749; font-weight:600; font-size:0.9rem; display:inline-flex; align-items:center; gap:0.5rem;">
+                            <h3 class="news-card-title">${news.title}</h3>
+                            <p class="news-card-excerpt">${news.excerpt || news.content || ''}</p>
+                            <span class="news-card-readmore">
                                 Baca Selengkapnya 
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="transition:transform 0.3s;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                     <path d="M5 12h14M12 5l7 7-7 7"/>
                                 </svg>
                             </span>
@@ -99,32 +287,150 @@ async function loadBeritaData() {
                 `;
             }).join('');
             
+            renderNewsPagination();
         } else {
-            emptyEl.style.display = 'block';
+            if (emptyEl) emptyEl.style.display = 'block';
         }
-        
-        beritaDataLoaded = true;
     } catch (error) {
-        console.error('❌ Error loading berita:', error);
-        loadingEl.innerHTML = '<p style="color:#ef4444; font-weight:500;">Gagal memuat berita. Silakan refresh halaman.</p>';
+        console.error('Error loading berita:', error);
+        loadingEl.innerHTML = '<p class="news-error-text">Gagal memuat berita. Silakan refresh halaman.</p>';
+    } finally {
+        isBeritaLoading = false;
     }
 }
 
-// Observer untuk load data saat halaman aktif
-document.addEventListener('DOMContentLoaded', () => {
-    const observer = new MutationObserver(() => {
-        const page = document.getElementById('page-berita');
-        if (page && page.classList.contains('active') && !beritaDataLoaded) {
-            setTimeout(() => loadBeritaData(), 100);
-            observer.disconnect();
+// ==========================================
+// RENDER PAGINATION
+// ==========================================
+function renderNewsPagination() {
+    const paginationWrapper = document.getElementById('newsPaginationWrapper');
+    const pageNumbersEl = document.getElementById('newsPageNumbers');
+    const prevBtn = document.getElementById('newsPrevBtn');
+    const nextBtn = document.getElementById('newsNextBtn');
+    const infoEl = document.getElementById('newsPaginationInfo');
+    
+    if (!paginationWrapper || !pageNumbersEl) return;
+    
+    if (newsTotalPages <= 1) {
+        paginationWrapper.classList.add('hidden');
+        return;
+    }
+    
+    paginationWrapper.classList.remove('hidden');
+    
+    if (prevBtn) prevBtn.disabled = newsCurrentPage === 1;
+    if (nextBtn) nextBtn.disabled = newsCurrentPage === newsTotalPages;
+    
+    pageNumbersEl.innerHTML = '';
+    
+    let pages = [];
+    
+    if (newsTotalPages <= 7) {
+        for (let i = 1; i <= newsTotalPages; i++) pages.push(i);
+    } else {
+        if (newsCurrentPage <= 3) {
+            pages = [1, 2, 3, 4, '...', newsTotalPages];
+        } else if (newsCurrentPage >= newsTotalPages - 2) {
+            pages = [1, '...', newsTotalPages - 3, newsTotalPages - 2, newsTotalPages - 1, newsTotalPages];
+        } else {
+            pages = [1, '...', newsCurrentPage - 1, newsCurrentPage, newsCurrentPage + 1, '...', newsTotalPages];
+        }
+    }
+    
+    pages.forEach(function(page) {
+        if (page === '...') {
+            const dots = document.createElement('span');
+            dots.className = 'news-pagination-dots';
+            dots.textContent = '...';
+            pageNumbersEl.appendChild(dots);
+        } else {
+            const btn = document.createElement('button');
+            btn.className = 'news-pagination-btn';
+            if (page === newsCurrentPage) btn.classList.add('active');
+            btn.textContent = page;
+            btn.onclick = function() { changeNewsPage(page); };
+            pageNumbersEl.appendChild(btn);
         }
     });
-    observer.observe(document.body, { childList: true, subtree: true });
     
-    // Load immediately if already active
+    if (infoEl) {
+        const from = (newsCurrentPage - 1) * newsPerPage + 1;
+        const to = Math.min(newsCurrentPage * newsPerPage, newsTotalItems);
+        infoEl.innerHTML = `Menampilkan <strong>${from}</strong> - <strong>${to}</strong> dari <strong>${newsTotalItems}</strong> berita`;
+    }
+}
+
+// ==========================================
+// SAFE PAGE ACTIVATION
+// ==========================================
+function checkAndLoadBerita() {
     const page = document.getElementById('page-berita');
-    if (page && page.classList.contains('active')) {
-        setTimeout(() => loadBeritaData(), 100);
+    if (page && page.classList.contains('active') && !beritaLoaded) {
+        beritaLoaded = true;
+        loadBeritaData();
+    }
+}
+
+document.addEventListener('DOMContentLoaded', checkAndLoadBerita);
+
+window.addEventListener('hashchange', function() {
+    if (window.location.hash === '#berita') {
+        beritaLoaded = false;
+        setTimeout(checkAndLoadBerita, 100);
     }
 });
+
+// Update description based on selected sort
+function updateSortDescription(value) {
+    const descriptions = {
+        'latest': 'Menampilkan berita dari yang paling baru dipublikasikan',
+        'oldest': 'Menampilkan berita dari yang paling lama dipublikasikan',
+        'title_asc': 'Menampilkan berita berdasarkan judul dari A sampai Z',
+        'title_desc': 'Menampilkan berita berdasarkan judul dari Z sampai A'
+    };
+    
+    const descEl = document.getElementById('sortDescription');
+    if (descEl) {
+        descEl.textContent = descriptions[value] || descriptions['latest'];
+    }
+}
+
+// Update function changeNewsSort
+function changeNewsSort(value) {
+    newsSort = value;
+    localStorage.setItem('news_sort', newsSort);
+    newsCurrentPage = 1;
+    updateSortDescription(value); // Add this line
+    loadBeritaData();
+}
+
+// Call on init
+document.addEventListener('DOMContentLoaded', function() {
+    // ... existing code ...
+    updateSortDescription(newsSort); // Add this line
+});
+
+
+
+// Safe observer
+const beritaPage = document.getElementById('page-berita');
+if (beritaPage) {
+    const beritaObserver = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+                if (beritaPage.classList.contains('active') && !beritaLoaded) {
+                    beritaLoaded = true;
+                    loadBeritaData();
+                } else if (!beritaPage.classList.contains('active')) {
+                    beritaLoaded = false;
+                }
+            }
+        });
+    });
+    
+    beritaObserver.observe(beritaPage, { 
+        attributes: true, 
+        attributeFilter: ['class']
+    });
+}
 </script>

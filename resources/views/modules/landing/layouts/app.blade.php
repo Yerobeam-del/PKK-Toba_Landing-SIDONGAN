@@ -31,9 +31,6 @@
     {{-- Footer --}}
     @include('modules.landing.partials.footer')
     
-    {{-- News Modal --}}
-    @include('modules.landing.partials.news-modal')
-    
     {{-- Global Config & Init --}}
     <script>
         window.Laravel = { csrfToken: '{{ csrf_token() }}' };
@@ -53,6 +50,83 @@
     
     {{-- Dynamic News Content (Inline Script) --}}
     <script>
+        // ==========================================
+        // AUTO-DETECT ACTIVE LINK - HYBRID ROUTING
+        // ==========================================
+        function setActiveLinkByRoute() {
+            const navbar = document.querySelector('.navbar-links');
+            if (!navbar) return;
+
+            const currentPath = window.location.pathname.toLowerCase();
+            const currentHash = window.location.hash.replace('#', '').toLowerCase();
+
+            // Remove all active states first
+            document.querySelectorAll('.navbar-links a').forEach(link => {
+                link.classList.remove('active-link');
+            });
+
+            // Determine active page
+            let activePage = 'beranda'; // default
+
+            // Priority 1: Laravel route (e.g. /berita/slug)
+            if (currentPath.includes('/berita')) {
+                activePage = 'berita';
+            } else if (currentPath.includes('/sk')) {
+                activePage = 'sk';
+            } else if (currentPath.includes('/template')) {
+                activePage = 'template';
+            } else if (currentPath.includes('/struktur')) {
+                activePage = 'struktur';
+            } else if (currentPath.includes('/desa')) {
+                activePage = 'desa';
+            }
+            // Priority 2: Hash navigation (SPA)
+            else if (currentHash) {
+                activePage = currentHash;
+            }
+
+            // Set active class
+            document.querySelectorAll('.navbar-links a').forEach(link => {
+                const href = (link.getAttribute('href') || '').toLowerCase();
+                const text = (link.textContent || '').trim().toLowerCase();
+                const onclick = (link.getAttribute('onclick') || '').toLowerCase();
+
+                // Match by onclick navigateTo, href, or text
+                if (
+                    onclick.includes("navigateTo('" + activePage + "')") ||
+                    href.includes(activePage) ||
+                    text === activePage
+                ) {
+                    link.classList.add('active-link');
+                }
+            });
+
+            console.log('[Router] Active page set to:', activePage, '| Path:', currentPath, '| Hash:', currentHash);
+        }
+
+        // Override updateActiveNav to respect Laravel routes
+        (function overrideUpdateActiveNav() {
+            if (typeof window.updateActiveNav === 'function' && !window._originalUpdateActiveNav) {
+                window._originalUpdateActiveNav = window.updateActiveNav;
+                window.updateActiveNav = function(pageName) {
+                    // If we're on Laravel route page, don't override
+                    const currentPath = window.location.pathname.toLowerCase();
+                    if (currentPath.includes('/berita') ||
+                        currentPath.includes('/sk') ||
+                        currentPath.includes('/template') ||
+                        currentPath.includes('/struktur') ||
+                        currentPath.includes('/desa')) {
+                        setActiveLinkByRoute();
+                        return;
+                    }
+                    // Otherwise use original SPA logic
+                    if (window._originalUpdateActiveNav) {
+                        window._originalUpdateActiveNav(pageName);
+                    }
+                };
+            }
+        })();
+
         // Only run if functions not already defined in external JS files
         if (typeof populateNewsHome !== 'function') {
             async function fetchNewsFromAPI(limit = 10) {
@@ -129,21 +203,69 @@
                 document.getElementById('newsModal')?.classList.remove('active');
                 document.body.style.overflow = '';
             }
-            
-            // Auto-navigate based on URL hash when page loads
-            document.addEventListener('DOMContentLoaded', function() {
-                const hash = window.location.hash.replace('#', '');
-                console.log('Page loaded with hash:', hash);
-                
-                if (hash && typeof navigateTo === 'function') {
-                    // Tunggu sebentar agar DOM ready
-                    setTimeout(function() {
-                        navigateTo(hash);
-                        updateActiveNav(hash);
-                    }, 100);
-                }
-            });
         }
+        
+        // ==========================================
+        // INITIALIZATION - HANDLE HYBRID ROUTING
+        // ==========================================
+        document.addEventListener('DOMContentLoaded', function() {
+            const hash = window.location.hash.replace('#', '');
+            const currentPath = window.location.pathname.toLowerCase();
+            const isLaravelRoute = currentPath.includes('/berita') ||
+                                currentPath.includes('/sk') ||
+                                currentPath.includes('/template') ||
+                                currentPath.includes('/struktur') ||
+                                currentPath.includes('/desa');
+
+            console.log('[Router] DOMContentLoaded | Path:', currentPath, '| Hash:', hash, '| IsLaravelRoute:', isLaravelRoute);
+
+            if (isLaravelRoute) {
+                // Laravel route page - set active by path
+                setTimeout(function() {
+                    setActiveLinkByRoute();
+                }, 150);
+                setTimeout(function() {
+                    setActiveLinkByRoute(); // Double-check after SPA scripts might have run
+                }, 500);
+            } else if (hash && typeof navigateTo === 'function') {
+                // SPA hash navigation
+                setTimeout(function() {
+                    navigateTo(hash);
+                    if (typeof updateActiveNav === 'function') {
+                        updateActiveNav(hash);
+                    }
+                }, 100);
+            } else {
+                // Homepage - ensure Beranda is active
+                setTimeout(function() {
+                    if (typeof updateActiveNav === 'function') {
+                        updateActiveNav('beranda');
+                    }
+                }, 100);
+            }
+
+            // Load news on homepage if needed
+            if (!isLaravelRoute && typeof populateNewsHome === 'function') {
+                const newsGrid = document.getElementById('newsHomeGrid');
+                if (newsGrid && !newsGrid.innerHTML.trim()) {
+                    populateNewsHome();
+                }
+            }
+        });
+
+        // Re-apply active link after any navigation event
+        window.addEventListener('hashchange', function() {
+            const currentPath = window.location.pathname.toLowerCase();
+            const isLaravelRoute = currentPath.includes('/berita') ||
+                                currentPath.includes('/sk') ||
+                                currentPath.includes('/template') ||
+                                currentPath.includes('/struktur') ||
+                                currentPath.includes('/desa');
+            
+            if (isLaravelRoute) {
+                setActiveLinkByRoute();
+            }
+        });
     </script>
     
     @stack('scripts')

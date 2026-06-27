@@ -299,7 +299,10 @@
             background: #fff;
             border-top: 1px solid #e2e8f0;
             padding: 1.5rem 2rem;
-            margin-top: auto;
+            position: sticky;
+            bottom: 0;
+            z-index: 100;
+            box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
         }
 
         .admin-footer-inner {
@@ -499,6 +502,18 @@
                             </svg>
                         </div>
                         <span class="nav-text">Manajemen Akun</span>
+                    </a>
+
+                    {{-- Data SIDONGAN --}}
+                    <a href="{{ route('admin.sidongan-data.index') }}" class="nav-item {{ request()->routeIs('admin.sidongan-data.*') ? 'active' : '' }}">
+                        <div class="nav-icon-box">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <ellipse cx="12" cy="5" rx="9" ry="3"/>
+                                <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/>
+                                <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/>
+                            </svg>
+                        </div>
+                        <span class="nav-text">Data SIDONGAN</span>
                     </a>
                 </div>
                 @endif

@@ -16,30 +16,66 @@ Route::get('/api/v1/health', function () {
 });
 
 // ================= API: NEWS =================
-Route::get('/api/v1/news', function () {
+Route::get('/api/v1/news', function (\Illuminate\Http\Request $request) {
     try {
-        $news = \App\Models\News::published()
-            ->orderBy('published_at', 'desc')
-            ->limit(10)
-            ->get()
-            ->map(function($item) {
-                return [
-                    'id' => $item->id,
-                    'slug' => $item->slug,
-                    'title' => $item->title,
-                    'category' => $item->category,
-                    'excerpt' => $item->excerpt,
-                    'content' => $item->content,
-                    'image_path' => $item->image_path,
-                    'image' => $item->image_path ? asset('storage/' . $item->image_path) : null,
-                    'published_at' => $item->published_at,
-                    'created_at' => $item->created_at,
-                    'date' => $item->published_at?->format('d M Y') ?? $item->created_at->format('d M Y'),
-                ];
-            });
+        // Get pagination parameters
+        $limit = min(max((int) $request->get('limit', 6), 1), 50);
         
-        return response()->json(['success' => true, 'data' => $news]);
+        // Get sort parameter
+        $sort = $request->get('sort', 'latest');
+        
+        // Build query - gunakan reorder() untuk reset order dari scope
+        $query = \App\Models\News::published()->reorder();
+        
+        // Apply sorting based on published_at date
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('published_at', 'asc');
+                break;
+            case 'title_asc':
+                $query->orderBy('title', 'asc');
+                break;
+            case 'title_desc':
+                $query->orderBy('title', 'desc');
+                break;
+            case 'latest':
+            default:
+                $query->orderBy('published_at', 'desc');
+                break;
+        }
+        
+        // Paginate
+        $news = $query->paginate($limit);
+        
+        // Format data
+        $formattedData = $news->map(function($item) {
+            return [
+                'id' => $item->id,
+                'slug' => $item->slug,
+                'title' => $item->title,
+                'category' => $item->category,
+                'excerpt' => $item->excerpt,
+                'content' => $item->content,
+                'image_path' => $item->image_path,
+                'image' => $item->image_path ? asset('storage/' . $item->image_path) : null,
+                'published_at' => $item->published_at,
+                'created_at' => $item->created_at,
+                'date' => $item->published_at?->format('d M Y') ?? $item->created_at->format('d M Y'),
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+            'total' => $news->total(),
+            'last_page' => $news->lastPage(),
+            'current_page' => $news->currentPage(),
+            'per_page' => $news->perPage(),
+            'from' => $news->firstItem(),
+            'to' => $news->lastItem(),
+        ]);
     } catch (\Exception $e) {
+        \Log::error('API News Error: ' . $e->getMessage());
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
     }
 });
@@ -193,59 +229,176 @@ Route::get('/api/v1/desas', function () {
     }
 });
 
-// ================= API: PROXY WILAYAH.ID =================
-Route::get('/api/v1/wilayah/proxy/desa/{kecamatanCode}', function ($kecamatanCode) {
+// ================= API: PROXY WILAYAH.ID (COMPLETE) =================
+
+// Proxy untuk Provinsi
+Route::get('/api/v1/wilayah/proxy/provinces', function () {
     try {
-        // Fetch dari API wilayah.id via server (bukan browser)
-        $response = Http::timeout(30)->get("https://wilayah.id/api/villages/{$kecamatanCode}.json");
+        $cacheKey = 'wilayah_provinces';
         
-        if (!$response->successful()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal mengambil data dari API wilayah.id'
-            ], $response->status());
-        }
+        // Try to get from cache (24 hours)
+        $provinces = cache()->remember($cacheKey, 86400, function () {
+            $response = Http::timeout(30)->get('https://wilayah.id/api/provinces.json');
+            
+            if (!$response->successful()) {
+                throw new \Exception('Failed to fetch provinces from wilayah.id');
+            }
+            
+            return $response->json()['data'] ?? [];
+        });
         
         return response()->json([
             'success' => true,
-            'data' => $response->json()['data'] ?? []
+            'data' => $provinces
         ]);
         
     } catch (\Exception $e) {
-        \Log::error('Proxy Error: ' . $e->getMessage());
+        \Log::error('Proxy Provinces Error: ' . $e->getMessage());
         return response()->json([
             'success' => false,
-            'message' => 'Server error: ' . $e->getMessage()
+            'message' => 'Gagal memuat data provinsi: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// Proxy untuk Kabupaten/Kota by Provinsi
+Route::get('/api/v1/wilayah/proxy/regencies/{provinceCode}', function ($provinceCode) {
+    try {
+        $cacheKey = 'wilayah_regencies_' . $provinceCode;
+        
+        $regencies = cache()->remember($cacheKey, 86400, function () use ($provinceCode) {
+            $response = Http::timeout(30)->get("https://wilayah.id/api/regencies/{$provinceCode}.json");
+            
+            if (!$response->successful()) {
+                throw new \Exception('Failed to fetch regencies from wilayah.id');
+            }
+            
+            return $response->json()['data'] ?? [];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $regencies
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Proxy Regencies Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memuat data kabupaten/kota: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// Proxy untuk Kecamatan by Kabupaten
+Route::get('/api/v1/wilayah/proxy/districts/{regencyCode}', function ($regencyCode) {
+    try {
+        $cacheKey = 'wilayah_districts_' . $regencyCode;
+        
+        $districts = cache()->remember($cacheKey, 86400, function () use ($regencyCode) {
+            $response = Http::timeout(30)->get("https://wilayah.id/api/districts/{$regencyCode}.json");
+            
+            if (!$response->successful()) {
+                throw new \Exception('Failed to fetch districts from wilayah.id');
+            }
+            
+            return $response->json()['data'] ?? [];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $districts
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Proxy Districts Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memuat data kecamatan: ' . $e->getMessage()
+        ], 500);
+    }
+});
+
+// Proxy untuk Desa/Kelurahan by Kecamatan (yang sudah ada, tapi kita update)
+Route::get('/api/v1/wilayah/proxy/villages/{districtCode}', function ($districtCode) {
+    try {
+        $cacheKey = 'wilayah_villages_' . $districtCode;
+        
+        $villages = cache()->remember($cacheKey, 86400, function () use ($districtCode) {
+            $response = Http::timeout(30)->get("https://wilayah.id/api/villages/{$districtCode}.json");
+            
+            if (!$response->successful()) {
+                throw new \Exception('Failed to fetch villages from wilayah.id');
+            }
+            
+            return $response->json()['data'] ?? [];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $villages
+        ]);
+        
+    } catch (\Exception $e) {
+        \Log::error('Proxy Villages Error: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'message' => 'Gagal memuat data desa: ' . $e->getMessage()
         ], 500);
     }
 });
 
 // ================= API: SK & DOKUMEN =================
-Route::get('/api/v1/dokumens', function () {
+Route::get('/api/v1/dokumens', function (\Illuminate\Http\Request $request) {
     try {
-        \Log::info('API /api/v1/dokumens accessed');
+        // Get per_page parameter (default 5, max 50)
+        $perPage = min(max((int) $request->get('per_page', 5), 1), 50);
         
-        $dokumens = \App\Models\Dokumen::published()
-            ->orderBy('document_date', 'desc')
-            ->orderBy('sort_order')
-            ->get()
-            ->map(function($doc) {
-                return [
-                    'id' => $doc->id,
-                    'name' => $doc->name,
-                    'file_name' => $doc->file_name,
-                    'file_size' => $doc->file_size,
-                    'file_url' => $doc->file_url,
-                    'file_type' => $doc->file_type,
-                    'document_date' => $doc->document_date?->format('Y-m-d'),
-                    'formatted_date' => $doc->document_date?->format('d M Y'),
-                    'status' => $doc->status, // Penting untuk filter client-side
-                ];
+        // Get search parameter
+        $search = $request->get('search', '');
+        
+        // Build query
+        $query = \App\Models\Dokumen::published();
+        
+        // Apply search filter if provided (case-insensitive)
+        if ($search) {
+            $searchTerm = strtolower($search); // Convert to lowercase for comparison
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                  ->orWhereRaw('LOWER(file_name) LIKE ?', ['%' . $searchTerm . '%']);
             });
+        }
         
-        \Log::info('API returning ' . count($dokumens) . ' documents');
+        $dokumens = $query->orderBy('document_date', 'desc')
+                          ->orderBy('sort_order')
+                          ->paginate($perPage);
         
-        return response()->json(['success' => true, 'data' => $dokumens]);
+        $formattedData = $dokumens->map(function($doc) {
+            return [
+                'id' => $doc->id,
+                'name' => $doc->name,
+                'file_name' => $doc->file_name,
+                'file_size' => $doc->file_size,
+                'file_url' => $doc->file_url,
+                'file_type' => $doc->file_type,
+                'document_date' => $doc->document_date?->format('Y-m-d'),
+                'formatted_date' => $doc->document_date?->format('d M Y'),
+                'status' => $doc->status,
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+            'pagination' => [
+                'current_page' => $dokumens->currentPage(),
+                'last_page' => $dokumens->lastPage(),
+                'per_page' => $dokumens->perPage(),
+                'total' => $dokumens->total(),
+                'from' => $dokumens->firstItem(),
+                'to' => $dokumens->lastItem(),
+            ]
+        ]);
     } catch (\Exception $e) {
         \Log::error('API Dokumen Error: ' . $e->getMessage());
         return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
@@ -253,36 +406,55 @@ Route::get('/api/v1/dokumens', function () {
 });
 
 // API Template untuk Landing Page
-Route::get('/api/v1/templates', function () {
+Route::get('/api/v1/templates', function (\Illuminate\Http\Request $request) {
     try {
-        \Log::info('API /api/v1/templates accessed');
+        $perPage = min(max((int) $request->get('per_page', 6), 1), 50);
+        $search = $request->get('search', '');
         
-        $templates = \App\Models\Template::published()
-            ->orderBy('upload_date', 'desc')
-            ->orderBy('sort_order')
-            ->get()
-            ->map(function($t) {
-                return [
-                    'id' => $t->id,
-                    'name' => $t->name,
-                    'file_name' => $t->file_name,
-                    'file_size' => $t->file_size,
-                    'file_url' => $t->file_url,
-                    'file_type' => $t->file_type,
-                    'upload_date' => $t->upload_date?->format('Y-m-d'),
-                    'formatted_date' => $t->upload_date?->format('d M Y'),
-                    'status' => $t->status,
-                    'description' => $t->description ?? null,
-                ];
+        $query = \App\Models\Template::published();
+        
+        if ($search) {
+            $searchTerm = strtolower($search);
+            $query->where(function($q) use ($searchTerm) {
+                $q->whereRaw('LOWER(name) LIKE ?', ['%' . $searchTerm . '%'])
+                  ->orWhereRaw('LOWER(file_name) LIKE ?', ['%' . $searchTerm . '%']);
             });
+        }
         
-        \Log::info('API returning ' . count($templates) . ' templates');
+        $templates = $query->orderBy('upload_date', 'desc')
+                          ->orderBy('sort_order')
+                          ->paginate($perPage);
         
-        return response()->json(['success' => true, 'data' => $templates]);
+        $formattedData = $templates->map(function($t) {
+            return [
+                'id' => $t->id,
+                'name' => $t->name,
+                'file_name' => $t->file_name,
+                'file_size' => $t->file_size,
+                'file_url' => asset('storage/' . $t->file_path), // ← URL lengkap
+                'file_path' => $t->file_path,
+                'file_type' => $t->file_type,
+                'upload_date' => $t->upload_date?->format('Y-m-d'),
+                'formatted_date' => $t->upload_date?->format('d M Y'),
+                'status' => $t->status,
+                'description' => $t->description ?? null,
+            ];
+        });
+        
+        return response()->json([
+            'success' => true,
+            'data' => $formattedData,
+            'pagination' => [
+                'current_page' => $templates->currentPage(),
+                'last_page' => $templates->lastPage(),
+                'per_page' => $templates->perPage(),
+                'total' => $templates->total(),
+                'from' => $templates->firstItem(),
+                'to' => $templates->lastItem(),
+            ]
+        ]);
     } catch (\Exception $e) {
         \Log::error('API Templates Error: ' . $e->getMessage());
-        \Log::error($e->getTraceAsString());
-        
         return response()->json([
             'success' => false, 
             'message' => $e->getMessage()
@@ -547,15 +719,36 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
         // Route view-only (wildcard di paling bawah)
         Route::get('/{user}', [App\Http\Controllers\Admin\UserManagementController::class, 'show'])->name('show');
     });
+
+    // SIDONGAN Data Management
+    Route::prefix('sidongan-data')->name('sidongan-data.')->middleware('permission:manage-users')->group(function () {
+        Route::get('/', [App\Http\Controllers\Admin\SidonganDataController::class, 'index'])->name('index');
+        Route::post('/cleanup', [App\Http\Controllers\Admin\SidonganDataController::class, 'cleanup'])->name('cleanup');
+        Route::delete('/{document}', [App\Http\Controllers\Admin\SidonganDataController::class, 'destroy'])->name('destroy');
+    });
 });
 
 // ================= SIDONGAN AUTH =================
-Route::get('/sidongan-login', function () {
-    return view('sidongan-auth.login');
-})->name('sidongan.login');
+Route::middleware(['sidongan.guest'])->group(function () {
+    Route::get('/sidongan-login', function () {
+        // Force logout dari guard lain untuk mencegah konflik
+        \Illuminate\Support\Facades\Auth::guard('web')->logout();
+        
+        // Clear session untuk mencegah error 419
+        if (session()->isStarted()) {
+            session()->flush();
+            session()->regenerateToken();
+        }
+        
+        return view('sidongan-auth.login');
+    })->name('sidongan.login');
+    
+    Route::post('/sidongan-login', [App\Http\Controllers\Sidongan\AuthController::class, 'login'])
+        ->name('sidongan.login.post');
+});
 
-Route::post('/sidongan-login', [App\Http\Controllers\Sidongan\AuthController::class, 'login'])->name('sidongan.login.post');
-Route::post('/sidongan-logout', [App\Http\Controllers\Sidongan\AuthController::class, 'logout'])->name('sidongan.logout');
+Route::post('/sidongan-logout', [App\Http\Controllers\Sidongan\AuthController::class, 'logout'])
+    ->name('sidongan.logout');
 
 // ================= SIDONGAN ADMIN - SEMUA ROUTE PRIVATE =================
 Route::middleware(['sidongan.auth'])->prefix('sidongan')->name('sidongan.')->group(function () {

@@ -1,0 +1,1011 @@
+/* =========================================
+   DETAIL SURAT - SIDONGAN
+   ========================================= */
+
+/* ===== CONTAINER ===== */
+.ds-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 2rem 1.5rem;
+}
+
+/* ===== HEADER ===== */
+.ds-header {
+    background: linear-gradient(135deg, #0891b2, #14b8a6);
+    padding: 2rem 2.5rem;
+    border-radius: 1rem;
+    margin-bottom: 2rem;
+    color: white;
+    box-shadow: 0 4px 20px rgba(8, 145, 178, 0.2);
+}
+
+.ds-header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1.5rem;
+}
+
+.ds-header h1 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.3;
+}
+
+.ds-header p {
+    font-size: 1.05rem;
+    opacity: 0.95;
+    margin: 0;
+}
+
+.ds-header-actions {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+/* ===== BUTTONS ===== */
+.ds-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.625rem;
+    padding: 0.875rem 1.5rem;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.625rem;
+    font-weight: 600;
+    font-size: 1rem;
+    transition: all 0.25s ease;
+    border: none;
+    cursor: pointer;
+    min-height: 48px;
+}
+
+.ds-btn-back {
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(4px);
+}
+
+.ds-btn-back:hover {
+    background: rgba(255, 255, 255, 0.35);
+    transform: translateY(-2px);
+}
+
+.ds-btn-edit {
+    background: white;
+    color: #0891b2;
+}
+
+.ds-btn-edit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+.ds-btn-disposisi {
+    background: #f97316;
+    box-shadow: 0 4px 12px rgba(249, 115, 22, 0.3);
+}
+
+.ds-btn-disposisi:hover {
+    background: #ea580c;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(249, 115, 22, 0.4);
+}
+
+.ds-btn-print {
+    background: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.ds-btn-print:hover {
+    background: #059669;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+}
+
+.ds-btn-lapor {
+    background: #22c55e;
+    box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+.ds-btn-lapor:hover {
+    background: #16a34a;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(34, 197, 94, 0.4);
+}
+
+.ds-btn-archive {
+    background: #8b5cf6;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.ds-btn-archive:hover {
+    background: #7c3aed;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(139, 92, 246, 0.4);
+}
+
+/* ===== STATUS BADGE ===== */
+.ds-status-section {
+    background: white;
+    border-radius: 1rem;
+    padding: 1.75rem 2rem;
+    margin-bottom: 2rem;
+    border: 1px solid #e2e8f0;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+}
+
+.ds-status-badges {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+}
+
+.ds-badge-agenda {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    font-family: 'Courier New', monospace;
+}
+
+.ds-badge-status {
+    display: inline-block;
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.ds-status-menunggu_disposisi { background: #fef3c7; color: #92400e; }
+.ds-status-berjalan { background: #dbeafe; color: #1e40af; }
+.ds-status-menunggu_verifikasi { background: #ede9fe; color: #6b21a8; }
+.ds-status-selesai { background: #d1fae5; color: #065f46; }
+.ds-status-diarsipkan { background: #f3e8ff; color: #7c3aed; }
+
+.ds-subject-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #0f172a;
+    margin: 0;
+    line-height: 1.4;
+}
+
+/* ===== CARD ===== */
+.ds-card {
+    background: white;
+    border-radius: 1rem;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+    border: 1px solid #e2e8f0;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.ds-card-header {
+    padding: 1.25rem 2rem;
+    border-bottom: 2px solid;
+}
+
+.ds-card-header-blue {
+    background: linear-gradient(135deg, #f0f9ff, #e0f2fe);
+    border-bottom-color: #bae6fd;
+}
+
+.ds-card-header-green {
+    background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+    border-bottom-color: #86efac;
+}
+
+.ds-card-header-orange {
+    background: linear-gradient(135deg, #fff7ed, #ffedd5);
+    border-bottom-color: #fdba74;
+}
+
+.ds-card-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.ds-card-header h3 i {
+    font-size: 1.375rem;
+    color: #14b8a6;
+}
+
+.ds-card-body {
+    padding: 2rem;
+}
+
+/* ===== INFO GRID ===== */
+.ds-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+}
+
+/* ===== INFO ROW ===== */
+.ds-info-row {
+    display: grid;
+    grid-template-columns: 1fr 2fr;
+    gap: 1rem;
+    padding: 1rem 0;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.ds-info-row:last-child {
+    border-bottom: none;
+}
+
+.ds-info-label {
+    font-size: 1rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.ds-info-value {
+    font-size: 1.05rem;
+    color: #0f172a;
+    font-weight: 500;
+}
+
+.ds-info-value-mono {
+    font-family: 'Courier New', monospace;
+    color: #2563eb;
+    font-weight: 600;
+}
+
+/* ===== SARAN BOX ===== */
+.ds-saran-box {
+    background: #eff6ff;
+    border: 2px solid #bfdbfe;
+    border-radius: 0.75rem;
+    padding: 1.25rem;
+    font-size: 1.05rem;
+    color: #1e40af;
+    line-height: 1.7;
+    margin-top: 0.75rem;
+}
+
+/* ===== LAMPIRAN ===== */
+.ds-lampiran-box {
+    background: #f8fafc;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    transition: all 0.25s ease;
+    text-decoration: none;
+    color: inherit;
+}
+
+.ds-lampiran-box:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+    transform: translateY(-2px);
+}
+
+.ds-lampiran-icon {
+    width: 3.5rem;
+    height: 3.5rem;
+    background: #fee2e2;
+    border-radius: 0.625rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.ds-lampiran-icon i {
+    font-size: 1.75rem;
+    color: #ef4444;
+}
+
+.ds-lampiran-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.ds-lampiran-name {
+    font-size: 1.05rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0 0 0.35rem 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.ds-lampiran-size {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.ds-lampiran-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: #dbeafe;
+    color: #2563eb;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+    flex-shrink: 0;
+    transition: all 0.25s ease;
+}
+
+.ds-lampiran-box:hover .ds-lampiran-btn {
+    background: #bfdbfe;
+}
+
+/* ===== DISPOSISI ===== */
+.ds-disposisi-grid {
+    display: grid;
+    gap: 1.5rem;
+}
+
+.ds-disposisi-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.ds-disposisi-label {
+    font-size: 0.95rem;
+    color: #64748b;
+    display: block;
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+.ds-disposisi-targets {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ds-disposisi-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.625rem 1rem;
+    background: #dbeafe;
+    color: #1e40af;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+}
+
+.ds-disposisi-badge i {
+    font-size: 0.8rem;
+}
+
+.ds-disposisi-action {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: #f3e8ff;
+    color: #7c3aed;
+    border-radius: 0.625rem;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.ds-disposisi-comment {
+    background: #f8fafc;
+    border-left: 4px solid #cbd5e1;
+    border-radius: 0 0.625rem 0.625rem 0;
+    padding: 1.25rem;
+}
+
+.ds-disposisi-comment-label {
+    font-size: 0.9rem;
+    color: #475569;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.5rem;
+}
+
+.ds-disposisi-comment-text {
+    font-size: 1.05rem;
+    color: #334155;
+    margin: 0;
+    font-style: italic;
+    line-height: 1.6;
+}
+
+.ds-disposisi-footer {
+    margin-top: 0.75rem;
+    padding-top: 1.25rem;
+    border-top: 2px solid #e2e8f0;
+    font-size: 0.95rem;
+    color: #94a3b8;
+    text-align: right;
+}
+
+.ds-disposisi-footer strong {
+    color: #f97316;
+    font-weight: 700;
+}
+
+/* ===== LAPORAN KEGIATAN CARD ===== */
+.ds-laporan-card {
+    border: 2px solid;
+    border-radius: 0.875rem;
+    padding: 1.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.ds-laporan-card-menunggu_verifikasi {
+    background: #fff7ed;
+    border-color: #fed7aa;
+}
+
+.ds-laporan-card-disetujui {
+    background: #f0fdf4;
+    border-color: #bbf7d0;
+}
+
+.ds-laporan-card-ditolak {
+    background: #fef2f2;
+    border-color: #fecaca;
+}
+
+.ds-laporan-card-draft {
+    background: #eff6ff;
+    border-color: #bfdbfe;
+}
+
+.ds-laporan-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.25rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-header { border-bottom-color: #fed7aa; }
+.ds-laporan-card-disetujui .ds-laporan-header { border-bottom-color: #bbf7d0; }
+.ds-laporan-card-ditolak .ds-laporan-header { border-bottom-color: #fecaca; }
+.ds-laporan-card-draft .ds-laporan-header { border-bottom-color: #bfdbfe; }
+
+.ds-laporan-creator {
+    display: flex;
+    align-items: center;
+    gap: 0.875rem;
+}
+
+.ds-laporan-avatar {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-avatar { background: #9a3412; }
+.ds-laporan-card-disetujui .ds-laporan-avatar { background: #166534; }
+.ds-laporan-card-ditolak .ds-laporan-avatar { background: #991b1b; }
+.ds-laporan-card-draft .ds-laporan-avatar { background: #1e40af; }
+
+.ds-laporan-name {
+    font-size: 1.05rem;
+    font-weight: 700;
+    margin: 0 0 0.25rem 0;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-name { color: #9a3412; }
+.ds-laporan-card-disetujui .ds-laporan-name { color: #166534; }
+.ds-laporan-card-ditolak .ds-laporan-name { color: #991b1b; }
+.ds-laporan-card-draft .ds-laporan-name { color: #1e40af; }
+
+.ds-laporan-date {
+    font-size: 0.9rem;
+    color: #64748b;
+    margin: 0;
+}
+
+.ds-laporan-status-badge {
+    padding: 0.375rem 1rem;
+    background: white;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    border: 2px solid;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-status-badge { color: #9a3412; border-color: #fed7aa; }
+.ds-laporan-card-disetujui .ds-laporan-status-badge { color: #166534; border-color: #bbf7d0; }
+.ds-laporan-card-ditolak .ds-laporan-status-badge { color: #991b1b; border-color: #fecaca; }
+.ds-laporan-card-draft .ds-laporan-status-badge { color: #1e40af; border-color: #bfdbfe; }
+
+.ds-laporan-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.25rem;
+    margin-bottom: 1.25rem;
+}
+
+.ds-laporan-info-label {
+    font-size: 0.9rem;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 0.35rem;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-info-label { color: #9a3412; }
+.ds-laporan-card-disetujui .ds-laporan-info-label { color: #166534; }
+.ds-laporan-card-ditolak .ds-laporan-info-label { color: #991b1b; }
+.ds-laporan-card-draft .ds-laporan-info-label { color: #1e40af; }
+
+.ds-laporan-info-value {
+    font-size: 1.05rem;
+    color: #334155;
+    margin: 0;
+    font-weight: 500;
+}
+
+.ds-laporan-lokasi-box {
+    background: white;
+    padding: 1rem 1.25rem;
+    border-radius: 0.625rem;
+    border: 2px solid;
+    margin-bottom: 1.25rem;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-lokasi-box { border-color: #fed7aa; }
+.ds-laporan-card-disetujui .ds-laporan-lokasi-box { border-color: #bbf7d0; }
+.ds-laporan-card-ditolak .ds-laporan-lokasi-box { border-color: #fecaca; }
+.ds-laporan-card-draft .ds-laporan-lokasi-box { border-color: #bfdbfe; }
+
+.ds-laporan-lokasi-hierarki {
+    font-size: 1.05rem;
+    color: #334155;
+    font-weight: 600;
+    margin: 0 0 0.75rem 0;
+}
+
+.ds-laporan-lokasi-alamat {
+    font-size: 0.95rem;
+    color: #64748b;
+    padding-top: 0.75rem;
+    border-top: 2px solid #f1f5f9;
+    margin: 0;
+}
+
+.ds-laporan-lokasi-alamat i {
+    color: #3b82f6;
+    margin-right: 0.5rem;
+}
+
+.ds-laporan-deskripsi {
+    background: white;
+    padding: 1.25rem;
+    border-radius: 0.625rem;
+    border: 2px solid;
+    margin-bottom: 1.25rem;
+    font-size: 1.05rem;
+    color: #374151;
+    line-height: 1.7;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-deskripsi { border-color: #fed7aa; }
+.ds-laporan-card-disetujui .ds-laporan-deskripsi { border-color: #bbf7d0; }
+.ds-laporan-card-ditolak .ds-laporan-deskripsi { border-color: #fecaca; }
+.ds-laporan-card-draft .ds-laporan-deskripsi { border-color: #bfdbfe; }
+
+.ds-laporan-foto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+}
+
+.ds-laporan-foto-item {
+    cursor: pointer;
+    border-radius: 0.625rem;
+    overflow: hidden;
+    border: 3px solid white;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    transition: all 0.25s ease;
+    aspect-ratio: 1;
+}
+
+.ds-laporan-foto-item:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+.ds-laporan-foto-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.ds-laporan-detail-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    color: white;
+    text-decoration: none;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    float: right;
+    transition: all 0.25s ease;
+}
+
+.ds-laporan-card-menunggu_verifikasi .ds-laporan-detail-btn { background: #f97316; }
+.ds-laporan-card-disetujui .ds-laporan-detail-btn { background: #22c55e; }
+.ds-laporan-card-ditolak .ds-laporan-detail-btn { background: #ef4444; }
+.ds-laporan-card-draft .ds-laporan-detail-btn { background: #3b82f6; }
+
+.ds-laporan-detail-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* ===== TIMELINE ===== */
+.ds-timeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+.ds-timeline-item {
+    display: flex;
+    gap: 1.5rem;
+    position: relative;
+}
+
+.ds-timeline-icon-col {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.ds-timeline-icon {
+    width: 3rem;
+    height: 3rem;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 2;
+}
+
+.ds-timeline-icon-blue { background: #3b82f6; }
+.ds-timeline-icon-orange { background: #f97316; }
+.ds-timeline-icon-green { background: #22c55e; }
+.ds-timeline-icon-red { background: #ef4444; }
+.ds-timeline-icon-purple { background: #a855f7; }
+
+.ds-timeline-line {
+    width: 3px;
+    flex: 1;
+    min-height: 2.5rem;
+    margin: 0.35rem 0;
+}
+
+.ds-timeline-content {
+    flex: 1;
+    padding-bottom: 2rem;
+}
+
+.ds-timeline-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 0.5rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.ds-timeline-title {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #0f172a;
+    margin: 0;
+}
+
+.ds-timeline-date {
+    font-size: 0.95rem;
+    color: #94a3b8;
+}
+
+.ds-timeline-desc {
+    font-size: 1.05rem;
+    color: #64748b;
+    margin: 0 0 0.5rem 0;
+    line-height: 1.6;
+}
+
+.ds-timeline-desc strong {
+    color: #0f172a;
+    font-weight: 600;
+}
+
+.ds-timeline-meta {
+    font-size: 0.95rem;
+    color: #64748b;
+    margin: 0.35rem 0 0 0;
+}
+
+.ds-timeline-meta i {
+    margin-right: 0.5rem;
+    color: #3b82f6;
+}
+
+.ds-timeline-role-badge {
+    display: inline-block;
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 0.25rem 0.75rem;
+    border-radius: 0.375rem;
+    font-size: 0.85rem;
+    margin: 0.125rem;
+    font-weight: 600;
+}
+
+.ds-timeline-quote {
+    font-size: 1rem;
+    color: #475569;
+    margin: 0.75rem 0 0 0;
+    font-style: italic;
+    line-height: 1.6;
+}
+
+.ds-timeline-verif-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.375rem 0.875rem;
+    border-radius: 9999px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    margin-right: 0.75rem;
+}
+
+.ds-timeline-verif-badge-success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.ds-timeline-verif-badge-danger {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.ds-timeline-verif-badge i {
+    font-size: 0.8rem;
+}
+
+.ds-timeline-note {
+    margin-top: 0.75rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.95rem;
+    color: #475569;
+    font-style: italic;
+    line-height: 1.6;
+    border-left: 4px solid;
+}
+
+.ds-timeline-note-success {
+    background: #f0fdf4;
+    border-left-color: #10b981;
+}
+
+.ds-timeline-note-danger {
+    background: #fef2f2;
+    border-left-color: #ef4444;
+}
+
+/* =========================================
+   RESPONSIVE - TABLET (max 1024px)
+   ========================================= */
+@media (max-width: 1024px) {
+    .ds-container {
+        padding: 1.5rem 1rem;
+    }
+
+    .ds-info-grid,
+    .ds-disposisi-row,
+    .ds-laporan-info-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+
+    .ds-header {
+        padding: 1.75rem 2rem;
+    }
+
+    .ds-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .ds-card-body {
+        padding: 1.75rem;
+    }
+}
+
+/* =========================================
+   RESPONSIVE - MOBILE (max 768px)
+   ========================================= */
+@media (max-width: 768px) {
+    .ds-container {
+        padding: 1rem 0.75rem;
+    }
+
+    .ds-header {
+        padding: 1.5rem;
+        border-radius: 0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .ds-header-top {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1.25rem;
+    }
+
+    .ds-header h1 {
+        font-size: 1.35rem;
+    }
+
+    .ds-header p {
+        font-size: 0.95rem;
+    }
+
+    .ds-header-actions {
+        width: 100%;
+        flex-direction: column;
+        gap: 0.625rem;
+    }
+
+    .ds-btn {
+        width: 100%;
+        justify-content: center;
+        padding: 0.875rem 1.25rem;
+    }
+
+    .ds-status-section {
+        padding: 1.25rem 1.5rem;
+    }
+
+    .ds-subject-title {
+        font-size: 1.2rem;
+    }
+
+    .ds-card-header {
+        padding: 1rem 1.25rem;
+    }
+
+    .ds-card-header h3 {
+        font-size: 1.05rem;
+    }
+
+    .ds-card-body {
+        padding: 1.25rem;
+    }
+
+    .ds-info-row {
+        grid-template-columns: 1fr;
+        gap: 0.35rem;
+    }
+
+    .ds-info-label,
+    .ds-info-value {
+        font-size: 0.95rem;
+    }
+
+    .ds-lampiran-box {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .ds-lampiran-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ds-disposisi-action {
+        font-size: 1rem;
+        padding: 0.625rem 1.25rem;
+    }
+
+    .ds-disposisi-badge {
+        font-size: 0.85rem;
+        padding: 0.5rem 0.875rem;
+    }
+
+    .ds-laporan-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .ds-laporan-detail-btn {
+        float: none;
+        width: 100%;
+        justify-content: center;
+    }
+
+    .ds-laporan-foto-grid {
+        grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+    }
+
+    .ds-timeline-item {
+        gap: 0.875rem;
+    }
+
+    .ds-timeline-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        font-size: 0.95rem;
+    }
+
+    .ds-timeline-title {
+        font-size: 1rem;
+    }
+
+    .ds-timeline-desc {
+        font-size: 0.95rem;
+    }
+
+    .ds-timeline-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+/* =========================================
+   RESPONSIVE - SMALL MOBILE (max 480px)
+   ========================================= */
+@media (max-width: 480px) {
+    .ds-header h1 {
+        font-size: 1.2rem;
+    }
+
+    .ds-subject-title {
+        font-size: 1.1rem;
+    }
+
+    .ds-card-header h3 {
+        font-size: 1rem;
+    }
+
+    .ds-card-body {
+        padding: 1rem;
+    }
+
+    .ds-laporan-foto-grid {
+        grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
+    }
+}

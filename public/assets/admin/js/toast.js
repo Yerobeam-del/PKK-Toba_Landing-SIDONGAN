@@ -1,5 +1,5 @@
 /**
- * Toast Notification System
+ * Toast Notification System dengan Progress Bar
  * Usage: Toast.show('Pesan sukses', 'success')
  * Types: success, error, warning, info
  */
@@ -56,10 +56,40 @@ const Toast = {
                 pointer-events: auto;
                 cursor: pointer;
                 transition: all 0.3s ease;
+                position: relative;
+                overflow: hidden;
             }
             .toast-item:hover {
                 transform: translateX(-5px);
                 box-shadow: 0 6px 16px rgba(0,0,0,0.2) !important;
+            }
+            .toast-content {
+                display: flex;
+                align-items: center;
+                gap: 0.75rem;
+                padding: 1rem 1.25rem;
+            }
+            .toast-progress {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: rgba(0,0,0,0.05);
+                overflow: hidden;
+            }
+            .toast-progress-bar {
+                height: 100%;
+                width: 100%;
+                transform-origin: left;
+                animation: toastProgress linear forwards;
+            }
+            @keyframes toastProgress {
+                from { transform: scaleX(1); }
+                to { transform: scaleX(0); }
+            }
+            .toast-item:hover .toast-progress-bar {
+                animation-play-state: paused;
             }
             .modal-overlay {
                 position: fixed;
@@ -168,37 +198,67 @@ const Toast = {
             background: ${config.bg};
             border-left: 4px solid ${config.border};
             color: ${config.text};
-            padding: 1rem 1.25rem;
             border-radius: 8px;
             box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
             min-width: 300px;
             max-width: 500px;
             animation: toastSlideIn 0.3s ease;
         `;
         
         toast.innerHTML = `
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${config.border}" stroke-width="2" style="flex-shrink:0">
-                ${config.icon}
-            </svg>
-            <span style="font-weight: 500; font-size: 0.9rem; flex: 1;">${message}</span>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${config.text}" stroke-width="2" style="opacity: 0.5; cursor: pointer;">
-                <line x1="18" y1="6" x2="6" y2="18"/>
-                <line x1="6" y1="6" x2="18" y2="18"/>
-            </svg>
+            <div class="toast-content">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="${config.border}" stroke-width="2" style="flex-shrink:0">
+                    ${config.icon}
+                </svg>
+                <span style="font-weight: 500; font-size: 0.9rem; flex: 1;">${message}</span>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="${config.text}" stroke-width="2" style="opacity: 0.5; cursor: pointer;">
+                    <line x1="18" y1="6" x2="6" y2="18"/>
+                    <line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+            </div>
+            ${duration > 0 ? `
+            <div class="toast-progress">
+                <div class="toast-progress-bar" style="background: ${config.border}; animation-duration: ${duration}ms;"></div>
+            </div>
+            ` : ''}
         `;
         
         // Click to close
-        toast.querySelector('svg:last-child').addEventListener('click', () => this.remove(toast));
+        toast.querySelector('.toast-content svg:last-child').addEventListener('click', () => this.remove(toast));
+        
+        // Hover pause/resume
+        let timeoutId;
+        let remainingTime = duration;
+        let startTime = Date.now();
+        
+        const startTimer = () => {
+            startTime = Date.now();
+            timeoutId = setTimeout(() => this.remove(toast), remainingTime);
+        };
+        
+        const pauseTimer = () => {
+            clearTimeout(timeoutId);
+            remainingTime -= (Date.now() - startTime);
+        };
+        
+        const resumeTimer = () => {
+            startTime = Date.now();
+            timeoutId = setTimeout(() => this.remove(toast), remainingTime);
+        };
+        
+        if (duration > 0) {
+            startTimer();
+            
+            toast.addEventListener('mouseenter', () => {
+                pauseTimer();
+            });
+            
+            toast.addEventListener('mouseleave', () => {
+                resumeTimer();
+            });
+        }
         
         this.container.appendChild(toast);
-        
-        // Auto remove
-        if (duration > 0) {
-            setTimeout(() => this.remove(toast), duration);
-        }
         
         return toast;
     },

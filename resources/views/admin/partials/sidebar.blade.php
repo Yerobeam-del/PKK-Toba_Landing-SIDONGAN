@@ -8,7 +8,7 @@
     </div>
     <ul class="sidebar-nav">
         
-        {{-- Beranda (Biasanya boleh diakses semua) --}}
+        {{-- Beranda --}}
         <li>
             <a href="{{ route('admin.dashboard') }}" class="{{ request()->routeIs('admin.dashboard') ? 'active' : '' }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -59,7 +59,7 @@
         </li>
         @endif
 
-        {{-- Berita (DANIEL PUNYA INI) --}}
+        {{-- Berita --}}
         @if(auth()->user()->hasPermission('manage-berita'))
         <li>
             <a href="{{ route('admin.berita.index') }}" class="{{ request()->routeIs('admin.berita.*') ? 'active' : '' }}">

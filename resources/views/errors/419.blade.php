@@ -169,19 +169,32 @@
         
         <div class="error-code">419</div>
         
+        @php
+            // Deteksi konteks SIDONGAN atau Admin
+            $isSidongan = false;
+            $loginRoute = 'login';
+            $loginLabel = 'Login';
+            
+            if (auth()->guard('sidongan')->check() || str_contains(request()->path(), 'sidongan')) {
+                $isSidongan = true;
+                $loginRoute = 'sidongan.login';
+                $loginLabel = 'Login SIDONGAN';
+            }
+        @endphp
+
         <div class="message">
             <span class="dynamic-msg">Halaman Login Telah Kedaluwarsa</span>
-            Sesi login SIDONGAN Anda telah berakhir karena halaman terlalu lama tidak digunakan.<br>
+            Sesi login {{ $isSidongan ? 'SIDONGAN' : 'Admin' }} Anda telah berakhir karena halaman terlalu lama tidak digunakan.<br>
             Silahkan kembali ke halaman login untuk masuk kembali.
         </div>
-        
-        <a href="{{ route('sidongan.login') }}" class="btn">
+
+        <a href="{{ route($loginRoute) }}" class="btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
                 <polyline points="10 17 15 12 10 7"/>
                 <line x1="15" y1="12" x2="3" y2="12"/>
             </svg>
-            Kembali ke Login SIDONGAN
+            Kembali ke {{ $loginLabel }}
         </a>
     </div>
 </body>

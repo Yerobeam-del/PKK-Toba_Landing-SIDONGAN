@@ -129,6 +129,60 @@
     </div>
 </div>
 
+{{-- Stats Cards Baru untuk Visibility --}}
+<div class="stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem;margin-bottom:2rem">
+    
+    {{-- Tampil di Beranda --}}
+    <div class="stat-card" style="background:linear-gradient(135deg,#14b8a6,#0d9488);color:#fff">
+        <div style="display:flex;align-items:flex-start;gap:1rem">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </div>
+            <div style="flex:1">
+                <p style="font-size:0.85rem;opacity:0.9;margin:0 0 0.25rem 0">Tampil di Beranda</p>
+                <p style="font-size:1.85rem;font-weight:800;margin:0;line-height:1.1">{{ $stats['show_in_beranda'] ?? 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Tampil di Footer --}}
+    <div class="stat-card" style="background:linear-gradient(135deg,#8b5cf6,#7c3aed);color:#fff">
+        <div style="display:flex;align-items:flex-start;gap:1rem">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="3" y1="15" x2="21" y2="15"></line>
+                </svg>
+            </div>
+            <div style="flex:1">
+                <p style="font-size:0.85rem;opacity:0.9;margin:0 0 0.25rem 0">Tampil di Footer</p>
+                <p style="font-size:1.85rem;font-weight:800;margin:0;line-height:1.1">{{ $stats['show_in_footer'] ?? 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+    {{-- Tampil di Floating --}}
+    <div class="stat-card" style="background:linear-gradient(135deg,#f59e0b,#d97706);color:#fff">
+        <div style="display:flex;align-items:flex-start;gap:1rem">
+            <div style="width:48px;height:48px;background:rgba(255,255,255,0.2);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                    <polyline points="2 17 12 22 22 17"></polyline>
+                    <polyline points="2 12 12 17 22 12"></polyline>
+                </svg>
+            </div>
+            <div style="flex:1">
+                <p style="font-size:0.85rem;opacity:0.9;margin:0 0 0.25rem 0">Tampil di Floating</p>
+                <p style="font-size:1.85rem;font-weight:800;margin:0;line-height:1.1">{{ $stats['show_in_floating'] ?? 0 }}</p>
+            </div>
+        </div>
+    </div>
+
+</div>
+
 {{-- Modern Tabs --}}
 <div class="tabs-container" style="display:flex;gap:0.25rem;margin-bottom:1.5rem;border-bottom:1px solid rgba(0,0,0,0.06);padding-bottom:0.5rem;overflow-x:auto">
     <button class="tab-btn active" onclick="switchTab('all', this)" style="padding:0.6rem 1rem;border-radius:8px 8px 0 0;background:transparent;border:none;font-weight:600;color:var(--text-muted);cursor:pointer;transition:all 0.2s;border-bottom:2px solid var(--primary)">

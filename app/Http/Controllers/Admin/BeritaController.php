@@ -34,7 +34,7 @@ class BeritaController extends Controller
             'is_published' => 'nullable|boolean',
         ]);
 
-        // ✅ CARA PASTI: Tambahkan timestamp untuk menjamin unik
+        // Menambahkan timestamp untuk menjamin unik
         $slug = Str::slug($validated['title']) . '-' . time() . '-' . rand(1000, 9999);
         $validated['slug'] = $slug;
         

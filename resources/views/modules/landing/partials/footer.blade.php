@@ -51,11 +51,11 @@
         
         {{-- Quick Access Section - Dynamic from Database --}}
         @php
-            // Ambil aplikasi yang aktif, maksimal 5
+            // Ambil aplikasi yang aktif, status active, DAN show_in_footer = true
             $quickAccessApps = \App\Models\Application::where('is_active', true)
                 ->where('status', 'active')
+                ->where('show_in_footer', true)
                 ->orderBy('sort_order')
-                ->limit(5)
                 ->get();
         @endphp
 

@@ -93,21 +93,43 @@ function renderActiveApps(apps) {
     }
     
     const activeCardTemplate = (app, index) => {
-        // ✅ CEK STATUS MAINTENANCE - PASTIKAN BENAR
+        // CEK STATUS MAINTENANCE - PASTIKAN BENAR
         const isMaintenance = app.status === 'maintenance';
         console.log(`App ${index}: ${app.short_name} - Status: ${app.status} - Is Maintenance: ${isMaintenance}`);
-        
-        // Tentukan class berdasarkan short_name
+                
+        // ARRAY 10 WARNA UNTUK APLIKASI
+        const appColors = [
+            { primary: '#2563eb', bg: 'linear-gradient(135deg, #dbeafe, #eff6ff)', circle: '#bfdbfe', btn: '#2563eb' },      // Biru (SIEDA)
+            { primary: '#dc2626', bg: 'linear-gradient(135deg, #fee2e2, #fef2f2)', circle: '#fecaca', btn: '#dc2626' },      // Merah (SIDONGAN)
+            { primary: '#7c3aed', bg: 'linear-gradient(135deg, #ede9fe, #f5f3ff)', circle: '#ddd6fe', btn: '#7c3aed' },      // Ungu
+            { primary: '#059669', bg: 'linear-gradient(135deg, #d1fae5, #ecfdf5)', circle: '#a7f3d0', btn: '#059669' },      // Hijau
+            { primary: '#d97706', bg: 'linear-gradient(135deg, #fef3c7, #fffbeb)', circle: '#fde68a', btn: '#d97706' },      // Kuning/Orange
+            { primary: '#db2777', bg: 'linear-gradient(135deg, #fce7f3, #fdf2f8)', circle: '#fbcfe8', btn: '#db2777' },      // Pink
+            { primary: '#0891b2', bg: 'linear-gradient(135deg, #cffafe, #ecfeff)', circle: '#a5f3fc', btn: '#0891b2' },      // Cyan
+            { primary: '#7c2d12', bg: 'linear-gradient(135deg, #ffedd5, #fff7ed)', circle: '#fed7aa', btn: '#7c2d12' },      // Brown/Orange gelap
+            { primary: '#4338ca', bg: 'linear-gradient(135deg, #e0e7ff, #eef2ff)', circle: '#c7d2fe', btn: '#4338ca' },      // Indigo
+            { primary: '#be185d', bg: 'linear-gradient(135deg, #fce7f3, #fdf2f8)', circle: '#f9a8d4', btn: '#be185d' }       // Rose/Pink gelap
+        ];
+
+        // Tentukan class dan warna berdasarkan short_name
         const appName = (app.short_name || app.name || '').toLowerCase().trim();
+        let colorIndex = 0;
         let cardClass = '';
-        
+
         if (appName.includes('sieda') || appName.includes('e-dasawisma')) {
             cardClass = 'sieda';
+            colorIndex = 0; // Biru
         } else if (appName.includes('sidongan')) {
             cardClass = 'SIDONGAN';
+            colorIndex = 1; // Merah
         } else {
-            cardClass = `app-${index}`;
+            // Gunakan index aplikasi untuk warna (loop 10 warna)
+            colorIndex = (index % 10);
+            cardClass = `app-color-${colorIndex}`;
         }
+
+        // Ambil warna yang sesuai
+        const colors = appColors[colorIndex];
         
         // Build image URL
         let imgUrl = null;
@@ -150,8 +172,8 @@ function renderActiveApps(apps) {
                 transition: all 0.3s ease;
              ">
             
-            <div class="app-card-header" style="position: relative; overflow: hidden;">
-                <div style="position: absolute; top: -50%; right: -30%; width: 200px; height: 200px; border-radius: 50%; background: ${cardClass === 'sieda' ? '#bfdbfe' : (cardClass === 'SIDONGAN' ? '#fecaca' : '#ddd6fe')}; opacity: ${isMaintenance ? '0.2' : '0.4'};"></div>
+            <div class="app-card-header" style="position: relative; overflow: hidden; background: ${isMaintenance ? '#f1f5f9' : colors.bg};">
+                <div style="position: absolute; top: -50%; right: -30%; width: 200px; height: 200px; border-radius: 50%; background: ${isMaintenance ? '#cbd5e1' : colors.circle}; opacity: ${isMaintenance ? '0.2' : '0.4'};"></div>
                 <div class="app-icon-wrapper" style="${isMaintenance ? 'filter: grayscale(100%) brightness(1.2) !important;' : ''}">
                     ${iconHtml}
                 </div>
@@ -177,7 +199,7 @@ function renderActiveApps(apps) {
                     align-items: center;
                     gap: 0.5rem;
                     padding: 0.75rem 1.25rem;
-                    background: ${isMaintenance ? '#94a3b8' : (cardClass === 'sieda' ? '#2563eb' : (cardClass === 'SIDONGAN' ? '#dc2626' : '#7c3aed'))};
+                    background: ${isMaintenance ? '#94a3b8' : colors.btn};
                     color: #fff;
                     border: none;
                     border-radius: 10px;

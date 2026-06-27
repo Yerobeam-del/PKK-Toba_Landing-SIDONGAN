@@ -140,7 +140,7 @@
 
             @if($currentUser && ($currentUser->hasSidonganRole('bendahara') || $currentUser->isSidonganPokja()))
                 {{-- Bendahara & Ketua Pokja: Lapor Kegiatan --}}
-                <a href="{{ route('sidongan.lapor-kegiatan.create') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                <a href="{{ route('sidongan.lapor_kegiatan.create') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
                     <div style="width: 2.5rem; height: 2.5rem; background: #dcfce7; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-clipboard-list" style="color: #16a34a;"></i>
                     </div>
@@ -153,7 +153,7 @@
 
             @if($currentUser && ($currentUser->hasSidonganRole('bendahara') || $currentUser->hasSidonganRole('ketua_pokja')))
                 {{-- Bendahara & Ketua Pokja: Lapor Kegiatan --}}
-                <a href="{{ route('sidongan.lapor-kegiatan.create') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
+                <a href="{{ route('sidongan.lapor_kegiatan.create') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 1rem; border-radius: 0.5rem; border: 1px solid #e2e8f0; background: white; text-decoration: none; transition: all 0.2s;" onmouseover="this.style.background='#f8fafc'; this.style.borderColor='#cbd5e1'; this.style.transform='translateY(-2px)'" onmouseout="this.style.background='white'; this.style.borderColor='#e2e8f0'; this.style.transform='translateY(0)'">
                     <div style="width: 2.5rem; height: 2.5rem; background: #dcfce7; border-radius: 0.5rem; display: flex; align-items: center; justify-content: center;">
                         <i class="fas fa-clipboard-list" style="color: #16a34a;"></i>
                     </div>
@@ -368,7 +368,7 @@
                     </div>
                 </div>
                 @empty
-                {{-- Empty State - SAMA dengan halaman notifikasi --}}
+                {{-- Empty State --}}
                 <div style="text-align: center; padding: 2rem 1rem;">
                     <div style="width: 4rem; height: 4rem; background: #f0fdf4; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 0.75rem;">
                         <svg style="width: 2rem; height: 2rem; stroke: #22c55e;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -383,7 +383,7 @@
         </div>
     </div>
 
-    {{-- ✅ PERUBAHAN 2: Tambahkan Alur Proses Surat di SIDONGAN --}}
+    {{-- Alur Proses Surat di SIDONGAN --}}
     <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; padding: 1.5rem;">
         <h3 style="font-size: 1rem; font-weight: 700; color: #1e293b; margin: 0 0 1.5rem 0;">Alur Proses Surat di SIDONGAN</h3>
         

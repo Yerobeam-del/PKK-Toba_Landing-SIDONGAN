@@ -61,7 +61,7 @@
         <div class="form-grid-2" style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem">
             <div>
                 <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Nama Singkat *</label>
-                <input type="text" name="short_name" class="form-control" value="{{ old('short_name') }}" required placeholder="Contoh: SIEDA" style="text-transform:uppercase">
+                <input type="text" name="short_name" id="shortNameInput" class="form-control" value="{{ old('short_name') }}" required placeholder="Contoh: SIEDA" style="text-transform:uppercase" maxlength="50">
                 <small style="color:var(--text-muted);display:block;margin-top:0.4rem;font-size:0.8rem">Singkatan unik untuk icon placeholder</small>
             </div>
             <div>
@@ -77,8 +77,16 @@
         {{-- Description --}}
         <div style="margin-bottom:1.5rem">
             <label style="font-weight:600;display:block;margin-bottom:0.5rem;font-size:0.9rem">Deskripsi Lengkap *</label>
-            <textarea name="description" class="form-control" rows="3" required placeholder="Deskripsi detail tentang aplikasi, fitur, dan fungsionalitas">{{ old('description') }}</textarea>
-            <small style="color:var(--text-muted);display:block;margin-top:0.4rem;font-size:0.8rem">Deskripsi akan ditampilkan di landing page</small>
+            <textarea name="description" id="description" class="form-control" rows="4" required maxlength="1000" placeholder="Deskripsi detail tentang aplikasi, fitur, dan fungsionalitas">{{ old('description') }}</textarea>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:0.5rem">
+                <small style="color:var(--text-muted);font-size:0.8rem">Deskripsi akan ditampilkan di landing page</small>
+                <small id="charCount" style="font-size:0.85rem;font-weight:600;color:var(--text-muted)">
+                    <span id="currentChars">0</span> / 1000 karakter
+                </small>
+            </div>
+            <div id="charWarning" style="display:none;margin-top:0.5rem;padding:0.5rem;background:#fef3c7;border-radius:6px;font-size:0.8rem;color:#92400e">
+                <strong>Peringatan:</strong> Deskripsi hampir mencapai batas maksimal
+            </div>
         </div>
 
         {{-- Features --}}
@@ -191,6 +199,82 @@
             </small>
         </div>
 
+        @php
+            // Hitung berapa aplikasi yang sudah tampil di Beranda
+            $berandaCount = \App\Models\Application::where('show_in_quick_access', true)
+                ->where('is_active', true)
+                ->where('status', 'active')
+                ->count();
+            $berandaFull = $berandaCount >= 2;
+        @endphp
+
+        {{-- Visibility Settings --}}
+        <div style="margin-bottom:2rem">
+            <label style="font-weight:600;display:block;margin-bottom:1rem;font-size:0.9rem">Tampilkan Aplikasi Di</label>
+            <div style="display:grid;grid-template-columns:repeat(auto-fill, minmax(250px, 1fr));gap:0.75rem">
+                
+                {{-- Floating Button --}}
+                <label class="vis-label" style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.75rem 1rem;background:#f8fafc;border-radius:10px;transition:all 0.2s;border:2px solid transparent" 
+                    onmouseover="this.style.borderColor='var(--primary)'" 
+                    onmouseout="this.style.borderColor='transparent'">
+                    <input type="checkbox" name="show_in_floating" value="1" {{ old('show_in_floating', true) ? 'checked' : '' }} style="display:none" class="vis-checkbox">
+                    <div class="vis-check-box" style="width:22px;height:22px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;transition:all 0.25s;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <span style="font-weight:600;color:#334155;font-size:0.9rem;display:block">Floating Button</span>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Tombol mengambang di pojok kanan bawah</span>
+                    </div>
+                </label>
+
+                {{-- Footer --}}
+                <label class="vis-label" style="display:flex;align-items:center;gap:0.75rem;cursor:pointer;padding:0.75rem 1rem;background:#f8fafc;border-radius:10px;transition:all 0.2s;border:2px solid transparent" 
+                    onmouseover="this.style.borderColor='var(--primary)'" 
+                    onmouseout="this.style.borderColor='transparent'">
+                    <input type="checkbox" name="show_in_footer" value="1" {{ old('show_in_footer', true) ? 'checked' : '' }} style="display:none" class="vis-checkbox">
+                    <div class="vis-check-box" style="width:22px;height:22px;border:2px solid #cbd5e1;border-radius:6px;background:#fff;transition:all 0.25s;display:flex;align-items:center;justify-content:center;flex-shrink:0">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <span style="font-weight:600;color:#334155;font-size:0.9rem;display:block">Footer</span>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Quick access di bagian bawah halaman</span>
+                    </div>
+                </label>
+
+                {{-- Beranda - Dengan Validasi --}}
+                <label class="vis-label" style="display:flex;align-items:center;gap:0.75rem;cursor:{{ $berandaFull ? 'not-allowed' : 'pointer' }};padding:0.75rem 1rem;background:{{ $berandaFull ? '#f1f5f9' : '#f8fafc' }};border-radius:10px;transition:all 0.2s;border:2px solid {{ $berandaFull ? '#e2e8f0' : 'transparent' }};opacity:{{ $berandaFull ? '0.6' : '1' }}" 
+                    @if(!$berandaFull) onmouseover="this.style.borderColor='var(--primary)'" onmouseout="this.style.borderColor='transparent'" @endif>
+                    <input type="checkbox" name="show_in_quick_access" value="1" {{ old('show_in_quick_access', true) && !$berandaFull ? 'checked' : '' }} {{ $berandaFull ? 'disabled' : '' }} style="display:none" class="vis-checkbox">
+                    <div class="vis-check-box" style="width:22px;height:22px;border:2px solid {{ $berandaFull ? '#cbd5e1' : '#cbd5e1' }};border-radius:6px;background:#fff;transition:all 0.25s;display:flex;align-items:center;justify-content:center;flex-shrink:0;{{ $berandaFull ? 'opacity:0.5' : '' }}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="opacity:0;transform:scale(0.5);transition:all 0.25s">
+                            <polyline points="20 6 9 17 4 12"></polyline>
+                        </svg>
+                    </div>
+                    <div>
+                        <span style="font-weight:600;color:#334155;font-size:0.9rem;display:block">Beranda</span>
+                        <span style="font-size:0.75rem;color:var(--text-muted)">Quick access di halaman utama</span>
+                        @if($berandaFull)
+                            <br><span style="font-size:0.7rem;color:#ef4444;font-weight:600">Sudah mencapai batas (2)</span>
+                        @endif
+                    </div>
+                </label>
+
+            </div>
+            <small style="color:var(--text-muted);display:block;margin-top:0.5rem;font-size:0.8rem">
+                Pilih di mana aplikasi ini akan ditampilkan. Aplikasi harus aktif terlebih dahulu.
+            </small>
+            <small style="color:var(--primary);display:block;margin-top:0.25rem;font-size:0.8rem;font-weight:600">
+                Catatan: Maksimal 2 aplikasi bisa tampil di Beranda.
+                @if($berandaFull)
+                    <br><span style="color:#ef4444">Saat ini sudah ada {{ $berandaCount }} aplikasi yang tampil di Beranda.</span>
+                @endif
+            </small>
+        </div>
+
         {{-- Action Buttons --}}
         <div style="display:flex;gap:0.75rem;justify-content:flex-end;padding-top:1rem;border-top:1px solid rgba(0,0,0,0.04)">
             <a href="{{ route('admin.aplikasi.index') }}" class="btn" style="background:#f8fafc;color:var(--text-dark)">Batal</a>
@@ -216,11 +300,23 @@ document.getElementById('iconInput')?.addEventListener('change', function(e) {
     }
 });
 
-// Update placeholder saat short_name berubah
-document.querySelector('input[name="short_name"]')?.addEventListener('input', function(e) {
-    const initial = e.target.value.charAt(0).toUpperCase() || 'A';
-    // Optional: update placeholder preview if you have one
-});
+// Auto-convert short_name ke UPPERCASE saat user mengetik
+const shortNameInput = document.getElementById('shortNameInput');
+if (shortNameInput) {
+    shortNameInput.addEventListener('input', function(e) {
+        // Simpan posisi cursor
+        const cursorPosition = this.selectionStart;
+        const oldValue = this.value;
+        
+        // Konversi ke uppercase
+        this.value = this.value.toUpperCase();
+        const newValue = this.value;
+        
+        // Kembalikan posisi cursor
+        const offset = newValue.length - oldValue.length;
+        this.setSelectionRange(cursorPosition + offset, cursorPosition + offset);
+    });
+}
 
 // Feature functions
 function addFeature() {
@@ -341,6 +437,68 @@ document.addEventListener('DOMContentLoaded', () => {
             updateCheckboxStyle('isActiveBox', 'isActiveCheck', this.checked);
         });
     }
+});
+
+// Character Counter untuk Description
+const descriptionTextarea = document.getElementById('description');
+const currentCharsSpan = document.getElementById('currentChars');
+const charWarning = document.getElementById('charWarning');
+const charCount = document.getElementById('charCount');
+
+if (descriptionTextarea) {
+    updateCharCounter();
+    descriptionTextarea.addEventListener('input', updateCharCounter);
+}
+
+function updateCharCounter() {
+    const currentLength = descriptionTextarea.value.length;
+    const maxLength = 1000;
+    
+    currentCharsSpan.textContent = currentLength;
+    
+    if (currentLength >= 1000) {
+        // Sudah mencapai batas maksimal
+        charCount.style.color = '#ef4444';
+        charWarning.style.display = 'block';
+        charWarning.innerHTML = '<strong>Peringatan:</strong> Deskripsi mencapai batas maksimal';
+    } else if (currentLength >= 950) {
+        charCount.style.color = '#ef4444';
+        charWarning.style.display = 'block';
+        charWarning.innerHTML = '<strong>Peringatan:</strong> Deskripsi hampir mencapai batas maksimal (' + (maxLength - currentLength) + ' karakter lagi)';
+    } else if (currentLength >= 900) {
+        charCount.style.color = '#d97706';
+        charWarning.style.display = 'block';
+        charWarning.innerHTML = '<strong>Peringatan:</strong> Deskripsi hampir mencapai batas maksimal (' + (maxLength - currentLength) + ' karakter lagi)';
+    } else if (currentLength >= 800) {
+        charCount.style.color = '#f59e0b';
+        charWarning.style.display = 'none';
+    } else {
+        charCount.style.color = 'var(--text-muted)';
+        charWarning.style.display = 'none';
+    }
+}
+
+// Visibility checkbox handler
+document.querySelectorAll('.vis-checkbox').forEach(function(checkbox) {
+    const box = checkbox.parentElement.querySelector('.vis-check-box');
+    
+    function updateVisStyle() {
+        const svg = box.querySelector('svg');
+        if (checkbox.checked) {
+            box.style.background = 'linear-gradient(135deg, #14b8a6, #0d9488)';
+            box.style.borderColor = '#14b8a6';
+            svg.style.opacity = '1';
+            svg.style.transform = 'scale(1)';
+        } else {
+            box.style.background = '#fff';
+            box.style.borderColor = '#cbd5e1';
+            svg.style.opacity = '0';
+            svg.style.transform = 'scale(0.5)';
+        }
+    }
+    
+    updateVisStyle();
+    checkbox.addEventListener('change', updateVisStyle);
 });
 </script>
 

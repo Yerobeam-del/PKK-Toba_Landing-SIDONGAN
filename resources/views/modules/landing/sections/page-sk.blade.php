@@ -15,13 +15,38 @@
         <div class="sk-container">
             {{-- Header Section --}}
             <div class="sk-header">
-                <h2 class="sk-section-title">Daftar Dokumen</h2>
-                <div class="sk-search-box">
-                    <svg class="sk-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/>
-                        <path d="m21 21-4.35-4.35"/>
-                    </svg>
-                    <input type="text" id="searchInput" class="sk-search-input" placeholder="Cari dokumen...">
+                <div class="sk-header-top">
+                    <h2 class="sk-section-title">Daftar Dokumen</h2>
+                    
+                    {{-- CONTROLS: Search di kiri, Dropdown di kanan --}}
+                    <div class="sk-header-controls">
+                        {{-- Search Box - DI KIRI --}}
+                        <div class="sk-search-box">
+                            <svg class="sk-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <circle cx="11" cy="11" r="8"/>
+                                <path d="m21 21-4.35-4.35"/>
+                            </svg>
+                            <input type="text" id="searchInput" class="sk-search-input" placeholder="Cari dokumen...">
+                        </div>
+                        
+                        {{-- Per Page Selector - DI KANAN --}}
+                        <div class="sk-perpage-selector">
+                            <label for="perPageSelect" class="sk-perpage-label">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16">
+                                    <path d="M4 6h16M4 12h16M4 18h16"/>
+                                </svg>
+                                Tampilkan:
+                            </label>
+                            <select id="perPageSelect" class="sk-perpage-select" onchange="changePerPage(this.value)">
+                                <option value="5" selected>5</option>
+                                <option value="10">10</option>
+                                <option value="15">15</option>
+                                <option value="20">20</option>
+                                <option value="25">25</option>
+                            </select>
+                            <span class="sk-perpage-text">dokumen</span>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -34,6 +59,13 @@
             {{-- Documents Table - Desktop --}}
             <div id="documentsTable" class="sk-table-container">
                 <table class="sk-table">
+                    <colgroup>
+                        <col style="width: 60px">
+                        <col style="width: auto">
+                        <col style="width: 160px">
+                        <col style="width: 130px">
+                        <col style="width: 120px">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th class="sk-col-no">No</th>
@@ -65,26 +97,46 @@
                             </th>
                             <th class="sk-col-action">
                                 <svg class="sk-header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <circle cx="12" cy="12" r="3"/>
-                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+                                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
                                 </svg>
                                 Aksi
                             </th>
                         </tr>
                     </thead>
                     <tbody id="documentsBody">
-                        {{-- Documents will be loaded here --}}
+                        {{-- Documents will be loaded by loadSKDocuments() in navigation.js --}}
                     </tbody>
                 </table>
             </div>
 
             {{-- Mobile Cards View --}}
-            <div id="mobileDocumentsList" class="sk-mobile-list">
-                {{-- Mobile cards will be loaded here --}}
+            <div id="mobileDocumentsList" class="sk-mobile-list"></div>
+
+            {{-- PAGINATION --}}
+            <div id="paginationWrapper" class="sk-pagination-wrapper">
+                <div class="sk-pagination-container">
+                    <button id="prevPageBtn" class="sk-pagination-btn" onclick="changePage('prev')" disabled>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="15 18 9 12 15 6"/>
+                        </svg>
+                        <span class="desktop-only">Previous</span>
+                    </button>
+
+                    <div id="pageNumbers" class="sk-page-numbers"></div>
+
+                    <button id="nextPageBtn" class="sk-pagination-btn" onclick="changePage('next')">
+                        <span class="desktop-only">Next</span>
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="9 18 15 12 9 6"/>
+                        </svg>
+                    </button>
+                </div>
+                
+                <div class="sk-pagination-info" id="paginationInfo"></div>
             </div>
 
             {{-- Empty State --}}
-            <div id="emptyState" class="sk-empty-state">
+            <div id="emptyState" class="sk-empty-state" style="display:none">
                 <div class="sk-empty-icon">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
                         <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -94,177 +146,88 @@
                         <polyline points="10 9 9 9 8 9"/>
                     </svg>
                 </div>
-                <h3 class="sk-empty-title">Belum Ada Dokumen</h3>
-                <p class="sk-empty-text">
+                
+                {{-- Title --}}
+                <h3 class="sk-empty-title" id="emptyStateTitle">Belum Ada Dokumen</h3>
+                
+                {{-- Search Term Display (box terpisah) --}}
+                <div id="emptyStateSearchTerm" class="sk-empty-search-term" style="display:none"></div>
+                
+                {{-- Message --}}
+                <p class="sk-empty-text" id="emptyStateText">
                     Dokumen SK dan surat resmi akan segera diunggah. 
                     Silakan kunjungi kembali nanti untuk update terbaru.
                 </p>
-                <a onclick="navigateTo('beranda')" class="sk-back-btn">
+                
+                {{-- Tombol 1: Kembali ke Beranda --}}
+                <a id="btnBackToHome" onclick="if(typeof navigateTo==='function')navigateTo('beranda')" class="sk-back-btn">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                     </svg>
                     Kembali ke Beranda
                 </a>
+                
+                {{-- Tombol 2: Tampilkan Semua Dokumen --}}
+                <button id="btnShowAllDocs" onclick="clearSearchAndShowAll()" class="sk-back-btn sk-btn-secondary" style="display:none">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
+                        <path d="M3 3v5h5"/>
+                    </svg>
+                    Tampilkan Semua Dokumen
+                </button>
             </div>
         </div>
     </section>
 </div>
 
 <script>
-// Search functionality
+// ==========================================
+// INISIALISASI PER PAGE & SEARCH
+// ==========================================
+let searchTimeout;
+
 document.addEventListener('DOMContentLoaded', function() {
-    const searchInput = document.getElementById('searchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function(e) {
-            const term = e.target.value.toLowerCase().trim();
-            const rows = document.querySelectorAll('#documentsBody tr');
-            const mobileCards = document.querySelectorAll('.sk-mobile-card');
-            
-            rows.forEach(row => {
-                const text = row.textContent.toLowerCase();
-                row.style.display = text.includes(term) ? '' : 'none';
-            });
-            
-            mobileCards.forEach(card => {
-                const text = card.textContent.toLowerCase();
-                card.style.display = text.includes(term) ? '' : 'none';
-            });
-        });
+    // Load per_page dari localStorage
+    const savedPerPage = localStorage.getItem('sk_per_page') || '5';
+    currentPerPage = parseInt(savedPerPage);
+    
+    const perPageSelect = document.getElementById('perPageSelect');
+    if (perPageSelect) {
+        perPageSelect.value = currentPerPage;
     }
 });
 
-// Render documents function
-function renderDocuments(documents) {
-    const tableBody = document.getElementById('documentsBody');
-    const mobileList = document.getElementById('mobileDocumentsList');
-    const tableContainer = document.getElementById('documentsTable');
-    const emptyState = document.getElementById('emptyState');
-    const loadingState = document.getElementById('loadingState');
+// Change per page
+function changePerPage(value) {
+    currentPerPage = parseInt(value);
+    localStorage.setItem('sk_per_page', currentPerPage);
+    currentSearchTerm = '';
+    originalSearchTerm = ''; // ← Reset juga (variable dari navigation.js)
     
-    loadingState.style.display = 'none';
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) searchInput.value = '';
     
-    if (!documents || documents.length === 0) {
-        tableContainer.style.display = 'none';
-        mobileList.style.display = 'none';
-        emptyState.style.display = 'block';
-        return;
+    if (typeof loadSKDocuments === 'function') {
+        loadSKDocuments(1);
     }
-    
-    emptyState.style.display = 'none';
-    tableContainer.style.display = 'block';
-    mobileList.style.display = 'block';
-    
-    // Clear existing content
-    tableBody.innerHTML = '';
-    mobileList.innerHTML = '';
-    
-    documents.forEach((doc, index) => {
-        // Desktop Table Row
-        const row = document.createElement('tr');
-        row.className = 'sk-table-row';
-        row.innerHTML = `
-            <td class="sk-cell sk-cell-no">${index + 1}</td>
-            <td class="sk-cell sk-cell-name">
-                <div class="sk-doc-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                </div>
-                <div class="sk-doc-info">
-                    <div class="sk-doc-name">${doc.name}</div>
-                    <div class="sk-doc-file">${doc.file_name || ''}</div>
-                </div>
-            </td>
-            <td class="sk-cell sk-cell-date">
-                <svg class="sk-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                    <line x1="16" y1="2" x2="16" y2="6"/>
-                    <line x1="8" y1="2" x2="8" y2="6"/>
-                    <line x1="3" y1="10" x2="21" y2="10"/>
-                </svg>
-                ${doc.date}
-            </td>
-            <td class="sk-cell sk-cell-size">
-                <svg class="sk-cell-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="17 8 12 3 7 8"/>
-                    <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-                ${doc.size}
-            </td>
-            <td class="sk-cell sk-cell-action">
-                <div class="sk-action-buttons">
-                    <button class="sk-action-btn sk-view-btn" onclick="viewDocument('${doc.id}')" title="Lihat">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                            <circle cx="12" cy="12" r="3"/>
-                        </svg>
-                    </button>
-                    <button class="sk-action-btn sk-download-btn" onclick="downloadDocument('${doc.id}')" title="Unduh">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                            <polyline points="7 10 12 15 17 10"/>
-                            <line x1="12" y1="15" x2="12" y2="3"/>
-                        </svg>
-                    </button>
-                </div>
-            </td>
-        `;
-        tableBody.appendChild(row);
+}
+
+// Search functionality dengan debounce
+const searchInput = document.getElementById('searchInput');
+if (searchInput) {
+    searchInput.addEventListener('input', function(e) {
+        const term = e.target.value; // ← Preserve original case
+        originalSearchTerm = term;   // ← Gunakan variable dari navigation.js
         
-        // Mobile Card
-        const mobileCard = document.createElement('div');
-        mobileCard.className = 'sk-mobile-card';
-        mobileCard.innerHTML = `
-            <div class="sk-mobile-card-header">
-                <div class="sk-mobile-doc-icon">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-                        <polyline points="14 2 14 8 20 8"/>
-                    </svg>
-                </div>
-                <div class="sk-mobile-doc-info">
-                    <div class="sk-mobile-doc-name">${doc.name}</div>
-                    <div class="sk-mobile-doc-meta">
-                        <span class="sk-mobile-doc-date">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
-                                <line x1="16" y1="2" x2="16" y2="6"/>
-                                <line x1="8" y1="2" x2="8" y2="6"/>
-                            </svg>
-                            ${doc.date}
-                        </span>
-                        <span class="sk-mobile-doc-size">
-                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                <polyline points="17 8 12 3 7 8"/>
-                            </svg>
-                            ${doc.size}
-                        </span>
-                    </div>
-                </div>
-            </div>
-            <div class="sk-mobile-card-actions">
-                <button class="sk-mobile-action-btn sk-view-btn" onclick="viewDocument('${doc.id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                        <circle cx="12" cy="12" r="3"/>
-                    </svg>
-                    <span>Lihat</span>
-                </button>
-                <button class="sk-mobile-action-btn sk-download-btn" onclick="downloadDocument('${doc.id}')">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                        <polyline points="7 10 12 15 17 10"/>
-                        <line x1="12" y1="15" x2="12" y2="3"/>
-                    </svg>
-                    <span>Unduh</span>
-                </button>
-            </div>
-        `;
-        mobileList.appendChild(mobileCard);
+        clearTimeout(searchTimeout);
+        
+        searchTimeout = setTimeout(() => {
+            currentSearchTerm = term.toLowerCase().trim(); // ← Untuk API (case-insensitive)
+            if (typeof loadSKDocuments === 'function') {
+                loadSKDocuments(1);
+            }
+        }, 300);
     });
 }
 </script>

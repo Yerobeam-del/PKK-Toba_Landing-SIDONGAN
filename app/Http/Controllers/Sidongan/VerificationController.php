@@ -62,9 +62,6 @@ class VerificationController extends Controller
         return view('sidongan.verifikasi.form', compact('report'));
     }
     
-    /**
-     * Process verification (approve/reject).
-     */
     public function store(Request $request, $id)
     {
         $user = auth()->guard('sidongan')->user();
@@ -88,14 +85,22 @@ class VerificationController extends Controller
             'verified_at' => now(),
         ]);
         
-        // UPDATE STATUS SURAT BERDASARKAN HASIL VERIFIKASI
+        // ✅ UPDATE STATUS SURAT DENGAN LOGIC YANG BENAR
         if ($report->document) {
+            // Gunakan method updateCorrectStatus() yang sudah kita buat
+            $newStatus = $report->document->updateCorrectStatus();
+            
+            $notifMessage = "";
+            $notifTitle = "";
+            
             if ($validated['status'] === 'disetujui') {
-                // Laporan disetujui → Surat selesai
-                $report->document->update(['status' => 'selesai']);
-                
-                $notifMessage = "Laporan kegiatan untuk surat {$report->document->agenda_number} telah disetujui.";
-                $notifTitle = "Laporan Disetujui";
+                if ($newStatus === 'selesai') {
+                    $notifMessage = "Laporan kegiatan untuk surat {$report->document->agenda_number} telah disetujui. Surat selesai.";
+                    $notifTitle = "Laporan Disetujui";
+                } else {
+                    $notifMessage = "Laporan kegiatan untuk surat {$report->document->agenda_number} telah disetujui. Menunggu laporan dari yang lain.";
+                    $notifTitle = "Laporan Disetujui";
+                }
             } else if ($validated['status'] === 'ditolak') {
                 // Laporan ditolak → Surat kembali ke "berjalan" agar bisa dibuat laporan baru
                 $report->document->update(['status' => 'berjalan']);

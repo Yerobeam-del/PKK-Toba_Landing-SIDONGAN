@@ -1,20 +1,65 @@
+@php
+// Query aplikasi yang aktif, status active, DAN show_in_floating = true
+$floatingApps = \App\Models\Application::where('is_active', true)
+    ->where('status', 'active')
+    ->where('show_in_floating', true)
+    ->orderBy('sort_order')
+    ->get();
+@endphp
+
+{{-- Floating App Button --}}
 <div class="floating-app-btn" id="floatingAppBtn">
+    {{-- Menu Items --}}
     <div class="floating-menu" id="floatingMenu">
-        <a href="https://sieda.pkktoba.id" target="_blank" class="floating-menu-item">
-            <span class="floating-menu-label">Akses SIEDA</span>
-            <div class="floating-menu-icon sieda-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+        @forelse($floatingApps as $app)
+        <a href="{{ $app->url && $app->url !== '#' ? $app->url : '#' }}" 
+           target="{{ $app->url && $app->url !== '#' ? '_blank' : '_self' }}" 
+           class="floating-menu-item">
+            <span class="floating-menu-label">{{ $app->name }}</span>
+            <div class="floating-menu-icon">
+                @if($app->icon)
+                    <img src="{{ asset('storage/' . $app->icon) }}" 
+                         alt="{{ $app->short_name }}"
+                         onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                    <span style="display:none;">{{ substr($app->short_name, 0, 2) }}</span>
+                @else
+                    <span>{{ substr($app->short_name, 0, 2) }}</span>
+                @endif
             </div>
         </a>
-        <a href="https://sidongan.pkktoba.id" target="_blank" class="floating-menu-item">
-            <span class="floating-menu-label">Akses SIDONGAN</span>
-            <div class="floating-menu-icon SIDONGAN-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        @empty
+        <a href="#" class="floating-menu-item">
+            <span class="floating-menu-label">Tidak Ada Aplikasi</span>
+            <div class="floating-menu-icon">
+                <span>NA</span>
             </div>
         </a>
+        @endforelse
     </div>
-    <button class="floating-trigger" id="floatingTrigger" onclick="toggleFloatingMenu()" aria-label="Akses Aplikasi">
+
+    {{-- Trigger Button --}}
+    <button class="floating-trigger" id="floatingTrigger" onclick="toggleFloatingMenu()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 2 7 12 12 22 7 12 2"></polygon>
+                <polyline points="2 17 12 22 22 17"></polyline>
+                <polyline points="2 12 12 17 22 12"></polyline>
+            </svg>
         <div class="floating-trigger-pulse"></div>
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
     </button>
 </div>
+
+<script>
+function toggleFloatingMenu() {
+    const btn = document.getElementById('floatingAppBtn');
+    if (!btn) return;
+    btn.classList.toggle('open');
+}
+
+// Close menu when clicking outside
+document.addEventListener('click', function(e) {
+    const btn = document.getElementById('floatingAppBtn');
+    if (btn && !btn.contains(e.target)) {
+        btn.classList.remove('open');
+    }
+});
+</script>

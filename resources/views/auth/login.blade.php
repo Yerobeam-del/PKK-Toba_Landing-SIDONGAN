@@ -379,20 +379,32 @@
         }
 
         .alert {
-            padding: 0.75rem 1rem;
+            padding: 1rem 1.25rem;
             border-radius: 8px;
             font-size: 0.85rem;
             margin-bottom: 1.125rem;
-            border-left: 4px solid;
-        }
-
-        .alert-danger {
+            border: 2px solid #dc2626;
             background: #fef2f2;
             color: #dc2626;
-            border-left-color: #dc2626;
+            box-shadow: 0 2px 8px rgba(220, 38, 38, 0.1);
+            text-align: center;
         }
 
-        .alert ul { margin: 0; padding-left: 1.25rem; }
+        .alert ul { 
+            margin: 0; 
+            padding: 0;
+            list-style: none;
+        }
+
+        .alert li {
+            margin: 0;
+            padding: 0;
+            line-height: 1.5;
+        }
+
+        .alert li::before {
+            display: none;
+        }
 
         /* Responsive */
         @media (max-width: 768px) {
@@ -454,7 +466,24 @@
                     <div class="alert alert-danger">
                         <ul>
                             @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
+                                <li>
+                                    @if (str_contains($error, 'credentials') || str_contains($error, 'auth.failed'))
+                                        @php
+                                            // Cek apakah email terdaftar
+                                            $emailExists = \App\Models\User::where('email', old('email'))->exists();
+                                        @endphp
+                                        
+                                        @if (!$emailExists && old('email'))
+                                            Email <strong>"{{ old('email') }}"</strong> tidak terdaftar dalam sistem.
+                                        @elseif ($emailExists)
+                                            Password yang Anda masukkan salah untuk email <strong>"{{ old('email') }}"</strong>.
+                                        @else
+                                            Email atau password yang Anda masukkan salah. Silakan periksa kembali.
+                                        @endif
+                                    @else
+                                        {{ $error }}
+                                    @endif
+                                </li>
                             @endforeach
                         </ul>
                     </div>

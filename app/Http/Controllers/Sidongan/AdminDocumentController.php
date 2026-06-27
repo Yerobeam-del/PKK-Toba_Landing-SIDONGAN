@@ -88,9 +88,9 @@ class AdminDocumentController extends Controller
         }]);
         
         // Filter Role
-        if ($user->hasSidonganRole('sekretaris')) {
-            $query->where('created_by', $user->id);
-        }
+        // if ($user->hasSidonganRole('sekretaris')) {
+        //     $query->where('created_by', $user->id);
+        // }
 
         // Hitung Total Dokumen
         $totalDocuments = (clone $query)->count();
@@ -270,10 +270,6 @@ class AdminDocumentController extends Controller
                 abort(403, 'Akses ditolak.');
             }
             
-            if ($document->status !== 'selesai') {
-                return back()->with('error', 'Hanya dokumen yang sudah selesai yang dapat diarsipkan.');
-            }
-            
             $document->update([
                 'status' => 'diarsipkan',
                 'updated_by' => $user->id,
@@ -415,28 +411,19 @@ class AdminDocumentController extends Controller
     {
         $user = auth()->guard('sidongan')->user();
         
-        // Cek akses
         if (!$user->hasSidonganRole('ketua')) {
             abort(403, 'Akses ditolak');
         }
         
-        // 1. VALIDASI INPUT
         $validated = $request->validate([
             'target_roles' => 'required|array|min:1',
             'target_roles.*' => 'in:bendahara,pengurus_1,pengurus_2,pengurus_3,pengurus_4,sekretaris,staf_ahli_1,staf_ahli_2',
             'action' => 'required|string',
             'custom_action' => 'nullable|string|max:255',
             'comment' => 'nullable|string',
-        ], [
-            'target_roles.required' => 'Anda wajib memilih minimal satu tujuan disposisi.',
-            'target_roles.min' => 'Pilih minimal satu tujuan disposisi.',
-            'action.required' => 'Tindakan/Instruksi wajib dipilih.',
         ]);
         
-        // 2. TENTUKAN TINDAKAN FINAL
         $finalAction = $validated['action'];
-        
-        // Jika "Lainnya" dipilih, gunakan custom_action
         if ($validated['action'] === 'Lainnya') {
             if (empty(trim($validated['custom_action'] ?? ''))) {
                 return back()->withErrors(['custom_action' => 'Tindakan/Instruksi lainnya wajib diisi.'])->withInput();
@@ -444,20 +431,18 @@ class AdminDocumentController extends Controller
             $finalAction = trim($validated['custom_action']);
         }
         
-        // 3. UPDATE DOKUMEN
         $document->update([
             'status' => 'berjalan',
-            'disposisi_data' => json_encode([
+            'disposisi_data' => [
                 'target_roles' => $validated['target_roles'],
                 'action' => $finalAction,
-                'action_type' => $validated['action'], // Simpan tipe: 'Lainnya' atau pilihan standar
+                'action_type' => $validated['action'],
                 'comment' => $validated['comment'] ?? null,
                 'disposed_by' => $user->id,
                 'disposed_at' => now(),
-            ])
+            ]
         ]);
         
-        // 4. NOTIFIKASI
         $rolesMap = [
             'sekretaris' => 'Sekretaris PKK',
             'bendahara' => 'Bendahara PKK',
@@ -469,24 +454,74 @@ class AdminDocumentController extends Controller
             'pengurus_4' => 'Ketua Pengurus IV',
         ];
 
+        $notificationCount = 0;
+        $errors = [];
+
         foreach ($validated['target_roles'] as $role) {
-            $targetUser = \App\Models\User::where('sidongan_role', $role)->first();
+            $targetUsers = \App\Models\User::where('sidongan_role', $role)->get();
             
-            if ($targetUser) {
+            \Log::info("Disposisi: Mencari user dengan role '{$role}', ditemukan {$targetUsers->count()} user");
+            
+            if ($targetUsers->isEmpty()) {
+                $errors[] = "Tidak ada user dengan role '{$rolesMap[$role]}'";
+                continue;
+            }
+            
+            foreach ($targetUsers as $targetUser) {
+                try {
+                    \Log::info("Disposisi: Membuat notifikasi untuk user ID {$targetUser->id} ({$targetUser->name})");
+                    
+                    $notification = \App\Models\Notification::create([
+                        'user_id' => $targetUser->id,
+                        'type' => 'disposisi.received',
+                        'title' => 'Disposisi Baru',
+                        'message' => "Anda menerima disposisi dari Ketua PKK untuk surat No. Agenda {$document->agenda_number} - {$document->subject}. Tindakan: {$finalAction}",
+                        'related_id' => $document->id,
+                        'related_type' => 'document',
+                        'read_at' => null, // Pastikan read_at NULL
+                    ]);
+                    
+                    \Log::info("Disposisi: Notifikasi berhasil dibuat dengan ID {$notification->id}");
+                    $notificationCount++;
+                    
+                } catch (\Exception $e) {
+                    \Log::error("Disposisi: Gagal membuat notifikasi untuk user {$targetUser->name}: " . $e->getMessage());
+                    $errors[] = "Gagal mengirim notifikasi ke {$targetUser->name}";
+                }
+            }
+        }
+
+        // Notifikasi ke Sekretaris
+        $sekretarisUsers = \App\Models\User::where('sidongan_role', 'sekretaris')->get();
+        foreach ($sekretarisUsers as $sekretaris) {
+            try {
                 \App\Models\Notification::create([
-                    'user_id' => $targetUser->id,
-                    'type' => 'disposisi.received',
-                    'title' => 'Disposisi Baru',
-                    'message' => "Anda menerima disposisi dari Ketua PKK untuk surat {$document->agenda_number}: {$document->subject}. Tindakan: {$finalAction}",
+                    'user_id' => $sekretaris->id,
+                    'type' => 'disposisi.processed',
+                    'title' => 'Disposisi Selesai',
+                    'message' => "Surat No. Agenda {$document->agenda_number} telah didisposisi oleh Ketua PKK ke: " . implode(', ', array_map(fn($r) => $rolesMap[$r] ?? $r, $validated['target_roles'])),
                     'related_id' => $document->id,
-                    'related_type' => \App\Models\Document::class,
+                    'related_type' => 'document',
+                    'read_at' => null,
                 ]);
+                $notificationCount++;
+            } catch (\Exception $e) {
+                \Log::error("Disposisi: Gagal membuat notifikasi ke sekretaris: " . $e->getMessage());
             }
         }
         
-        // 5. REDIRECT
+        \Log::info("Disposisi: Total {$notificationCount} notifikasi dikirim untuk surat {$document->agenda_number}");
+        
+        $message = "Disposisi berhasil! {$notificationCount} notifikasi terkirim.";
+        $type = 'success';
+        
+        if (!empty($errors)) {
+            $message .= " PERHATIAN: " . implode(', ', $errors);
+            $type = 'warning';
+        }
+        
         return redirect()->route('sidongan.disposisi')
-            ->with('success', 'Disposisi surat berhasil dikirim!');
+            ->with($type, $message);
     }
 
     /**
@@ -526,12 +561,12 @@ class AdminDocumentController extends Controller
         
         $document->update([
             'status' => $validated['status'] === 'disetujui' ? 'selesai' : 'draft',
-            'verifikasi_data' => json_encode([
+            'verifikasi_data' => [
                 'status' => $validated['status'],
                 'comment' => $validated['comment'] ?? null,
                 'verified_by' => $user->id,
                 'verified_at' => now(),
-            ])
+            ]
         ]);
         
         return redirect()->route('sidongan.verifikasi')
@@ -592,10 +627,7 @@ class AdminDocumentController extends Controller
             abort(403, 'Akses ditolak. Hanya Sekretaris yang dapat mengarsipkan surat.');
         }
         
-        // Hanya dokumen yang statusnya 'selesai' yang bisa diarsipkan
-        if ($document->status !== 'selesai') {
-            return back()->with('error', 'Hanya dokumen yang sudah selesai yang dapat diarsipkan.');
-        }
+        // Surat bisa diarsipkan dari status apapun
         
         // Update status menjadi diarsipkan
         $document->update([

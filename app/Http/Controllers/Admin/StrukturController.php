@@ -12,19 +12,37 @@ use Illuminate\Support\Facades\Log;
 class StrukturController extends Controller
 {
     protected $sortMap = [
-        'Ketua Pembina' => 1, 'Ketua TP PKK' => 2, 'Staf Ahli' => 3,
-        'Sekretaris' => 4, 'Bendahara' => 5,
-        'Ketua I' => 6, 'Ketua II' => 7, 'Ketua III' => 8, 'Ketua IV' => 9,
-        'Ketua' => 10, 'Wakil Ketua' => 11, 'Sekretaris Pokja' => 12, 'Anggota' => 13
+        'Ketua Pembina' => 1, 
+        'Ketua TP PKK' => 2, 
+        'Staf Ahli 1' => 3,
+        'Staf Ahli 2' => 4,
+        'Sekretaris' => 5, 
+        'Bendahara' => 6,
+        'Ketua I' => 7, 
+        'Ketua II' => 8, 
+        'Ketua III' => 9, 
+        'Ketua IV' => 10,
+        'Ketua' => 11, 
+        'Wakil Ketua' => 12, 
+        'Sekretaris Pokja' => 13, 
+        'Anggota' => 14
     ];
 
     public function index()
     {
         $pengurusInti = StrukturMember::whereNull('pokja_id')
             ->orderByRaw("CASE position 
-                WHEN 'Ketua Pembina' THEN 1 WHEN 'Ketua TP PKK' THEN 2 WHEN 'Staf Ahli' THEN 3
-                WHEN 'Sekretaris' THEN 4 WHEN 'Bendahara' THEN 5 WHEN 'Ketua I' THEN 6
-                WHEN 'Ketua II' THEN 7 WHEN 'Ketua III' THEN 8 WHEN 'Ketua IV' THEN 9 ELSE 99 END")
+                WHEN 'Ketua Pembina' THEN 1 
+                WHEN 'Ketua TP PKK' THEN 2 
+                WHEN 'Staf Ahli 1' THEN 3
+                WHEN 'Staf Ahli 2' THEN 4
+                WHEN 'Sekretaris' THEN 5 
+                WHEN 'Bendahara' THEN 6 
+                WHEN 'Ketua I' THEN 7
+                WHEN 'Ketua II' THEN 8 
+                WHEN 'Ketua III' THEN 9 
+                WHEN 'Ketua IV' THEN 10 
+                ELSE 99 END")
             ->get();
             
         $pokjaList = Pokja::withCount('members')->orderBy('id')->get();

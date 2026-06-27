@@ -158,6 +158,7 @@
                         <th style="padding: 1rem; text-align: left; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">TANGGAL</th>
                         <th style="padding: 1rem; text-align: left; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">DISPOSISI</th>
                         <th style="padding: 1rem; text-align: left; font-size: 0.8rem; font-weight: 600; text-transform: uppercase; min-width: 220px;">STATUS</th>
+                        <th style="padding: 1rem; text-align: left; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">AKSI TERAKHIR</th>
                         <th style="padding: 1rem; text-align: center; font-size: 0.8rem; font-weight: 600; text-transform: uppercase;">AKSI</th>
                     </tr>
                 </thead>
@@ -210,92 +211,305 @@
                             @endif
                         </td>
                         
-                        <td style="padding: 1rem;">
-                            @php
-                                $reports = $doc->activityReports ?? collect();
-                                $latestReport = $reports->first();
-                                $rejectedReport = $reports->where('status', 'ditolak')->first();
-                                $hasReport = $reports->count() > 0;
-                            @endphp
+<td style="padding: 1rem;">
+    @php
+        $reports = $doc->activityReports ?? collect();
+        $hasReport = $reports->count() > 0;
+        
+        $rejectedReports = $reports->where('status', 'ditolak');
+        $hasRejected = $rejectedReports->count() > 0;
+        
+        $approvedReports = $reports->where('status', 'disetujui');
+        $hasApproved = $approvedReports->count() > 0;
+        
+        $pendingReports = $reports->where('status', 'menunggu_verifikasi');
+        $hasPending = $pendingReports->count() > 0;
+        
+        $allReported = false;
+        $dispoData = is_string($doc->disposisi_data) 
+            ? json_decode($doc->disposisi_data, true) 
+            : $doc->disposisi_data;
+        
+        if ($dispoData && isset($dispoData['target_roles'])) {
+            $targetRoles = $dispoData['target_roles'];
+            $targetUsers = \App\Models\User::whereIn('sidongan_role', $targetRoles)->get();
+            
+            if ($targetUsers->isEmpty()) {
+                $allReported = true;
+            } else {
+                $allReported = true;
+                foreach ($targetUsers as $targetUser) {
+                    $userHasReported = $reports->where('created_by', $targetUser->id)->count() > 0;
+                    if (!$userHasReported) {
+                        $allReported = false;
+                        break;
+                    }
+                }
+            }
+        }
+    @endphp
 
-                            @if($doc->status === 'menunggu_disposisi')
-                                <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-                                    <i class="fas fa-hourglass-half" style="font-size: 0.65rem;"></i>
-                                    Menunggu Disposisi
-                                </span>
-                            @elseif($doc->status === 'berjalan')
-                                @if($rejectedReport)
-                                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #fee2e2; color: #991b1b; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; width: fit-content;">
-                                            <i class="fas fa-times-circle" style="font-size: 0.65rem;"></i>
-                                            Perlu Laporan Ulang
-                                        </span>
-                                        <div style="padding: 0.5rem 0.75rem; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 0.25rem; font-size: 0.75rem;">
-                                            <div style="color: #991b1b; font-weight: 600; margin-bottom: 0.15rem; display: flex; align-items: center; gap: 0.35rem;">
-                                                <i class="fas fa-user" style="font-size: 0.65rem;"></i>
-                                                {{ $rejectedReport->creator->name ?? 'Unknown' }}
-                                            </div>
-                                            @if($rejectedReport->catatan_verifikasi)
-                                                <div style="color: #7f1d1d; font-style: italic; font-size: 0.7rem; line-height: 1.4;">
-                                                    "{{ Str::limit($rejectedReport->catatan_verifikasi, 60) }}"
-                                                </div>
-                                            @endif
-                                            <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.2rem;">
-                                                {{ $rejectedReport->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                @elseif($hasReport)
-                                    <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                                        <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; width: fit-content;">
-                                            <i class="fas fa-clock" style="font-size: 0.65rem;"></i>
-                                            Menunggu Verifikasi
-                                        </span>
-                                        <div style="padding: 0.5rem 0.75rem; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 0.25rem; font-size: 0.75rem;">
-                                            <div style="color: #1e40af; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
-                                                <i class="fas fa-user" style="font-size: 0.65rem;"></i>
-                                                {{ $latestReport->creator->name ?? 'Unknown' }}
-                                            </div>
-                                            <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.15rem;">
-                                                {{ $latestReport->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                @else
-                                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #f1f5f9; color: #475569; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-                                        <i class="fas fa-file-circle-xmark" style="font-size: 0.65rem;"></i>
-                                        Belum Dilaporkan
-                                    </span>
-                                @endif
-                            @elseif($doc->status === 'selesai')
-                                <div style="display: flex; flex-direction: column; gap: 0.35rem;">
-                                    <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; width: fit-content;">
-                                        <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i>
-                                        Selesai
-                                    </span>
-                                    @if($latestReport)
-                                        <div style="padding: 0.5rem 0.75rem; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 0.25rem; font-size: 0.75rem;">
-                                            <div style="color: #065f46; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
-                                                <i class="fas fa-user" style="font-size: 0.65rem;"></i>
-                                                {{ $latestReport->creator->name ?? 'Unknown' }}
-                                            </div>
-                                            <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.15rem;">
-                                                {{ $latestReport->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
-                                            </div>
-                                        </div>
-                                    @endif
-                                </div>
-                            @elseif($doc->status === 'diarsipkan')
-                                <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #f3e8ff; color: #7c3aed; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-                                    <i class="fas fa-archive" style="font-size: 0.65rem;"></i>
-                                    Diarsipkan
-                                </span>
-                            @else
-                                <span style="display: inline-block; padding: 0.375rem 0.75rem; background: #f1f5f9; color: #475569; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
-                                    {{ ucfirst(str_replace('_', ' ', $doc->status)) }}
-                                </span>
-                            @endif
-                        </td>
+    @if($doc->status === 'menunggu_disposisi')
+        <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #fef3c7; color: #92400e; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+            <i class="fas fa-hourglass-half" style="font-size: 0.65rem;"></i>
+            Menunggu Disposisi
+        </span>
+
+    @elseif($doc->status === 'berjalan')
+        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+            {{-- ✅ BADGE UTAMA: Berjalan (SELALU MUNCUL) --}}
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #ffedd5; color: #9a3412; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; width: fit-content;">
+                <i class="fas fa-spinner fa-spin" style="font-size: 0.65rem;"></i>
+                Berjalan
+            </span>
+            
+            {{-- Laporan Ditolak --}}
+            @if($hasRejected)
+                @foreach($rejectedReports as $rejected)
+                    <div style="padding: 0.5rem 0.75rem; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 0.25rem; font-size: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; background: #fee2e2; color: #991b1b; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600;">
+                                <i class="fas fa-times-circle" style="font-size: 0.6rem;"></i>
+                                Laporan Ditolak
+                            </span>
+                        </div>
+                        <div style="color: #991b1b; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fas fa-user" style="font-size: 0.65rem;"></i>
+                            {{ $rejected->creator->name ?? 'Unknown' }}
+                        </div>
+                        @if($rejected->catatan_verifikasi)
+                            <div style="color: #7f1d1d; font-style: italic; font-size: 0.7rem; line-height: 1.4; margin-top: 0.25rem;">
+                                "{{ Str::limit($rejected->catatan_verifikasi, 60) }}"
+                            </div>
+                        @endif
+                        <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.2rem;">
+                            {{ $rejected->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+            
+            {{-- Laporan Disetujui --}}
+            @if($hasApproved)
+                @foreach($approvedReports as $approved)
+                    <div style="padding: 0.5rem 0.75rem; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 0.25rem; font-size: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; background: #d1fae5; color: #065f46; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600;">
+                                <i class="fas fa-check-circle" style="font-size: 0.6rem;"></i>
+                                Laporan Disetujui
+                            </span>
+                        </div>
+                        <div style="color: #065f46; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fas fa-user" style="font-size: 0.65rem;"></i>
+                            {{ $approved->creator->name ?? 'Unknown' }}
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.2rem;">
+                            {{ $approved->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+            
+            {{-- Laporan Menunggu Verifikasi --}}
+            @if($hasPending)
+                @foreach($pendingReports as $pending)
+                    <div style="padding: 0.5rem 0.75rem; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 0.25rem; font-size: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.25rem;">
+                            <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; background: #dbeafe; color: #1e40af; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600;">
+                                <i class="fas fa-clock" style="font-size: 0.6rem;"></i>
+                                Menunggu Verifikasi
+                            </span>
+                        </div>
+                        <div style="color: #1e40af; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fas fa-user" style="font-size: 0.65rem;"></i>
+                            {{ $pending->creator->name ?? 'Unknown' }}
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.2rem;">
+                            {{ $pending->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+            
+            {{-- Info Progress --}}
+            @if(!$allReported && $hasReport)
+                <div style="padding: 0.5rem 0.75rem; background: #f8fafc; border-left: 3px solid #94a3b8; border-radius: 0.25rem; font-size: 0.75rem;">
+                    <div style="color: #475569; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                        <i class="fas fa-users" style="font-size: 0.65rem;"></i>
+                        {{ $reports->count() }} dari {{ \App\Models\User::whereIn('sidongan_role', $dispoData['target_roles'] ?? [])->count() }} sudah lapor
+                    </div>
+                </div>
+            @endif
+            
+            {{-- Belum ada laporan --}}
+            @if(!$hasReport)
+                <div style="padding: 0.5rem 0.75rem; background: #f8fafc; border-left: 3px solid #cbd5e1; border-radius: 0.25rem; font-size: 0.75rem;">
+                    <div style="color: #64748b; display: flex; align-items: center; gap: 0.35rem;">
+                        <i class="fas fa-file-circle-xmark" style="font-size: 0.65rem;"></i>
+                        Belum ada laporan
+                    </div>
+                </div>
+            @endif
+        </div>
+
+    @elseif($doc->status === 'menunggu_verifikasi')
+        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #dbeafe; color: #1e40af; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; width: fit-content;">
+                <i class="fas fa-clock" style="font-size: 0.65rem;"></i>
+                Menunggu Verifikasi
+            </span>
+            @if($allReported)
+                <div style="padding: 0.5rem 0.75rem; background: #eff6ff; border-left: 3px solid #3b82f6; border-radius: 0.25rem; font-size: 0.75rem;">
+                    <div style="color: #1e40af; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                        <i class="fas fa-users" style="font-size: 0.65rem;"></i>
+                        Semua sudah lapor
+                    </div>
+                </div>
+            @endif
+        </div>
+
+    @elseif($doc->status === 'selesai')
+        <div style="display: flex; flex-direction: column; gap: 0.35rem;">
+            <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #d1fae5; color: #065f46; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; width: fit-content;">
+                <i class="fas fa-check-circle" style="font-size: 0.65rem;"></i>
+                Selesai
+            </span>
+            @if($hasApproved)
+                @foreach($approvedReports as $approved)
+                    <div style="padding: 0.5rem 0.75rem; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 0.25rem; font-size: 0.75rem;">
+                        <div style="color: #065f46; font-weight: 600; display: flex; align-items: center; gap: 0.35rem;">
+                            <i class="fas fa-user" style="font-size: 0.65rem;"></i>
+                            {{ $approved->creator->name ?? 'Unknown' }}
+                        </div>
+                        <div style="color: #94a3b8; font-size: 0.65rem; margin-top: 0.15rem;">
+                            {{ $approved->created_at->locale('id')->translatedFormat('d M Y, H.i') }}
+                        </div>
+                    </div>
+                @endforeach
+            @endif
+        </div>
+
+    @elseif($doc->status === 'diarsipkan')
+        <span style="display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.375rem 0.75rem; background: #f3e8ff; color: #7c3aed; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+            <i class="fas fa-archive" style="font-size: 0.65rem;"></i>
+            Diarsipkan
+        </span>
+
+    @else
+        <span style="display: inline-block; padding: 0.375rem 0.75rem; background: #f1f5f9; color: #475569; border-radius: 9999px; font-size: 0.75rem; font-weight: 600;">
+            {{ ucfirst(str_replace('_', ' ', $doc->status)) }}
+        </span>
+    @endif
+</td>
+                        
+{{-- KOLOM: AKSI TERAKHIR --}}
+<td style="padding: 1rem;">
+    @php
+        // Kumpulkan semua aksi dengan timestamp-nya
+        $actions = [];
+        
+        // 1. Dokumen dibuat
+        $actions[] = [
+            'action' => 'Dokumen Dibuat',
+            'time' => \Carbon\Carbon::parse($doc->created_at),
+            'user' => $doc->creator,
+            'type' => 'info',
+        ];
+        
+        // 2. Disposisi
+        if ($doc->disposisi_data) {
+            $dispoData = is_string($doc->disposisi_data) 
+                ? json_decode($doc->disposisi_data, true) 
+                : $doc->disposisi_data;
+            
+            if (isset($dispoData['disposed_by'])) {
+                $disposedBy = \App\Models\User::find($dispoData['disposed_by']);
+                if ($disposedBy) {
+                    $actions[] = [
+                        'action' => 'Disposisi',
+                        'time' => isset($dispoData['disposed_at']) 
+                            ? \Carbon\Carbon::parse($dispoData['disposed_at'])
+                            : \Carbon\Carbon::parse($doc->updated_at),
+                        'user' => $disposedBy,
+                        'type' => 'warning',
+                    ];
+                }
+            }
+        }
+        
+        // 3. Laporan & Verifikasi
+        $allReports = $doc->activityReports()->with('creator')->get();
+        foreach ($allReports as $rpt) {
+            // Aksi: Buat Laporan
+            $actions[] = [
+                'action' => 'Buat Laporan',
+                'time' => \Carbon\Carbon::parse($rpt->created_at),
+                'user' => $rpt->creator,
+                'type' => 'primary',
+            ];
+            
+            // Aksi: Verifikasi Laporan
+            if ($rpt->verified_at && $rpt->verified_by) {
+                $verifier = \App\Models\User::find($rpt->verified_by);
+                if ($verifier) {
+                    $verifLabel = $rpt->status === 'disetujui' ? 'Laporan Disetujui' : 'Laporan Ditolak';
+                    $actions[] = [
+                        'action' => $verifLabel,
+                        'time' => \Carbon\Carbon::parse($rpt->verified_at),
+                        'user' => $verifier,
+                        'type' => $rpt->status === 'disetujui' ? 'success' : 'danger',
+                    ];
+                }
+            }
+        }
+        
+        // Urutkan berdasarkan waktu terbaru
+        usort($actions, function($a, $b) {
+            return $b['time'] <=> $a['time'];
+        });
+        
+        // Ambil aksi terbaru
+        $latestAction = $actions[0] ?? null;
+        
+        $badgeColors = [
+            'success' => ['bg' => '#d1fae5', 'text' => '#065f46', 'icon' => 'fa-check-circle'],
+            'danger' => ['bg' => '#fee2e2', 'text' => '#991b1b', 'icon' => 'fa-times-circle'],
+            'primary' => ['bg' => '#dbeafe', 'text' => '#1e40af', 'icon' => 'fa-file-alt'],
+            'warning' => ['bg' => '#fef3c7', 'text' => '#92400e', 'icon' => 'fa-share-alt'],
+            'info' => ['bg' => '#e0f2fe', 'text' => '#075985', 'icon' => 'fa-plus'],
+        ];
+    @endphp
+
+    @if($latestAction && $latestAction['user'])
+        @php $color = $badgeColors[$latestAction['type']] ?? $badgeColors['info']; @endphp
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            @if($latestAction['user']->avatar)
+                <img src="{{ asset('storage/' . $latestAction['user']->avatar) }}" 
+                     alt="{{ $latestAction['user']->name }}"
+                     style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            @else
+                <div style="width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #3b82f6, #8b5cf6); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 0.75rem; border: 2px solid #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {{ strtoupper(substr($latestAction['user']->name, 0, 1)) }}
+                </div>
+            @endif
+            
+            <div style="flex: 1; min-width: 0;">
+                <span style="display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.2rem 0.5rem; background: {{ $color['bg'] }}; color: {{ $color['text'] }}; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; margin-bottom: 0.25rem;">
+                    <i class="fas {{ $color['icon'] }}" style="font-size: 0.6rem;"></i>
+                    {{ $latestAction['action'] }}
+                </span>
+                <div style="font-weight: 600; color: #0f172a; font-size: 0.875rem;">
+                    {{ $latestAction['user']->name }}
+                </div>
+                <div style="font-size: 0.7rem; color: #64748b;">
+                    {{ $latestAction['time']->locale('id')->translatedFormat('d M Y, H.i') }}
+                </div>
+            </div>
+        </div>
+    @else
+        <span style="color: #94a3b8; font-size: 0.85rem;">-</span>
+    @endif
+</td>
                         
                         <td style="padding: 1rem; white-space: nowrap;">
                             <div style="display: flex; gap: 0.5rem; justify-content: center;">
@@ -316,31 +530,27 @@
                                         <i class="fas fa-edit" style="font-size: 0.875rem;"></i>
                                     </a>
                                     
-                                    <form action="{{ route('sidongan.documents.destroy', $doc) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Yakin ingin menghapus surat ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" 
-                                                style="display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;"
-                                                onmouseover="this.style.background='#fecaca'" 
-                                                onmouseout="this.style.background='#fee2e2'"
-                                                title="Hapus Surat">
-                                            <i class="fas fa-trash" style="font-size: 0.875rem;"></i>
-                                        </button>
-                                    </form>
+                                    {{-- TOMBOL HAPUS - Menggunakan Toast Confirm --}}
+                                    <button type="button" 
+                                            onclick="confirmDelete({{ $doc->id }}, '{{ addslashes($doc->subject ?? $doc->title) }}')"
+                                            style="display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background: #fee2e2; color: #ef4444; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;"
+                                            onmouseover="this.style.background='#fecaca'" 
+                                            onmouseout="this.style.background='#fee2e2'"
+                                            title="Hapus Surat">
+                                        <i class="fas fa-trash" style="font-size: 0.875rem;"></i>
+                                    </button>
                                 @endif
 
-                                @if($currentUser && $currentUser->hasSidonganRole('sekretaris') && $doc->status === 'selesai')
-                                    <form action="{{ route('sidongan.documents.archive', $doc) }}" method="POST" style="display: inline-block;" onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan surat ini?\n\nSurat yang diarsipkan akan dipindahkan ke menu Arsip Surat.');">
-                                        @csrf
-                                        @method('PATCH')
-                                        <button type="submit" 
-                                                style="display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background: #ede9fe; color: #7c3aed; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;"
-                                                onmouseover="this.style.background='#ddd6fe'" 
-                                                onmouseout="this.style.background='#ede9fe'"
-                                                title="Arsipkan Surat">
-                                            <i class="fas fa-archive" style="font-size: 0.875rem;"></i>
-                                        </button>
-                                    </form>
+                                @if($currentUser && $currentUser->hasSidonganRole('sekretaris') && in_array($doc->status, ['selesai', 'berjalan']))
+                                    {{-- TOMBOL ARSIPKAN - Muncul untuk status selesai ATAU berjalan --}}
+                                    <button type="button"
+                                            onclick="confirmArchive({{ $doc->id }}, '{{ addslashes($doc->subject ?? $doc->title) }}')"
+                                            style="display: inline-flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background: #ede9fe; color: #7c3aed; border: none; border-radius: 0.375rem; cursor: pointer; transition: all 0.2s;"
+                                            onmouseover="this.style.background='#ddd6fe'" 
+                                            onmouseout="this.style.background='#ede9fe'"
+                                            title="Arsipkan Surat">
+                                        <i class="fas fa-archive" style="font-size: 0.875rem;"></i>
+                                    </button>
                                 @endif
                             </div>
                         </td>
@@ -459,9 +669,15 @@
     </div>
 </div>
 
+{{-- Hidden Forms untuk Delete & Archive --}}
 <form id="deleteForm" method="POST" style="display: none;">
     @csrf
     @method('DELETE')
+</form>
+
+<form id="archiveForm" method="POST" style="display: none;">
+    @csrf
+    @method('PATCH')
 </form>
 
 <script>
@@ -486,11 +702,36 @@
         }, 500);
     });
 
+    // Fungsi Konfirmasi Hapus dengan Toast
     function confirmDelete(id, title) {
-        if (confirm(`Apakah Anda yakin ingin menghapus surat "${title}"?\n\nPeringatan: Tindakan ini tidak dapat dibatalkan.`)) {
-            document.getElementById('deleteForm').action = `/sidongan/documents/${id}`;
-            document.getElementById('deleteForm').submit();
-        }
+        Toast.confirm(`Apakah Anda yakin ingin menghapus surat "<strong>${title}</strong>"?<br><small style="color:#64748b;">Peringatan: Tindakan ini tidak dapat dibatalkan.</small>`, {
+            title: 'Konfirmasi Hapus Surat',
+            confirmText: 'Ya, Hapus',
+            cancelText: 'Batal',
+            type: 'danger'
+        }).then((confirmed) => {
+            if (confirmed) {
+                const form = document.getElementById('deleteForm');
+                form.action = `/sidongan/documents/${id}`;
+                form.submit();
+            }
+        });
+    }
+
+    // Fungsi Konfirmasi Arsipkan dengan Toast
+    function confirmArchive(id, title) {
+        Toast.confirm(`Apakah Anda yakin ingin mengarsipkan surat "<strong>${title}</strong>"?<br><small style="color:#64748b;">Surat yang diarsipkan akan dipindahkan ke menu Arsip Surat.</small>`, {
+            title: 'Konfirmasi Arsipkan Surat',
+            confirmText: 'Ya, Arsipkan',
+            cancelText: 'Batal',
+            type: 'warning'
+        }).then((confirmed) => {
+            if (confirmed) {
+                const form = document.getElementById('archiveForm');
+                form.action = `/sidongan/documents/${id}/archive`;
+                form.submit();
+            }
+        });
     }
 </script>
 @endsection

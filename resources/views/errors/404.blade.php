@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>404 - Halaman Tidak Ditemukan</title>
     <style>
-        /* Reset & Base */
+        /* ... (style tetap sama) ... */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-            /* Background diubah ke tema Oranye/Kuning hangat */
             background: linear-gradient(180deg, #fffbeb 0%, #fef3c7 50%, #ffffff 100%);
             height: 100vh;
             overflow: hidden;
@@ -19,7 +18,6 @@
             position: relative;
         }
 
-        /* ANIMASI AWAN (Warna tetap putih agar kontras) */
         .cloud {
             position: absolute;
             background: #fff;
@@ -55,7 +53,6 @@
             to { transform: translateX(110vw); }
         }
 
-        /* KARTU KONTEN UTAMA */
         .container {
             position: relative;
             z-index: 10;
@@ -75,7 +72,6 @@
             50% { transform: translateY(-10px); }
         }
 
-        /* IKON HANTU ORANYE */
         .ghost-icon {
             width: 72px;
             height: 72px;
@@ -94,7 +90,6 @@
         }
         .ghost-icon svg { width: 36px; height: 36px; color: #ffffff; }
 
-        /* TYPOGRAPHY MENGIKUTI TEMA ORANYE */
         .error-code {
             font-size: 3.2rem;
             font-weight: 800;
@@ -112,13 +107,12 @@
         }
         .dynamic-msg {
             font-weight: 700;
-            color: #b45309; /* Amber sedang */
+            color: #b45309;
             display: block;
             margin-bottom: 0.6rem;
             font-size: 1.15rem;
         }
 
-        /* TOMBOL MENGIKUTI TEMA ORANYE */
         .btn {
             display: inline-flex;
             align-items: center;
@@ -139,7 +133,6 @@
             background: linear-gradient(135deg, #d97706, #b45309);
         }
 
-        /* RESPONSIVE */
         @media (max-width: 768px) {
             .container { 
                 max-width: 95%; 
@@ -152,13 +145,31 @@
     </style>
 </head>
 <body>
-    <!-- Awan-awan Bergerak -->
     <div class="cloud c1"></div>
     <div class="cloud c2"></div>
     <div class="cloud c3"></div>
     <div class="cloud c4"></div>
     
-    <!--  Konten Utama -->
+    @php
+        // Deteksi konteks SIDONGAN atau Admin
+        $isSidongan = false;
+        $dashboardRoute = 'admin.dashboard';
+        $dashboardLabel = 'Dashboard Admin';
+        
+        // Cek apakah user login via SIDONGAN guard
+        if (auth()->guard('sidongan')->check()) {
+            $isSidongan = true;
+            $dashboardRoute = 'sidongan.dashboard';
+            $dashboardLabel = 'Dashboard SIDONGAN';
+        }
+        // Cek apakah URL mengandung 'sidongan'
+        elseif (str_contains(request()->path(), 'sidongan')) {
+            $isSidongan = true;
+            $dashboardRoute = 'sidongan.dashboard';
+            $dashboardLabel = 'Dashboard SIDONGAN';
+        }
+    @endphp
+    
     <div class="container">
         <div class="ghost-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -174,9 +185,9 @@
             Silahkan kembali ke dashboard untuk melanjutkan.
         </div>
         
-        <a href="{{ route('admin.dashboard') }}" class="btn">
+        <a href="{{ route($dashboardRoute) }}" class="btn">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
-            Kembali ke Dashboard
+            Kembali ke {{ $dashboardLabel }}
         </a>
     </div>
 </body>

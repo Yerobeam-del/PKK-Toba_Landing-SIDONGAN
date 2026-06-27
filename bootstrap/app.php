@@ -15,6 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'can.access' => \App\Http\Middleware\CanAccessApplication::class,
             'sidongan.auth' => \App\Http\Middleware\SidonganAuthenticate::class,
+            'sidongan.guest' => \App\Http\Middleware\RedirectIfAuthenticatedSidongan::class,
             'permission' => \App\Http\Middleware\CheckPermission::class,
         ]);
     })
@@ -23,23 +24,28 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (TokenMismatchException $e, $request) {
             $path = $request->path();
             
-            // Deteksi SIDONGAN HANYA berdasarkan path (lebih spesifik)
+            // Deteksi SIDONGAN berdasarkan path
             $isSidongan = str_starts_with($path, 'sidongan') 
                 || str_starts_with($path, 'sidongan-login');
             
-            // PENTING: Jika path mengandung 'admin', PASTI bukan SIDONGAN
+            // Jika path mengandung 'admin', bukan SIDONGAN
             if (str_starts_with($path, 'admin')) {
                 $isSidongan = false;
             }
             
             if ($isSidongan) {
-                // Redirect ke login SIDONGAN
+                // Clear session dan redirect ke login SIDONGAN
+                if (session()->isStarted()) {
+                    session()->flush();
+                    session()->regenerateToken();
+                }
+                
                 return redirect()
                     ->route('sidongan.login')
                     ->with('error', 'Sesi login Anda telah berakhir. Silakan login kembali.');
             }
             
-            // Untuk Admin Panel dan lainnya, tampilkan halaman 419
+            // Untuk Admin Panel dan lainnya
             if ($request->expectsJson() || $request->ajax()) {
                 return response()->json([
                     'message' => 'CSRF token expired. Silakan refresh halaman.',

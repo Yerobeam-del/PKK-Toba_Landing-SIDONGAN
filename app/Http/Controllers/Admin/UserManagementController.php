@@ -68,7 +68,7 @@ class UserManagementController extends Controller
             'permissions.*' => 'exists:permissions,id',
             'applications' => 'array',
             'applications.*' => 'exists:applications,id',
-            'sidongan_role' => 'nullable|in:bupati,ketua,sekretaris,bendahara,pokja1,pokja2,pokja3,pokja4,super_admin',
+            'sidongan_role' => 'nullable|in:ketua,sekretaris,bendahara,staf_ahli_1,staf_ahli_2,pengurus_1,pengurus_2,pengurus_3,pengurus_4,super_admin',
         ]);
 
         $user = User::create([
@@ -149,7 +149,7 @@ class UserManagementController extends Controller
             'permissions.*' => 'exists:permissions,id',
             'applications' => 'array',
             'applications.*' => 'exists:applications,id',
-            'sidongan_role' => 'nullable|in:bupati,ketua,sekretaris,bendahara,pokja1,pokja2,pokja3,pokja4,super_admin',
+            'sidongan_role' => 'nullable|in:ketua,sekretaris,bendahara,staf_ahli_1,staf_ahli_2,pengurus_1,pengurus_2,pengurus_3,pengurus_4,super_admin',
         ]);
 
         $user->name = $validated['name'];
@@ -169,7 +169,6 @@ class UserManagementController extends Controller
         if ($role->name === 'anggota' && isset($validated['permissions'])) {
             $user->role->permissions()->sync($validated['permissions']);
         } elseif ($role->name === 'administrator') {
-            // Administrator dapat semua permission
             $user->role->permissions()->sync(Permission::all());
         }
 

@@ -328,7 +328,18 @@ let originalFile = null;
 let existingPhotoUrl = '{{ $struktur->photo_path ? asset("storage/".$struktur->photo_path) : "" }}';
 
 const positions = {
-    pengurus: ['Ketua Pembina', 'Ketua TP PKK', 'Staf Ahli', 'Sekretaris', 'Bendahara', 'Ketua I', 'Ketua II', 'Ketua III', 'Ketua IV'],
+    pengurus: [
+        'Ketua Pembina', 
+        'Ketua TP PKK', 
+        'Staf Ahli 1', 
+        'Staf Ahli 2', 
+        'Sekretaris', 
+        'Bendahara', 
+        'Ketua I', 
+        'Ketua II', 
+        'Ketua III', 
+        'Ketua IV'
+    ],
     pokja1: ['Ketua', 'Wakil Ketua', 'Sekretaris', 'Anggota'],
     pokja2: ['Ketua', 'Wakil Ketua', 'Sekretaris', 'Anggota'],
     pokja3: ['Ketua', 'Wakil Ketua', 'Sekretaris', 'Anggota'],

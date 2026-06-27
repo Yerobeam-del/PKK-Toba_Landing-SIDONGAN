@@ -164,7 +164,52 @@
 </div>
 
 <script>
-    // Drag & Drop Upload Logic - Enhanced Preview
+    // ==========================================
+    // FILE VALIDATION FUNCTION
+    // ==========================================
+    function validateFile(file) {
+        const allowedTypes = [
+            'application/pdf',
+            'image/jpeg',
+            'image/jpg',
+            'image/png'
+        ];
+        
+        const allowedExtensions = ['.pdf', '.jpg', '.jpeg', '.png'];
+        const maxFileSize = 5 * 1024 * 1024; // 5MB
+        
+        // Cek ukuran file
+        if (file.size > maxFileSize) {
+            const sizeInMB = (file.size / 1024 / 1024).toFixed(2);
+            return {
+                valid: false,
+                message: `Ukuran file terlalu besar (${sizeInMB}MB). Maksimal 5MB.`
+            };
+        }
+        
+        // Cek tipe file (MIME type)
+        if (!allowedTypes.includes(file.type)) {
+            return {
+                valid: false,
+                message: `Format file "${file.name}" tidak diizinkan. Hanya PDF dan gambar (JPG, PNG) yang diperbolehkan.`
+            };
+        }
+        
+        // Cek ekstensi file (double check)
+        const fileExtension = '.' + file.name.split('.').pop().toLowerCase();
+        if (!allowedExtensions.includes(fileExtension)) {
+            return {
+                valid: false,
+                message: `Ekstensi file "${fileExtension}" tidak diizinkan. Hanya .pdf, .jpg, .jpeg, .png yang diperbolehkan.`
+            };
+        }
+        
+        return { valid: true, message: '' };
+    }
+
+    // ==========================================
+    // DRAG & DROP UPLOAD LOGIC
+    // ==========================================
     const dropZone = document.getElementById('dropZone');
     const fileInput = document.getElementById('fileInput');
     const uploadPlaceholder = document.getElementById('uploadPlaceholder');
@@ -172,9 +217,18 @@
     const fileName = document.getElementById('fileName');
     const fileSize = document.getElementById('fileSize');
     const fileIcon = document.getElementById('fileIcon');
+    
+    // Flag untuk mencegah multiple clicks
+    let isChangingFile = false;
 
-    // Click dropzone to open file picker
-    dropZone.addEventListener('click', () => fileInput.click());
+    // Click dropzone to open file picker (hanya jika bukan tombol ganti file)
+    dropZone.addEventListener('click', (e) => {
+        // Jangan trigger jika sedang dalam proses ganti file atau klik di dalam preview
+        if (isChangingFile || e.target.closest('#filePreview') || e.target.closest('button')) {
+            return;
+        }
+        fileInput.click();
+    });
 
     // Drag over effect
     dropZone.addEventListener('dragover', (e) => {
@@ -189,31 +243,69 @@
         dropZone.style.background = 'white';
     });
 
-    // Drop file
+    // Drop file - WITH VALIDATION
     dropZone.addEventListener('drop', (e) => {
         e.preventDefault();
         dropZone.style.borderColor = '#e2e8f0';
         dropZone.style.background = 'white';
+        
         if(e.dataTransfer.files.length > 0) {
+            const file = e.dataTransfer.files[0];
+            const validation = validateFile(file);
+            
+            if (!validation.valid) {
+                // Show error toast
+                if (typeof Toast !== 'undefined') {
+                    Toast.error(validation.message);
+                } else {
+                    alert(validation.message);
+                }
+                // Clear file input
+                fileInput.value = '';
+                return;
+            }
+            
+            // File valid, proceed
             fileInput.files = e.dataTransfer.files;
-            showFilePreview(e.dataTransfer.files[0]);
+            showFilePreview(file);
         }
     });
 
-    // File input change
+    // File input change - WITH VALIDATION
     fileInput.addEventListener('change', (e) => {
         if (e.target.files.length > 0) {
-            showFilePreview(e.target.files[0]);
+            const file = e.target.files[0];
+            const validation = validateFile(file);
+            
+            if (!validation.valid) {
+                // Show error toast
+                if (typeof Toast !== 'undefined') {
+                    Toast.error(validation.message);
+                } else {
+                    alert(validation.message);
+                }
+                // Clear file input
+                e.target.value = '';
+                return;
+            }
+            
+            // File valid, show preview
+            showFilePreview(file);
         }
+        
+        // Reset flag setelah file dipilih
+        isChangingFile = false;
     });
 
-    // Show file preview inside the box
+    // ==========================================
+    // SHOW FILE PREVIEW
+    // ==========================================
     function showFilePreview(file) {
         // Hide placeholder, show preview
         if (uploadPlaceholder) uploadPlaceholder.style.display = 'none';
         if (filePreview) filePreview.style.display = 'block';
         
-        // Set file name (with ellipsis if too long)
+        // Set file name
         if (fileName) fileName.textContent = file.name;
         
         // Format file size
@@ -230,9 +322,6 @@
             } else if (file.type.startsWith('image/')) {
                 iconElement.className = 'fas fa-file-image';
                 iconElement.style.color = '#10b981';
-            } else if (file.type.includes('word') || file.name.endsWith('.doc') || file.name.endsWith('.docx')) {
-                iconElement.className = 'fas fa-file-word';
-                iconElement.style.color = '#3b82f6';
             } else {
                 iconElement.className = 'fas fa-file';
                 iconElement.style.color = '#64748b';
@@ -244,8 +333,13 @@
         dropZone.style.background = '#f0fdf4';
     }
 
-    // Change file button handler
+    // ==========================================
+    // CHANGE FILE BUTTON
+    // ==========================================
     function changeFile() {
+        // Set flag untuk mencegah multiple clicks
+        isChangingFile = true;
+        
         // Reset to placeholder
         if (uploadPlaceholder) uploadPlaceholder.style.display = 'block';
         if (filePreview) filePreview.style.display = 'none';
@@ -257,8 +351,10 @@
         dropZone.style.borderColor = '#e2e8f0';
         dropZone.style.background = 'white';
         
-        // Click to select new file
-        setTimeout(() => fileInput.click(), 100);
+        // Click to select new file (dengan timeout yang lebih lama)
+        setTimeout(() => {
+            fileInput.click();
+        }, 150);
     }
 </script>
 @endsection

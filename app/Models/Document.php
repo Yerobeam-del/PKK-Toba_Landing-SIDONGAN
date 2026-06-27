@@ -14,17 +14,17 @@ class Document extends Model
 
     protected $table = 'sidongan_documents';
 
-    // ✅ UPDATED: Tambahkan semua field yang digunakan di form
+    // Field yang digunakan di form
     protected $fillable = [
         'title',
         'slug',
         'description',
-        'sender',              // ✅ Pengirim surat
-        'document_number',     // ✅ Nomor surat dari pengirim
-        'agenda_number',       // ✅ Nomor agenda internal (AG/MM/YYYY/NNN)
-        'document_date',       // ✅ Tanggal surat
-        'subject',             // ✅ Perihal surat
-        'suggestion',          // ✅ Saran sekretaris
+        'sender',              // Pengirim surat
+        'document_number',     // Nomor surat dari pengirim
+        'agenda_number',       // Nomor agenda internal (AG/MM/YYYY/NNN)
+        'document_date',       // Tanggal surat
+        'subject',             // Perihal surat
+        'suggestion',          // Saran sekretaris
         'status',
         'category_id',
         'file_path',
@@ -33,8 +33,8 @@ class Document extends Model
         'file_size',
         'is_public',
         'metadata',
-        'disposisi_data',      // ✅ Data disposisi (JSON)
-        'verifikasi_data',     // ✅ Data verifikasi (JSON)
+        'disposisi_data',      // Data disposisi (JSON)
+        'verifikasi_data',     // Data verifikasi (JSON)
         'created_by',
         'updated_by'
     ];
@@ -189,5 +189,222 @@ class Document extends Model
             9 => 'IX',  10 => 'X',  11 => 'XI',  12 => 'XII'
         ];
         return $roman[$month] ?? 'I';
+    }
+
+    /**
+     * Cek apakah semua disposisi sudah memberikan laporan
+     */
+    public function allDispositionsReported()
+    {
+        $disposisiData = $this->disposisi_data;
+        
+        \Log::info("=== CHECK allDispositionsReported ===");
+        \Log::info("Document ID: {$this->id}");
+        \Log::info("Raw disposisi_data:", ['data' => $disposisiData]);
+        
+        // Handle double-encoded JSON (data lama yang salah)
+        if (is_array($disposisiData) && isset($disposisiData['data']) && is_string($disposisiData['data'])) {
+            \Log::info("Detected double-encoded JSON, decoding...");
+            $decoded = json_decode($disposisiData['data'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $disposisiData = $decoded;
+                \Log::info("Decoded disposisi_data:", ['data' => $disposisiData]);
+            }
+        }
+        
+        if (!is_array($disposisiData) || !isset($disposisiData['target_roles'])) {
+            \Log::info("No target_roles found, returning true");
+            return true;
+        }
+        
+        $targetRoles = $disposisiData['target_roles'];
+        \Log::info("Target roles:", ['roles' => $targetRoles]);
+        
+        if (empty($targetRoles)) {
+            \Log::info("Empty target_roles, returning true");
+            return true;
+        }
+        
+        // Ambil SEMUA user dengan role target
+        $targetUsers = \App\Models\User::whereIn('sidongan_role', $targetRoles)->get();
+        
+        \Log::info("Target users found:", [
+            'count' => $targetUsers->count(),
+            'users' => $targetUsers->map(fn($u) => [
+                'id' => $u->id,
+                'name' => $u->name,
+                'role' => $u->sidongan_role
+            ])
+        ]);
+        
+        if ($targetUsers->isEmpty()) {
+            \Log::info("No users found with target roles, returning true");
+            return true;
+        }
+        
+        // Cek apakah SEMUA user target sudah lapor
+        $allReported = true;
+        foreach ($targetUsers as $user) {
+            $hasReported = \App\Models\ActivityReport::where('document_id', $this->id)
+                ->where('created_by', $user->id)
+                ->exists();
+            
+            \Log::info("User report status:", [
+                'user_id' => $user->id,
+                'user_name' => $user->name,
+                'user_role' => $user->sidongan_role,
+                'has_reported' => $hasReported ? 'YES' : 'NO'
+            ]);
+            
+            if (!$hasReported) {
+                $allReported = false;
+                \Log::info("User {$user->name} ({$user->sidongan_role}) has NOT reported yet!");
+            }
+        }
+        
+        \Log::info("All dispositions reported: " . ($allReported ? 'YES' : 'NO'));
+        return $allReported;
+    }
+
+    /**
+     * Update status dokumen berdasarkan laporan dan verifikasi
+     */
+    public function updateStatusBasedOnReports()
+    {
+        return $this->updateCorrectStatus();
+    }
+
+    /**
+     * Hitung jumlah user yang sudah lapor
+     */
+    public function getReportedCount()
+    {
+        $disposisiData = $this->disposisi_data;
+        
+        if (!is_array($disposisiData) || !isset($disposisiData['target_roles'])) {
+            return 0;
+        }
+        
+        $targetRoles = $disposisiData['target_roles'];
+        $targetUsers = \App\Models\User::whereIn('sidongan_role', $targetRoles)->get();
+        
+        $reportedCount = 0;
+        foreach ($targetUsers as $user) {
+            $hasReported = \App\Models\ActivityReport::where('document_id', $this->id)
+                ->where('created_by', $user->id)
+                ->exists();
+            
+            if ($hasReported) {
+                $reportedCount++;
+            }
+        }
+        
+        return $reportedCount;
+    }
+
+    /**
+     * Hitung total user yang harus lapor
+     */
+    public function getTotalRequiredReports()
+    {
+        $disposisiData = $this->disposisi_data;
+        
+        if (!is_array($disposisiData) || !isset($disposisiData['target_roles'])) {
+            return 0;
+        }
+        
+        $targetRoles = $disposisiData['target_roles'];
+        return \App\Models\User::whereIn('sidongan_role', $targetRoles)->count();
+    }
+
+    /**
+     * Cek apakah semua laporan sudah diverifikasi (disetujui)
+     */
+    public function allReportsVerified()
+    {
+        $disposisiData = $this->disposisi_data;
+        
+        // Handle double-encoded JSON (data lama)
+        if (is_array($disposisiData) && isset($disposisiData['data']) && is_string($disposisiData['data'])) {
+            $decoded = json_decode($disposisiData['data'], true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $disposisiData = $decoded;
+            }
+        }
+        
+        if (!is_array($disposisiData) || !isset($disposisiData['target_roles'])) {
+            return true;
+        }
+        
+        $targetRoles = $disposisiData['target_roles'];
+        $targetUsers = \App\Models\User::whereIn('sidongan_role', $targetRoles)->get();
+        
+        if ($targetUsers->isEmpty()) {
+            return true;
+        }
+        
+        foreach ($targetUsers as $user) {
+            $report = \App\Models\ActivityReport::where('document_id', $this->id)
+                ->where('created_by', $user->id)
+                ->first();
+            
+            if (!$report || $report->status !== 'disetujui') {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+
+    /**
+     * Update status dokumen dengan logic yang benar
+     */
+    public function updateCorrectStatus()
+    {
+        \Log::info("=== UPDATE STATUS DOCUMENT {$this->id} ===");
+        
+        // Cek apakah semua disposisi sudah lapor
+        $allReported = $this->allDispositionsReported();
+        \Log::info("All Dispositions Reported: " . ($allReported ? 'YES' : 'NO'));
+        
+        if (!$allReported) {
+            $this->update(['status' => 'berjalan']);
+            \Log::info("Status updated to: berjalan");
+            return 'berjalan';
+        }
+        
+        // Semua sudah lapor, cek apakah sudah diverifikasi
+        $allVerified = $this->allReportsVerified();
+        \Log::info("All Reports Verified: " . ($allVerified ? 'YES' : 'NO'));
+        
+        if ($allVerified) {
+            $this->update(['status' => 'selesai']);
+            \Log::info("Status updated to: selesai");
+            return 'selesai';
+        }
+        
+        $this->update(['status' => 'menunggu_verifikasi']);
+        \Log::info("Status updated to: menunggu_verifikasi");
+        return 'menunggu_verifikasi';
+    }
+
+    /**
+     * Hitung jumlah laporan yang sudah diverifikasi
+     */
+    public function getVerifiedReportsCount()
+    {
+        return $this->activityReports()
+            ->where('status', 'disetujui')
+            ->count();
+    }
+
+    /**
+     * Hitung jumlah laporan yang menunggu verifikasi
+     */
+    public function getPendingReportsCount()
+    {
+        return $this->activityReports()
+            ->where('status', 'menunggu_verifikasi')
+            ->count();
     }
 }

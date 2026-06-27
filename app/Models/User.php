@@ -111,14 +111,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Check apakah user adalah Bupati (akses penuh di SIDONGAN)
-     */
-    public function isSidonganBupati()
-    {
-        return $this->hasSidonganRole('bupati');
-    }
-
-    /**
      * Check apakah user adalah Ketua PKK (bisa disposisi & verifikasi)
      */
     public function isSidonganKetua()
@@ -143,11 +135,19 @@ class User extends Authenticatable
     }
 
     /**
-     * Check apakah user adalah Ketua POKJA (bisa terima disposisi & buat laporan)
+     * Check apakah user adalah Ketua POKJA / Pengurus (bisa terima disposisi & buat laporan)
      */
     public function isSidonganPokja()
     {
-        return in_array($this->sidongan_role, ['pokja1', 'pokja2', 'pokja3', 'pokja4']);
+        return in_array($this->sidongan_role, ['pengurus_1', 'pengurus_2', 'pengurus_3', 'pengurus_4']);
+    }
+
+    /**
+     * Check apakah user adalah Staf Ahli
+     */
+    public function isSidonganStafAhli()
+    {
+        return in_array($this->sidongan_role, ['staf_ahli_1', 'staf_ahli_2']);
     }
 
     public function role(): BelongsTo
