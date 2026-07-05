@@ -34,7 +34,7 @@
                         </span>
                         <span>Jabatan</span>
                     </th>
-                    {{-- ✅ PERBAIKAN: HAPUS ICON GEAR DI HEADER AKSI --}}
+
                     <th class="text-right">
                         <span>Aksi</span>
                     </th>

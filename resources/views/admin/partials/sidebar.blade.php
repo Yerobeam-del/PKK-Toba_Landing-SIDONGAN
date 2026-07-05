@@ -72,7 +72,7 @@
         </li>
         @endif
 
-        {{-- Desa --}}
+        {{-- Desa 
         @if(auth()->user()->hasPermission('manage-desa'))
         <li>
             <a href="{{ route('admin.desa.index') }}" class="{{ request()->routeIs('admin.desa.*') ? 'active' : '' }}">
@@ -83,7 +83,7 @@
                 Desa
             </a>
         </li>
-        @endif
+        @endif --}}
 
         {{-- SK & Dokumen --}}
         @if(auth()->user()->hasPermission('manage-dokumen'))

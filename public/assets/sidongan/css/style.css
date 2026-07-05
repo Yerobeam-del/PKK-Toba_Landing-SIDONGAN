@@ -183,6 +183,7 @@ body {
     display: flex;
     flex-direction: column;
     min-width: 0;
+    min-height: 100vh;
 }
 
 .admin-layout.collapsed .main-wrapper {
@@ -272,9 +273,10 @@ body {
 }
 
 #notificationPopup {
-    min-width: 350px;
-    max-width: 400px;
-    width: max-content;
+    width: 400px;
+    max-width: calc(100vw - 2rem);
+    max-height: 80vh;
+    overflow: hidden;
 }
 
 .user-menu.show, #notificationPopup.show {
@@ -309,8 +311,39 @@ body {
     display: none;
 }
 
+/* Mobile Responsive untuk Notification Popup */
+@media (max-width: 768px) {
+    #notificationPopup {
+        position: fixed !important;
+        top: 70px !important;
+        right: 1rem !important;
+        left: 1rem !important;
+        width: auto !important;
+        max-width: none !important;
+        max-height: calc(100vh - 90px) !important;
+    }
+    
+    #notificationPopup > div:nth-child(2) {
+        max-height: calc(100vh - 180px) !important;
+        overflow-y: auto !important;
+    }
+}
+
+@media (max-width: 480px) {
+    #notificationPopup {
+        top: 65px !important;
+        right: 0.5rem !important;
+        left: 0.5rem !important;
+        max-height: calc(100vh - 80px) !important;
+    }
+    
+    #notificationPopup > div:nth-child(2) {
+        max-height: calc(100vh - 160px) !important;
+    }
+}
+
 /* ==========================================
-   ADMIN FOOTER - RESPONSIVE WITH SIDEBAR
+   ADMIN FOOTER - STICKY BOTTOM (FIXED)
    ========================================== */
 .admin-footer {
     background: #fff;
@@ -318,11 +351,11 @@ body {
     padding: 1.5rem 2rem;
     position: fixed;
     bottom: 0;
-    left: var(--sidebar-width); /* Follow sidebar width */
+    left: var(--sidebar-width);
     right: 0;
     z-index: 100;
     box-shadow: 0 -2px 8px rgba(0,0,0,0.05);
-    transition: var(--transition); /* Smooth transition */
+    transition: var(--transition);
 }
 
 /* When sidebar is collapsed */
@@ -331,7 +364,7 @@ body {
 }
 
 .admin-footer-inner {
-    max-width: calc(1400px - var(--sidebar-width)); /* Adjust for sidebar */
+    max-width: calc(1400px - var(--sidebar-width));
     margin: 0 auto;
     display: flex;
     justify-content: space-between;
@@ -340,7 +373,6 @@ body {
     gap: 1rem;
 }
 
-/* When sidebar is collapsed */
 .admin-layout.collapsed .admin-footer-inner {
     max-width: calc(1400px - var(--sidebar-collapsed-width));
 }
@@ -382,10 +414,10 @@ body {
     color: var(--primary);
 }
 
-/* Adjust content area to prevent overlap with fixed footer */
+/* Content area dengan padding-bottom yang cukup */
 .content-area {
     padding: 2rem;
-    padding-bottom: 6rem; /* Space for footer */
+    padding-bottom: 5.5rem; /* Ruang untuk footer desktop */
     flex: 1;
     width: 100%;
     overflow-x: hidden;
@@ -394,7 +426,7 @@ body {
 /* Mobile responsive */
 @media (max-width: 1024px) {
     .admin-footer {
-        left: 0 !important; /* Full width on mobile */
+        left: 0 !important;
     }
     
     .admin-footer-inner {
@@ -418,7 +450,8 @@ body {
     }
     
     .content-area {
-        padding-bottom: 7rem; /* More space on mobile */
+        padding: 1.5rem;
+        padding-bottom: 7.5rem; /* Ruang untuk footer mobile (2 baris) */
     }
 }
 
@@ -430,5 +463,9 @@ body {
     
     .admin-footer-divider {
         display: none;
+    }
+    
+    .content-area {
+        padding-bottom: 9rem; /* Ruang untuk footer mobile kecil (3 baris) */
     }
 }

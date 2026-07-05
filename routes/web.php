@@ -723,7 +723,9 @@ Route::middleware(['auth'])->prefix('admin')->name('admin.')->group(function () 
     // SIDONGAN Data Management
     Route::prefix('sidongan-data')->name('sidongan-data.')->middleware('permission:manage-users')->group(function () {
         Route::get('/', [App\Http\Controllers\Admin\SidonganDataController::class, 'index'])->name('index');
+        Route::get('/{document}', [App\Http\Controllers\Admin\SidonganDataController::class, 'show'])->name('show');
         Route::post('/cleanup', [App\Http\Controllers\Admin\SidonganDataController::class, 'cleanup'])->name('cleanup');
+        Route::delete('/report/{reportId}', [App\Http\Controllers\Admin\SidonganDataController::class, 'deleteReport'])->name('report.delete');
         Route::delete('/{document}', [App\Http\Controllers\Admin\SidonganDataController::class, 'destroy'])->name('destroy');
     });
 });
@@ -804,7 +806,6 @@ Route::middleware(['sidongan.auth'])->prefix('sidongan')->name('sidongan.')->gro
     Route::post('/notifications/mark-all-read', [App\Http\Controllers\Sidongan\AdminDocumentController::class, 'markAllNotificationsAsRead'])->name('notifications.mark-all-read');
 
 });
-
 
 // ================= AUTH ROUTES (Wajib di paling bawah) =================
 require __DIR__.'/auth.php';

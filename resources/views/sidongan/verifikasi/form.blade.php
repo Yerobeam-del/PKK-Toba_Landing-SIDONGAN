@@ -2,6 +2,17 @@
 @section('title', 'Form Verifikasi Laporan - SIDONGAN')
 
 @section('content')
+@php
+    // ✅ Ambil URL kembali dari session
+    $backUrl = session('verifikasi_form_back_url', route('sidongan.lapor_kegiatan.show', $report->id));
+    
+    // Validasi URL - pastikan bukan halaman form verifikasi
+    if (str_contains($backUrl, '/verifikasi/form') || 
+        str_contains($backUrl, '/verifikasi-print')) {
+        $backUrl = route('sidongan.lapor_kegiatan.show', $report->id);
+    }
+@endphp
+
 <style>
     /* =========================================
        Styles untuk Kartu Pilihan (Colored Icons)
@@ -73,7 +84,6 @@
         transform: scale(1.05);
         border-color: #7c3aed;
     }
-    /* ✅ Animasi Tap pada Thumbnail */
     .thumb-item:active {
         transform: scale(0.92);
     }
@@ -110,22 +120,21 @@
         object-fit: contain; transition: opacity 0.3s ease;
     }
     
-    /* ✅ Keyframes Animasi Gallery */
-    /* Zoom In: Untuk membuka foto pertama kali */
     @keyframes zoomIn {
         0% { opacity: 0; transform: scale(0.8); }
         100% { opacity: 1; transform: scale(1); }
     }
-    /* Fade In: Untuk transisi halus */
     @keyframes fadeIn {
         0% { opacity: 0; }
         100% { opacity: 1; }
     }
-    /* Slide Left/Right: Untuk navigasi antar foto */
     @keyframes slideLeft { 0% { opacity: 0; transform: translateX(50px); } 100% { opacity: 1; transform: translateX(0); } }
     @keyframes slideRight { 0% { opacity: 0; transform: translateX(-50px); } 100% { opacity: 1; transform: translateX(0); } }
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
 
-    /* Kelas Animasi */
     .gallery-image.zoom-in { animation: zoomIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
     .gallery-image.fade-in { animation: fadeIn 0.3s ease forwards; }
     .gallery-image.slide-left { animation: slideLeft 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards; }
@@ -158,10 +167,10 @@
         align-items: center; 
         justify-content: space-between;
         width: 100%; 
-        margin-top: 1.5rem; /* Jarak lebih lebar dari foto */
+        margin-top: 1.5rem;
         padding: 0 0.5rem;
         position: relative;
-        z-index: 20; /* Pastikan tombol berada di atas bayangan foto */
+        z-index: 20;
     }
 
     .gallery-counter {
@@ -177,6 +186,38 @@
     }
     .gallery-download-btn:hover { background: rgba(59, 130, 246, 1); transform: translateY(-2px); }
 
+    .animate-slide-in {
+        animation: slideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+        opacity: 0;
+    }
+
+    /* Responsive */
+    @media (max-width: 968px) {
+        .verifikasi-container {
+            padding: 0 1rem;
+        }
+        
+        .content-grid {
+            grid-template-columns: 1fr !important;
+            gap: 1rem;
+        }
+        
+        .verifikasi-header {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .verifikasi-header-actions {
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+        
+        .verifikasi-header-actions a {
+            width: 100%;
+            justify-content: center;
+        }
+    }
+
     @media (max-width: 768px) {
         .gallery-nav.prev { left: 10px; }
         .gallery-nav.next { right: 10px; }
@@ -185,55 +226,75 @@
     }
 </style>
 
-<div style="max-width: 1200px; margin: 0 auto;">
-    {{-- Header --}}
-    <div style="background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 1.25rem 1.5rem; border-radius: 0.75rem; margin-bottom: 1.5rem; color: white;">
-        <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
-            <div>
-                <h1 style="font-size: 1.25rem; font-weight: 700; margin: 0;">Form Verifikasi</h1>
-                <p style="font-size: 0.85rem; opacity: 0.9; margin: 0.25rem 0 0 0;">Tinjau detail laporan dan tentukan keputusan</p>
+<div class="verifikasi-container" style="padding: 0 1.5rem;">
+{{-- Header --}}
+<div class="verifikasi-header animate-slide-in" style="background: linear-gradient(135deg, #7c3aed, #6d28d9); padding: 1.5rem 2rem; border-radius: 1rem; margin-bottom: 1.5rem; color: white; box-shadow: 0 4px 20px rgba(124, 58, 237, 0.2);">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <div style="width: 3rem; height: 3rem; background: rgba(255, 255, 255, 0.25); border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(10px); box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                <i class="fas fa-clipboard-check" style="font-size: 1.5rem; color: white;"></i>
             </div>
-            <a href="{{ route('sidongan.lapor_kegiatan.show', $report->id) }}" 
-               style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.625rem 1rem; background: rgba(255,255,255,0.2); color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.2s;" 
-               onmouseover="this.style.background='rgba(255,255,255,0.3)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+            <div>
+                <h1 style="font-size: 1.25rem; font-weight: 700; margin: 0 0 0.25rem 0;">Form Verifikasi</h1>
+                <p style="font-size: 0.875rem; opacity: 0.95; margin: 0;">Tinjau detail laporan dan tentukan keputusan</p>
+            </div>
+        </div>
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <a href="{{ $backUrl }}" 
+               style="display: inline-flex; align-items: center; gap: 0.5rem; padding: 0.75rem 1.25rem; background: rgba(255,255,255,0.25); color: white; text-decoration: none; border-radius: 0.5rem; font-weight: 600; transition: all 0.25s ease; backdrop-filter: blur(4px); border: 1px solid rgba(255, 255, 255, 0.3);" 
+               onmouseover="this.style.background='rgba(255,255,255,0.35)'; this.style.transform='translateY(-2px)'" 
+               onmouseout="this.style.background='rgba(255,255,255,0.25)'; this.style.transform='translateY(0)'">
                 <i class="fas fa-arrow-left"></i>
-                <span>Kembali ke Detail</span>
+                <span>Kembali</span>
             </a>
         </div>
     </div>
+</div>
 
     <form action="{{ route('sidongan.verifikasi.store', $report->id) }}" method="POST">
         @csrf
         @method('PUT')
         
-        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: start;">
+        <div class="content-grid" style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; align-items: start;">
             
             {{-- LEFT: Full Report Detail --}}
-            <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
-                <div style="padding: 1rem 1.5rem; background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                    <h3 style="font-size: 0.95rem; font-weight: 700; color: #1e293b; margin: 0;">
-                        <i class="fas fa-file-alt" style="color: #64748b; margin-right: 0.5rem;"></i>
+            <div class="animate-slide-in" style="background: white; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden;">
+                <div style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #f5f3ff, #ede9fe); border-bottom: 2px solid #ddd6fe;">
+                    <h3 style="font-size: 1.05rem; font-weight: 700; color: #1e293b; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                        <i class="fas fa-file-alt" style="color: #7c3aed;"></i>
                         Detail Laporan Kegiatan
                     </h3>
                 </div>
                 <div style="padding: 1.5rem;">
                     {{-- Basic Info --}}
                     <div style="margin-bottom: 1.5rem;">
-                        <h4 style="font-size: 1.1rem; font-weight: 700; color: #0f172a; margin: 0 0 1rem 0;">{{ $report->kegiatan_nama }}</h4>
+                        <h4 style="font-size: 1.05rem; font-weight: 700; color: #0f172a; margin: 0 0 1rem 0;">{{ $report->kegiatan_nama }}</h4>
                         <div style="display: flex; gap: 1.5rem; flex-wrap: wrap;">
-                            <span style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #64748b;">
-                                <i class="fas fa-calendar" style="color: #3b82f6;"></i>
-                                {{ $report->kegiatan_tanggal->locale('id')->translatedFormat('d M Y') }}
+                            <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 1.5rem; height: 1.5rem; background: #f5f3ff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-calendar" style="color: #7c3aed; font-size: 0.7rem;"></i>
+                                </div>
+                                <span style="font-size: 0.875rem; color: #64748b;">
+                                    {{ $report->kegiatan_tanggal->locale('id')->translatedFormat('d F Y') }}
+                                </span>
                             </span>
                             @if($report->lokasi)
-                            <span style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #64748b;">
-                                <i class="fas fa-map-marker-alt" style="color: #ef4444;"></i>
-                                {{ $report->lokasi }}
+                            <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 1.5rem; height: 1.5rem; background: #f5f3ff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-map-marker-alt" style="color: #7c3aed; font-size: 0.7rem;"></i>
+                                </div>
+                                <span style="font-size: 0.875rem; color: #64748b;">
+                                    {{ $report->lokasi }}
+                                </span>
                             </span>
                             @endif
-                            <span style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; color: #64748b;">
-                                <i class="fas fa-user" style="color: #16a34a;"></i>
-                                {{ $report->creator->name ?? 'Sekretaris PKK' }}
+                            <span style="display: flex; align-items: center; gap: 0.5rem;">
+                                <div style="width: 1.5rem; height: 1.5rem; background: #f5f3ff; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                                    <i class="fas fa-user" style="color: #7c3aed; font-size: 0.7rem;"></i>
+                                </div>
+                                <span style="font-size: 0.875rem; color: #64748b;">
+                                    {{ $report->creator->name ?? 'Sekretaris PKK' }}
+                                </span>
                             </span>
                         </div>
                     </div>
@@ -255,7 +316,7 @@
                     @endphp
                     @if(count($fotosArray) > 0)
                     <div>
-                        <span style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.5rem;">
+                        <span style="display: block; font-size: 0.8rem; font-weight: 600; color: #64748b; margin-bottom: 0.75rem;">
                             <i class="fas fa-images" style="margin-right: 0.35rem;"></i>
                             Dokumentasi Kegiatan ({{ count($fotosArray) }} foto)
                         </span>
@@ -272,11 +333,11 @@
             </div>
 
             {{-- RIGHT: Verification Form (Sticky) --}}
-            <div style="position: sticky; top: 1rem;">
-                <div style="background: white; border-radius: 0.75rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; overflow: hidden;">
-                    <div style="padding: 1rem 1.5rem; background: #fffbeb; border-bottom: 1px solid #fde68a;">
-                        <h3 style="font-size: 0.95rem; font-weight: 700; color: #92400e; margin: 0;">
-                            <i class="fas fa-clipboard-check" style="color: #d97706; margin-right: 0.5rem;"></i>
+            <div class="animate-slide-in" style="position: sticky; top: 1rem;">
+                <div style="background: white; border-radius: 0.75rem; box-shadow: 0 2px 12px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; overflow: hidden;">
+                    <div style="padding: 1.25rem 1.5rem; background: linear-gradient(135deg, #fffbeb, #fef3c7); border-bottom: 2px solid #fcd34d;">
+                        <h3 style="font-size: 1.05rem; font-weight: 700; color: #92400e; margin: 0; display: flex; align-items: center; gap: 0.5rem;">
+                            <i class="fas fa-clipboard-check" style="color: #d97706;"></i>
                             Keputusan Verifikasi
                         </h3>
                     </div>
@@ -284,7 +345,9 @@
                         
                         {{-- Status Choice (Colored Icons) --}}
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.75rem;">Status Keputusan <span style="color: #ef4444;">*</span></label>
+                            <label style="display: block; font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem;">
+                                Status Keputusan <span style="color: #ef4444;">*</span>
+                            </label>
                             <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
                                 
                                 {{-- Option: Approve (Green) --}}
@@ -315,7 +378,9 @@
 
                         {{-- Notes --}}
                         <div style="margin-bottom: 1.5rem;">
-                            <label style="display: block; font-size: 0.85rem; font-weight: 600; color: #334155; margin-bottom: 0.5rem;">Catatan Verifikasi</label>
+                            <label style="display: block; font-size: 0.9rem; font-weight: 700; color: #0f172a; margin-bottom: 0.75rem;">
+                                Catatan Verifikasi
+                            </label>
                             <textarea name="catatan_verifikasi" rows="4" placeholder="Berikan catatan atau alasan jika ditolak (Opsional)..."
                                       style="width: 100%; padding: 0.75rem 1rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; transition: all 0.2s; resize: vertical; box-sizing: border-box; font-family: inherit;" 
                                       onfocus="this.style.borderColor='#7c3aed'; this.style.boxShadow='0 0 0 3px rgba(124,58,237,0.1)'" 
@@ -324,15 +389,16 @@
 
                         {{-- Submit Buttons --}}
                         <div style="display: flex; gap: 0.75rem; padding-top: 1rem; border-top: 1px solid #e2e8f0;">
-                            <button type="button" onclick="history.back()" 
-                                    style="flex: 1; padding: 0.75rem; background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.875rem;" 
-                                    onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">
+                            <a href="{{ $backUrl }}" 
+                               style="flex: 1; padding: 0.75rem; background: white; color: #475569; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.875rem; text-align: center; text-decoration: none; display: inline-flex; align-items: center; justify-content: center;" 
+                               onmouseover="this.style.background='#f1f5f9'" 
+                               onmouseout="this.style.background='white'">
                                 Batal
-                            </button>
+                            </a>
                             <button type="submit" 
-                                    style="flex: 2; padding: 0.75rem; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 4px rgba(124,58,237,0.2); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" 
-                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(124,58,237,0.3)'" 
-                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(124,58,237,0.2)'">
+                                    style="flex: 2; padding: 0.75rem; background: linear-gradient(135deg, #7c3aed, #6d28d9); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: all 0.2s; box-shadow: 0 2px 8px rgba(124,58,237,0.2); font-size: 0.875rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem;" 
+                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 12px rgba(124,58,237,0.3)'" 
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 8px rgba(124,58,237,0.2)'">
                                 <i class="fas fa-save"></i>
                                 <span>Simpan Keputusan</span>
                             </button>
@@ -370,7 +436,6 @@
             </a>
         </div>
         
-        {{-- Thumbnails inside modal --}}
         <div id="galleryThumbnails" style="display: flex; gap: 0.5rem; margin-top: 0.5rem; justify-content: center; max-width: 80vw;"></div>
     </div>
 </div>
@@ -380,11 +445,9 @@
     // Logic untuk Kartu Status (Warna)
     // ===============================
     function selectOption(value) {
-        // Reset styles
         document.getElementById('option-approve').classList.remove('selected-approve');
         document.getElementById('option-reject').classList.remove('selected-reject');
         
-        // Add style to selected
         if (value === 'disetujui') {
             document.getElementById('option-approve').classList.add('selected-approve');
         } else {
@@ -401,7 +464,6 @@
     
     function openGallery(index) {
         currentIndex = index;
-        // ✅ Gunakan animasi 'zoom-in' saat membuka galeri
         updateGalleryImage('zoom-in'); 
         updateGalleryUI(); 
         document.getElementById('galleryOverlay').classList.add('active');
@@ -464,7 +526,6 @@
             prevBtn.style.display = 'flex'; nextBtn.style.display = 'flex';
         }
         
-        // Update thumbnails in modal
         const container = document.getElementById('galleryThumbnails');
         container.innerHTML = '';
         galleryFotos.forEach((foto, index) => {

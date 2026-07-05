@@ -6,13 +6,114 @@
     /* ============================================
        Layout Preview Lembar Disposisi
        ============================================ */
+    .disposisi-container {
+        padding: 0 1.5rem;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+    
+    .action-bar {
+        background: linear-gradient(135deg, #0891b2, #14b8a6);
+        padding: 1.5rem 2rem;
+        border-radius: 1rem;
+        margin-bottom: 1.5rem;
+        color: white;
+        box-shadow: 0 4px 20px rgba(8, 145, 178, 0.2);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+    
+    .action-title {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    
+    .action-title-icon {
+        width: 3rem;
+        height: 3rem;
+        background: rgba(255, 255, 255, 0.25);
+        border-radius: 0.75rem;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(10px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    
+    .action-title-icon i {
+        font-size: 1.5rem;
+        color: white;
+    }
+    
+    .action-title-text h1 {
+        font-size: 1.25rem;
+        font-weight: 700;
+        margin: 0 0 0.25rem 0;
+        color: white;
+    }
+    
+    .action-title-text p {
+        font-size: 0.875rem;
+        opacity: 0.95;
+        margin: 0;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 0.75rem;
+        flex-wrap: wrap;
+    }
+    
+    .btn-action {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.75rem 1.25rem;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        text-decoration: none;
+        border: none;
+        min-height: 44px;
+    }
+    
+    .btn-print {
+        background: white;
+        color: #0891b2;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    
+    .btn-print:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    
+    .btn-back {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+        backdrop-filter: blur(4px);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .btn-back:hover {
+        background: rgba(255, 255, 255, 0.35);
+        transform: translateY(-2px);
+    }
+    
     .disposisi-preview-wrapper {
         max-width: 210mm;
         margin: 0 auto;
         background: white;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
-        border-radius: 0.5rem;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        border-radius: 0.75rem;
         overflow: hidden;
+        border: 1px solid #e2e8f0;
     }
     
     .disposisi-page {
@@ -54,7 +155,7 @@
         margin: 0 0 8px 0;
     }
     
-    /* Garis horizontal tipis (pendek) - untuk di atas SURAT DARI */
+    /* Garis horizontal tipis (pendek) */
     .disposisi-line-short {
         border: none;
         border-top: 1px solid #000;
@@ -158,7 +259,7 @@
     }
     
     .disposisi-signature-space {
-        height: 80px; /* Ruang untuk tanda tangan */
+        height: 80px;
     }
     
     .disposisi-signature-name {
@@ -166,67 +267,56 @@
         text-decoration: underline;
     }
     
-    /* Tombol Aksi */
-    .action-bar {
+    /* Info Card di bawah preview */
+    .info-card {
+        background: white;
+        border-radius: 0.75rem;
+        padding: 1.25rem 1.5rem;
+        margin-top: 1.5rem;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+        border: 1px solid #e2e8f0;
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        margin-bottom: 1.5rem;
+        gap: 1rem;
         flex-wrap: wrap;
-        gap: 0.75rem;
     }
     
-    .action-title {
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-        font-size: 1rem;
-        font-weight: 700;
-        color: #1e293b;
-    }
-    
-    .action-buttons {
-        display: flex;
-        gap: 0.5rem;
-    }
-    
-    .btn-action {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.5rem 1rem;
+    .info-card-icon {
+        width: 2.5rem;
+        height: 2.5rem;
+        background: #eff6ff;
         border-radius: 0.5rem;
-        font-weight: 600;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none;
-        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
     }
     
-    .btn-print {
-        background: #3b82f6;
-        color: white;
-    }
-    .btn-print:hover {
-        background: #2563eb;
-        transform: translateY(-1px);
+    .info-card-icon i {
+        color: #3b82f6;
+        font-size: 1.1rem;
     }
     
-    .btn-back {
-        background: #64748b;
-        color: white;
+    .info-card-text {
+        flex: 1;
+        min-width: 200px;
     }
-    .btn-back:hover {
-        background: #475569;
-        transform: translateY(-1px);
+    
+    .info-card-text p {
+        margin: 0;
+        font-size: 0.9rem;
+        color: #475569;
+        line-height: 1.5;
+    }
+    
+    .info-card-text strong {
+        color: #1e293b;
     }
     
     /* ============================================
     PRINT STYLES - A4 Only
     ============================================ */
     @media print {
-        /* ✅ PAKSA A4 */
         @page {
             size: A4 portrait !important;
             margin: 0 !important;
@@ -237,18 +327,15 @@
             -webkit-print-color-adjust: exact !important;
         }
         
-        /* Sembunyikan SEMUA elemen di body */
         body * {
             visibility: hidden !important;
         }
         
-        /* Tampilkan HANYA wrapper disposisi dan isinya */
         .disposisi-preview-wrapper,
         .disposisi-preview-wrapper * {
             visibility: visible !important;
         }
         
-        /* Position wrapper di pojok kiri atas saat print */
         .disposisi-preview-wrapper {
             position: absolute !important;
             left: 0 !important;
@@ -261,6 +348,7 @@
             margin: 0 !important;
             padding: 0 !important;
             background: white !important;
+            border: none !important;
         }
         
         .disposisi-page {
@@ -269,30 +357,76 @@
             height: 100% !important;
         }
         
-        /* Sembunyikan action bar */
         .action-bar,
+        .info-card,
         .no-print {
             display: none !important;
         }
     }
+    
+    /* Mobile Responsive */
+    @media (max-width: 768px) {
+        .disposisi-container {
+            padding: 0 1rem;
+        }
+        
+        .action-bar {
+            padding: 1.25rem 1.5rem;
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .action-buttons {
+            width: 100%;
+        }
+        
+        .btn-action {
+            flex: 1;
+            justify-content: center;
+        }
+        
+        .info-card {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+    }
+    
+    @media (max-width: 480px) {
+        .disposisi-container {
+            padding: 0 0.75rem;
+        }
+        
+        .action-title-text h1 {
+            font-size: 1.1rem;
+        }
+        
+        .action-title-text p {
+            font-size: 0.8rem;
+        }
+    }
 </style>
 
-<div style="max-width: 900px; margin: 0 auto;">
+<div class="disposisi-container">
     {{-- Action Bar --}}
     <div class="action-bar no-print">
         <div class="action-title">
-            <i class="fas fa-print" style="color: #0891b2;"></i>
-            <span>Preview Lembar Disposisi</span>
+            <div class="action-title-icon">
+                <i class="fas fa-print"></i>
+            </div>
+            <div class="action-title-text">
+                <h1>Preview Lembar Disposisi</h1>
+                <p>Surat No. Agenda: {{ $document->agenda_number }}</p>
+            </div>
         </div>
         <div class="action-buttons">
+            <button onclick="window.location.replace('{{ route('sidongan.documents.show', $document) }}')" class="btn-action btn-back">
+                <i class="fas fa-arrow-left"></i>
+                <span>Kembali</span>
+            </button>
             <button onclick="window.print()" class="btn-action btn-print">
                 <i class="fas fa-print"></i>
                 <span>Cetak</span>
             </button>
-            <a href="{{ route('sidongan.documents.show', $document) }}" class="btn-action btn-back">
-                <i class="fas fa-arrow-left"></i>
-                <span>Kembali</span>
-            </a>
         </div>
     </div>
 
@@ -320,7 +454,7 @@
             {{-- Garis tebal bawah --}}
             <hr class="disposisi-line-thick">
             
-            {{-- Garis tipis pendek di atas SURAT DARI (dekat) --}}
+            {{-- Garis tipis pendek di atas SURAT DARI --}}
             <hr class="disposisi-line-short">
             
             {{-- SURAT DARI --}}
@@ -427,6 +561,20 @@
                     </tr>
                 </tbody>
             </table>
+        </div>
+    </div>
+    
+    {{-- Info Card --}}
+    <div class="info-card no-print">
+        <div class="info-card-icon">
+            <i class="fas fa-info-circle"></i>
+        </div>
+        <div class="info-card-text">
+            <p>
+                <strong>Tips:</strong> Gunakan tombol <strong>Cetak</strong> untuk mencetak lembar disposisi ini. 
+                Tombol <strong>Kembali</strong> akan membawa Anda ke halaman detail surat. 
+                Format cetakan sudah disesuaikan dengan ukuran kertas <strong>A4 Portrait</strong>.
+            </p>
         </div>
     </div>
 </div>

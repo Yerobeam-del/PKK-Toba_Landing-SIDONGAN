@@ -28,16 +28,14 @@ class VerificationController extends Controller
             $query->where('kegiatan_nama', 'like', '%' . $request->search . '%');
         }
         
-        // 3. Filter Status
-        if ($request->filled('status')) {
+        // 3. Filter Status - HANYA jika ada parameter status DAN tidak kosong
+        if ($request->has('status') && $request->filled('status')) {
             $query->where('status', $request->status);
-        } else {
-            // Default: hanya tampilkan yang menunggu verifikasi
-            $query->where('status', 'menunggu_verifikasi');
         }
+        // Jika status tidak ada atau kosong (Semua Status), jangan filter
         
         // 4. Eksekusi Query
-        $documents = $query->latest()->paginate(10);
+        $documents = $query->latest()->paginate($request->get('per_page', 10));
         
         // 5. Append query parameters ke pagination links
         $documents->appends($request->except('page'));
@@ -45,7 +43,7 @@ class VerificationController extends Controller
         // 6. Kirim ke View
         return view('sidongan.verifikasi.index', compact('documents'));
     }
-    
+        
     /**
      * Show verification form for a specific report.
      */
@@ -55,6 +53,16 @@ class VerificationController extends Controller
         
         if (!$user->hasSidonganRole('ketua')) {
             abort(403, 'Akses ditolak');
+        }
+        
+        // ✅ SIMPAN URL SEBELUMNYA DI SESSION
+        $previousUrl = url()->previous();
+        
+        // Hanya simpan jika bukan dari form verifikasi itu sendiri
+        if ($previousUrl && 
+            !str_contains($previousUrl, '/verifikasi/form') &&
+            !str_contains($previousUrl, '/verifikasi-print')) {
+            session(['verifikasi_form_back_url' => $previousUrl]);
         }
         
         $report = ActivityReport::with(['document', 'creator'])->findOrFail($id);
@@ -85,7 +93,6 @@ class VerificationController extends Controller
             'verified_at' => now(),
         ]);
         
-        // ✅ UPDATE STATUS SURAT DENGAN LOGIC YANG BENAR
         if ($report->document) {
             // Gunakan method updateCorrectStatus() yang sudah kita buat
             $newStatus = $report->document->updateCorrectStatus();
@@ -102,9 +109,6 @@ class VerificationController extends Controller
                     $notifTitle = "Laporan Disetujui";
                 }
             } else if ($validated['status'] === 'ditolak') {
-                // Laporan ditolak → Surat kembali ke "berjalan" agar bisa dibuat laporan baru
-                $report->document->update(['status' => 'berjalan']);
-                
                 $catatan = $validated['catatan_verifikasi'] ? " Catatan: \"{$validated['catatan_verifikasi']}\"" : '';
                 $notifMessage = "Laporan kegiatan untuk surat {$report->document->agenda_number} ditolak. Silakan perbaiki dan buat laporan baru.{$catatan}";
                 $notifTitle = "Laporan Ditolak";

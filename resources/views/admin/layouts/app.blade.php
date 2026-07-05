@@ -436,7 +436,7 @@
                 </a>
                 @endif
 
-                {{-- Berita (Daniel punya ini) --}}
+                {{-- Berita --}}
                 @if(auth()->user()->hasPermission('manage-berita'))
                 <a href="{{ route('admin.berita.index') }}" class="nav-item {{ request()->routeIs('admin.berita.*') ? 'active' : '' }}">
                     <div class="nav-icon-box">
@@ -446,7 +446,7 @@
                 </a>
                 @endif
 
-                {{-- Desa --}}
+                {{-- Desa 
                 @if(auth()->user()->hasPermission('manage-desa'))
                 <a href="{{ route('admin.desa.index') }}" class="nav-item {{ request()->routeIs('admin.desa.*') ? 'active' : '' }}">
                     <div class="nav-icon-box">
@@ -454,7 +454,7 @@
                     </div>
                     <span class="nav-text">Desa</span>
                 </a>
-                @endif
+                @endif --}}
 
                 {{-- SK & Dokumen --}}
                 @if(auth()->user()->hasPermission('manage-dokumen'))

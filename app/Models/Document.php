@@ -356,9 +356,6 @@ class Document extends Model
         return true;
     }
 
-    /**
-     * Update status dokumen dengan logic yang benar
-     */
     public function updateCorrectStatus()
     {
         \Log::info("=== UPDATE STATUS DOCUMENT {$this->id} ===");
@@ -373,19 +370,34 @@ class Document extends Model
             return 'berjalan';
         }
         
-        // Semua sudah lapor, cek apakah sudah diverifikasi
-        $allVerified = $this->allReportsVerified();
-        \Log::info("All Reports Verified: " . ($allVerified ? 'YES' : 'NO'));
+        // Semua sudah lapor, cek status laporan
+        $reports = $this->activityReports;
+        $hasRejected = $reports->where('status', 'ditolak')->count() > 0;
+        $hasApproved = $reports->where('status', 'disetujui')->count() > 0;
+        $hasPending = $reports->where('status', 'menunggu_verifikasi')->count() > 0;
         
-        if ($allVerified) {
-            $this->update(['status' => 'selesai']);
-            \Log::info("Status updated to: selesai");
-            return 'selesai';
+        \Log::info("Report status - Rejected: " . ($hasRejected ? 'YES' : 'NO') . 
+                ", Approved: " . ($hasApproved ? 'YES' : 'NO') . 
+                ", Pending: " . ($hasPending ? 'YES' : 'NO'));
+        
+        // JIKA ADA LAPORAN YANG DITOLAK → Status tetap BERJALAN (bisa lapor ulang)
+        if ($hasRejected) {
+            $this->update(['status' => 'berjalan']);
+            \Log::info("Status updated to: berjalan (ada laporan ditolak)");
+            return 'berjalan';
         }
         
-        $this->update(['status' => 'menunggu_verifikasi']);
-        \Log::info("Status updated to: menunggu_verifikasi");
-        return 'menunggu_verifikasi';
+        // Jika ada yang menunggu verifikasi
+        if ($hasPending) {
+            $this->update(['status' => 'menunggu_verifikasi']);
+            \Log::info("Status updated to: menunggu_verifikasi");
+            return 'menunggu_verifikasi';
+        }
+        
+        // Semua disetujui → Selesai
+        $this->update(['status' => 'selesai']);
+        \Log::info("Status updated to: selesai");
+        return 'selesai';
     }
 
     /**

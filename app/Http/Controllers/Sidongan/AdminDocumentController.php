@@ -27,13 +27,23 @@ class AdminDocumentController extends Controller
             return redirect()->route('sidongan.login');
         }
         
+        // Build stats query berdasarkan role
         $statsQuery = Document::query();
         
+        // Filter berdasarkan role user
         if ($user->hasSidonganRole('sekretaris')) {
+            // Sekretaris: hanya surat yang dibuatnya
             $statsQuery->where('created_by', $user->id);
+        } elseif (!$user->hasSidonganRole('ketua')) {
+            // Role lain (Ketua Pengurus, Bendahara, Staf Ahli): 
+            // Hanya surat yang sudah didisposisi ke mereka (status = 'berjalan')
+            $userRole = $user->sidongan_role;
+            $statsQuery->where('status', 'berjalan')
+                ->whereJsonContains('disposisi_data->target_roles', $userRole);
         }
+        // Ketua: lihat semua surat (tidak ada filter)
         
-        // ✅ RECENT DOCUMENTS - Dengan sorting prioritas status
+        // Recent Documents dengan sorting prioritas status
         $recentDocuments = (clone $statsQuery)
             ->with(['creator', 'activityReports' => function($q) {
                 $q->with('creator')->latest();
@@ -52,7 +62,7 @@ class AdminDocumentController extends Controller
             ->take(5)
             ->get();
 
-        // NOTIFIKASI: HANYA yang BELUM DIBACA
+        // Notifications
         $notifications = Notification::where('user_id', $user->id)
             ->whereNull('read_at')
             ->latest()
@@ -63,7 +73,7 @@ class AdminDocumentController extends Controller
             ->whereNull('read_at')
             ->count();
 
-        return view('sidongan.dashboard', [
+        return view('sidongan.dashboard.index', [
             'totalSurat' => (clone $statsQuery)->count(),
             'sedangBerjalan' => (clone $statsQuery)->where('status', 'berjalan')->count(),
             'menungguProses' => (clone $statsQuery)->whereIn('status', ['menunggu_disposisi', 'menunggu_verifikasi'])->count(),
@@ -87,11 +97,6 @@ class AdminDocumentController extends Controller
             $q->with('creator')->latest();
         }]);
         
-        // Filter Role
-        // if ($user->hasSidonganRole('sekretaris')) {
-        //     $query->where('created_by', $user->id);
-        // }
-
         // Hitung Total Dokumen
         $totalDocuments = (clone $query)->count();
         
@@ -106,30 +111,68 @@ class AdminDocumentController extends Controller
             $query->search($request->search);
         }
         
-        // 3. Filter Status & Kategori
-        if ($request->filled('category')) {
-            $query->where('category_id', $request->category);
-        }
+        // 3. Filter Status
         if ($request->filled('status')) {
             $query->where('status', $request->status);
         }
-
-        // 4. SORTING CUSTOM
-        $query->orderByRaw("
-            CASE 
-                WHEN status = 'menunggu_disposisi' THEN 1
-                WHEN status = 'berjalan' THEN 2
-                WHEN status = 'menunggu_verifikasi' THEN 3
-                WHEN status = 'selesai' THEN 4
-                WHEN status = 'diarsipkan' THEN 5
-                ELSE 6
-            END
-        ");
         
-        $query->orderBy('created_at', 'desc');
+        // 4. Filter Kategori
+        if ($request->filled('category')) {
+            $query->where('category_id', $request->category);
+        }
+        
+        // 5. Filter Tanggal
+        if ($request->filled('date_from')) {
+            $query->whereDate('document_date', '>=', $request->date_from);
+        }
+        if ($request->filled('date_to')) {
+            $query->whereDate('document_date', '<=', $request->date_to);
+        }
+        
+        // 6. Filter Bulan
+        if ($request->filled('filter_month')) {
+            $query->whereMonth('document_date', $request->filter_month);
+        }
+        
+        // 7. Filter Tahun
+        if ($request->filled('filter_year')) {
+            $query->whereYear('document_date', $request->filter_year);
+        }
 
-        // 5. PAGINATION DENGAN PER PAGE DYNAMIC
-        $perPage = $request->get('per_page', 10); // Default 10
+        // 8. SORTING
+        $sortField = $request->get('sort', null);
+        $sortDirection = $request->get('direction', 'desc');
+        
+        if ($sortField) {
+            $allowedSorts = ['id', 'agenda_number', 'subject', 'document_number', 'document_date', 'status', 'created_at'];
+            if (!in_array($sortField, $allowedSorts)) {
+                $sortField = 'created_at';
+            }
+            if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
+                $sortDirection = 'desc';
+            }
+            $query->orderBy($sortField, $sortDirection);
+        } else {
+            // DEFAULT: Sorting berdasarkan prioritas status
+            $query->orderByRaw("
+                CASE 
+                    WHEN status = 'menunggu_disposisi' THEN 1
+                    WHEN status = 'berjalan' AND EXISTS (
+                        SELECT 1 FROM activity_reports 
+                        WHERE activity_reports.document_id = sidongan_documents.id 
+                        AND activity_reports.status = 'menunggu_verifikasi'
+                    ) THEN 2
+                    WHEN status = 'berjalan' THEN 3
+                    WHEN status = 'selesai' THEN 4
+                    WHEN status = 'diarsipkan' THEN 5
+                    ELSE 6
+                END
+            ");
+            $query->orderBy('created_at', 'desc');
+        }
+
+        // 9. PAGINATION
+        $perPage = $request->get('per_page', 10);
         $allowedPerPages = [5, 10, 15, 25, 50];
         if (!in_array($perPage, $allowedPerPages)) {
             $perPage = 10;
@@ -137,6 +180,14 @@ class AdminDocumentController extends Controller
 
         $documents = $query->paginate($perPage)->withQueryString();
         $categories = DocumentCategory::where('is_active', true)->orderBy('name')->get();
+        
+        // Ambil tahun unik untuk filter tahun
+        $availableYears = Document::selectRaw('YEAR(document_date) as year')
+            ->whereNotNull('document_date')
+            ->distinct()
+            ->orderBy('year', 'desc')
+            ->pluck('year')
+            ->filter();
 
         return view('sidongan.documents.index', [
             'documents' => $documents,
@@ -147,7 +198,10 @@ class AdminDocumentController extends Controller
             'statMenungguDisposisi' => $statMenungguDisposisi,
             'statMenungguVerifikasi' => $statMenungguVerifikasi,
             'currentPerPage' => $perPage,
-            'allowedPerPages' => $allowedPerPages, // ✅ TAMBAHKAN INI
+            'allowedPerPages' => $allowedPerPages,
+            'currentSort' => $sortField,
+            'currentDirection' => $sortDirection,
+            'availableYears' => $availableYears,
         ]);
     }
 
@@ -168,7 +222,7 @@ class AdminDocumentController extends Controller
                 ->withErrors(['auth' => 'Session expired. Silakan login ulang.']);
         }
         
-        // Validasi input
+        // Validasi input dengan custom messages
         $validated = $request->validate([
             // Data Pengirim
             'sender' => 'required|string|max:255',
@@ -188,6 +242,28 @@ class AdminDocumentController extends Controller
             
             // Kategori (opsional)
             'category_id' => 'nullable|exists:sidongan_categories,id',
+        ], [
+            // Custom error messages dalam bahasa Indonesia
+            'sender.required' => 'Nama pengirim surat harus diisi',
+            'sender.max' => 'Nama pengirim maksimal 255 karakter',
+            
+            'document_number.required' => 'Nomor surat harus diisi',
+            'document_number.max' => 'Nomor surat maksimal 100 karakter',
+            
+            'document_date.required' => 'Tanggal surat harus diisi',
+            'document_date.date' => 'Format tanggal surat tidak valid',
+            
+            'subject.required' => 'Perihal surat harus diisi',
+            'subject.max' => 'Perihal surat maksimal 255 karakter',
+            
+            'suggestion.required' => 'Saran atau catatan untuk Ketua PKK harus diisi',
+            
+            'file.required' => 'File surat harus diupload',
+            'file.file' => 'File yang diupload tidak valid',
+            'file.mimes' => 'Format file harus: PDF, JPG, JPEG, PNG, DOC, atau DOCX',
+            'file.max' => 'Ukuran file maksimal 5MB',
+            
+            'category_id.exists' => 'Kategori yang dipilih tidak valid',
         ]);
 
         // Handle upload file
@@ -333,12 +409,61 @@ class AdminDocumentController extends Controller
         return Storage::disk('public')->download($document->file_path, $document->file_name);
     }
 
-    public function show(Document $document)
+    public function show(Request $request, Document $document)
     {
-        // Load document dengan relasi yang diperlukan
+        \Log::info('=== SHOW METHOD CALLED ===', [
+            'document_id' => $document->id,
+            'from_param' => $request->get('from'),
+            'session_before' => session('document_back_url'),
+            'previous_url' => url()->previous(),
+        ]);
+
+        // ✅ Helper function untuk cek apakah URL adalah Form Disposisi
+        $isDisposisiForm = function($url) {
+            // Match pattern: /disposisi/{angka} (Form Disposisi)
+            // TIDAK match: /disposisi (List Disposisi)
+            return preg_match('#/disposisi/\d+#', $url) === 1;
+        };
+
+        // ✅ PRIORITAS 1: URL parameter 'from'
+        if ($request->has('from')) {
+            $fromUrl = $request->get('from');
+            if (!$isDisposisiForm($fromUrl) && 
+                !str_contains($fromUrl, '/disposisi-print') &&
+                !str_contains($fromUrl, '/create') &&
+                !str_contains($fromUrl, '/edit')) {
+                session(['document_back_url' => $fromUrl]);
+                \Log::info('Session SET from URL parameter', ['url' => $fromUrl]);
+            }
+        } 
+        // ✅ PRIORITAS 2: previousUrl
+        else {
+            $previousUrl = url()->previous();
+            $currentUrl = url()->current();
+            
+            // ✅ JANGAN update session jika datang dari Form Disposisi
+            if ($previousUrl && 
+                $previousUrl !== $currentUrl && 
+                !$isDisposisiForm($previousUrl) &&  // ← KUNCI: Cek pattern /disposisi/{angka}
+                !str_contains($previousUrl, '/disposisi-print') &&
+                !str_contains($previousUrl, '/create') &&
+                !str_contains($previousUrl, '/edit')) {
+                session(['document_back_url' => $previousUrl]);
+                \Log::info('Session SET from previous URL', ['url' => $previousUrl]);
+            } else {
+                \Log::info('Session NOT updated (from Form Disposisi or invalid)', [
+                    'previous' => $previousUrl,
+                    'is_form' => $isDisposisiForm($previousUrl) ? 'yes' : 'no'
+                ]);
+            }
+        }
+
+        \Log::info('=== SHOW METHOD END ===', [
+            'session_final' => session('document_back_url'),
+        ]);
+        
         $document->load(['creator', 'category', 'tags']);
         
-        // Ambil activity reports untuk dokumen ini
         $activityReports = \App\Models\ActivityReport::where('document_id', $document->id)
             ->with(['creator'])
             ->latest()
@@ -369,7 +494,7 @@ class AdminDocumentController extends Controller
     /**
      * Halaman Disposisi Surat (untuk Ketua PKK)
      */
-    public function disposisi()
+    public function disposisi(Request $request)
     {
         $user = auth()->guard('sidongan')->user();
         
@@ -377,10 +502,41 @@ class AdminDocumentController extends Controller
             abort(403, 'Akses ditolak');
         }
         
-        $documents = Document::with(['category', 'creator'])
-            ->where('status', 'menunggu_disposisi')
-            ->latest()
-            ->paginate(15);
+        // 1. Query Dasar - hanya surat menunggu disposisi
+        $query = Document::with(['category', 'creator'])
+            ->where('status', 'menunggu_disposisi');
+        
+        // 2. Filter Pencarian
+        if ($request->filled('search')) {
+            $query->where(function($q) use ($request) {
+                $q->where('subject', 'like', '%' . $request->search . '%')
+                ->orWhere('agenda_number', 'like', '%' . $request->search . '%')
+                ->orWhere('document_number', 'like', '%' . $request->search . '%')
+                ->orWhere('sender', 'like', '%' . $request->search . '%');
+            });
+        }
+        
+        // 3. Sorting
+        $sort = $request->get('sort', 'latest');
+        switch ($sort) {
+            case 'oldest':
+                $query->orderBy('created_at', 'asc');
+                break;
+            case 'agenda':
+                $query->orderBy('agenda_number', 'asc');
+                break;
+            default: // latest
+                $query->orderBy('created_at', 'desc');
+        }
+        
+        // 4. Pagination
+        $perPage = $request->get('per_page', 10);
+        $allowedPerPages = [5, 10, 15, 25, 50];
+        if (!in_array($perPage, $allowedPerPages)) {
+            $perPage = 10;
+        }
+        
+        $documents = $query->paginate($perPage)->withQueryString();
         
         return view('sidongan.disposisi.index', compact('documents'));
     }
@@ -388,7 +544,7 @@ class AdminDocumentController extends Controller
     /**
      * Form Disposisi
      */
-    public function showDisposisiForm(Document $document)
+    public function showDisposisiForm(Request $request, Document $document)
     {
         $user = auth()->guard('sidongan')->user();
         
@@ -396,8 +552,26 @@ class AdminDocumentController extends Controller
             abort(403, 'Akses ditolak');
         }
         
+        // ✅ PRIORITAS 1: URL parameter 'from'
+        if ($request->has('from')) {
+            $fromUrl = $request->get('from');
+            if (!str_contains($fromUrl, '/disposisi/form') &&
+                !str_contains($fromUrl, '/disposisi-print')) {
+                session(['disposisi_form_back_url' => $fromUrl]);
+            }
+        }
+        // ✅ PRIORITAS 2: previousUrl
+        else {
+            $previousUrl = url()->previous();
+            
+            if ($previousUrl && 
+                !str_contains($previousUrl, '/disposisi/form') &&
+                !str_contains($previousUrl, '/disposisi-print')) {
+                session(['disposisi_form_back_url' => $previousUrl]);
+            }
+        }
+        
         $roles = User::getSidonganRoles();
-        // Exclude ketua (tidak bisa disposisi ke diri sendiri) dan sekretaris (karena sekretaris yang upload)
         unset($roles['ketua']);
         unset($roles['sekretaris']);
         
@@ -431,6 +605,7 @@ class AdminDocumentController extends Controller
             $finalAction = trim($validated['custom_action']);
         }
         
+        // Format string yang eksplisit untuk disposed_at
         $document->update([
             'status' => 'berjalan',
             'disposisi_data' => [
@@ -439,7 +614,7 @@ class AdminDocumentController extends Controller
                 'action_type' => $validated['action'],
                 'comment' => $validated['comment'] ?? null,
                 'disposed_by' => $user->id,
-                'disposed_at' => now(),
+                'disposed_at' => now()->toDateTimeString(), // Format: Y-m-d H:i:s
             ]
         ]);
         
@@ -478,7 +653,7 @@ class AdminDocumentController extends Controller
                         'message' => "Anda menerima disposisi dari Ketua PKK untuk surat No. Agenda {$document->agenda_number} - {$document->subject}. Tindakan: {$finalAction}",
                         'related_id' => $document->id,
                         'related_type' => 'document',
-                        'read_at' => null, // Pastikan read_at NULL
+                        'read_at' => null,
                     ]);
                     
                     \Log::info("Disposisi: Notifikasi berhasil dibuat dengan ID {$notification->id}");

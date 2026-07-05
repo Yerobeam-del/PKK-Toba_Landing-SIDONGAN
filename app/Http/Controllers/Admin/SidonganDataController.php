@@ -173,14 +173,14 @@ class SidonganDataController extends Controller
                         }
                     }
                     
-                    ActivityReport::truncate();
+                    ActivityReport::query()->delete(); // GANTI DARI truncate()
                     $message = "{$deletedCount} laporan kegiatan berhasil dihapus ({$deletedFiles} file foto dihapus).";
                     break;
                     
                 case 'delete_all_notifications':
                     // Hapus semua notifikasi
                     $deletedCount = Notification::count();
-                    Notification::truncate();
+                    Notification::query()->delete(); // GANTI DARI truncate()
                     $message = "{$deletedCount} notifikasi berhasil dihapus.";
                     break;
             }
@@ -194,6 +194,60 @@ class SidonganDataController extends Controller
             DB::rollBack();
             return redirect()->route('admin.sidongan-data.index')
                 ->with('error', 'Gagal melakukan pembersihan: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Tampilkan detail surat dengan timeline
+     */
+    public function show(Document $document)
+    {
+        // Load document dengan relasi yang benar
+        $document->load(['category', 'creator', 'activityReports.creator']);
+        
+        // Ambil semua notifikasi terkait
+        $notifications = Notification::where('related_id', $document->id)
+            ->where('related_type', Document::class)
+            ->orderBy('created_at', 'desc')
+            ->get();
+        
+        // Stats untuk laporan
+        $stats = [
+            'total_laporan' => ActivityReport::where('document_id', $document->id)->count(),
+        ];
+        
+        return view('admin.sidongan-data.show', compact('document', 'notifications', 'stats'));
+    }
+
+    /**
+     * Hapus laporan kegiatan tertentu
+     */
+    public function deleteReport($reportId)
+    {
+        try {
+            $report = ActivityReport::findOrFail($reportId);
+            $documentId = $report->document_id;
+            
+            // Hapus file foto
+            if ($report->fotos) {
+                $fotos = json_decode($report->fotos, true);
+                if (is_array($fotos)) {
+                    foreach ($fotos as $foto) {
+                        if (Storage::disk('public')->exists($foto)) {
+                            Storage::disk('public')->delete($foto);
+                        }
+                    }
+                }
+            }
+            
+            $report->delete();
+            
+            return redirect()->back()
+                ->with('success', 'Laporan kegiatan berhasil dihapus.');
+                
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal menghapus laporan: ' . $e->getMessage());
         }
     }
     

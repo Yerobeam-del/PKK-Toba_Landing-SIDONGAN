@@ -12,6 +12,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
+        // 🟢 TAMBAHAN: Mempercayai semua proxy luar (Localtunnel / VS Code Ports)
+        // Ini wajib agar Laravel membaca header X-Forwarded-Proto untuk HTTPS
+        $middleware->trustProxies(at: '*');
+
         $middleware->alias([
             'can.access' => \App\Http\Middleware\CanAccessApplication::class,
             'sidongan.auth' => \App\Http\Middleware\SidonganAuthenticate::class,

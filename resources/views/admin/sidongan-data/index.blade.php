@@ -219,13 +219,13 @@
     </h3>
     <p style="color:var(--text-muted);margin:0 0 1.5rem 0;font-size:0.9rem">Hapus data yang tidak diperlukan untuk mengoptimalkan sistem</p>
     
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:1rem">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:1rem">
         {{-- Hapus Arsip --}}
         <form method="POST" action="{{ route('admin.sidongan-data.cleanup') }}" class="cleanup-form" data-title="Hapus Semua Surat Arsip" data-message="Semua surat yang sudah diarsipkan akan dihapus permanen beserta file-nya. Tindakan ini tidak dapat dibatalkan!">
             @csrf
             <input type="hidden" name="action" value="delete_archived">
             <input type="hidden" name="confirm" value="1">
-            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#a855f7,#9333ea);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left"
+            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#a855f7,#9333ea);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left;position:relative"
                     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 16px rgba(168,85,247,0.3)'"
                     onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                 <div style="display:flex;align-items:center;gap:0.75rem">
@@ -236,7 +236,7 @@
                         <div style="font-weight:600;margin-bottom:0.25rem">Hapus Arsip</div>
                         <div style="font-size:0.85rem;opacity:0.9">{{ $stats['diarsipkan'] }} surat</div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;flex-shrink:0;margin-right:4px"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </button>
         </form>
@@ -246,7 +246,7 @@
             @csrf
             <input type="hidden" name="action" value="delete_completed">
             <input type="hidden" name="confirm" value="1">
-            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left"
+            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left;position:relative"
                     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 16px rgba(34,197,94,0.3)'"
                     onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                 <div style="display:flex;align-items:center;gap:0.75rem">
@@ -257,7 +257,7 @@
                         <div style="font-weight:600;margin-bottom:0.25rem">Hapus Selesai</div>
                         <div style="font-size:0.85rem;opacity:0.9">{{ $stats['selesai'] }} surat</div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;flex-shrink:0;margin-right:4px"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </button>
         </form>
@@ -267,7 +267,7 @@
             @csrf
             <input type="hidden" name="action" value="delete_all_reports">
             <input type="hidden" name="confirm" value="1">
-            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left"
+            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#3b82f6,#2563eb);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left;position:relative"
                     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 16px rgba(59,130,246,0.3)'"
                     onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                 <div style="display:flex;align-items:center;gap:0.75rem">
@@ -278,7 +278,7 @@
                         <div style="font-weight:600;margin-bottom:0.25rem">Hapus Laporan</div>
                         <div style="font-size:0.85rem;opacity:0.9">{{ $stats['total_laporan'] }} laporan</div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;flex-shrink:0;margin-right:4px"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </button>
         </form>
@@ -288,7 +288,7 @@
             @csrf
             <input type="hidden" name="action" value="delete_all_notifications">
             <input type="hidden" name="confirm" value="1">
-            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left"
+            <button type="submit" style="width:100%;padding:1rem;background:linear-gradient(135deg,#ec4899,#db2777);color:#fff;border:none;border-radius:10px;cursor:pointer;transition:all 0.2s;text-align:left;position:relative"
                     onmouseover="this.style.transform='translateY(-2px)';this.style.boxShadow='0 8px 16px rgba(236,72,153,0.3)'"
                     onmouseout="this.style.transform='translateY(0)';this.style.boxShadow='none'">
                 <div style="display:flex;align-items:center;gap:0.75rem">
@@ -299,7 +299,7 @@
                         <div style="font-weight:600;margin-bottom:0.25rem">Hapus Notifikasi</div>
                         <div style="font-size:0.85rem;opacity:0.9">{{ $stats['total_notifikasi'] }} notifikasi</div>
                     </div>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6"><polyline points="9 18 15 12 9 6"/></svg>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="opacity:0.6;flex-shrink:0;margin-right:4px"><polyline points="9 18 15 12 9 6"/></svg>
                 </div>
             </button>
         </form>
@@ -386,6 +386,13 @@
                     </td>
                     <td style="padding:1rem;color:var(--text-muted);font-size:0.875rem">{{ $doc->creator->name ?? '-' }}</td>
                     <td style="padding:1rem;text-align:right">
+                        <a href="{{ route('admin.sidongan-data.show', $doc->id) }}"
+                        title="Lihat Detail"
+                        style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#3b82f6;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s;text-decoration:none;margin-right:0.25rem"
+                        onmouseover="this.style.background='#eff6ff';this.style.transform='scale(1.1)'"
+                        onmouseout="this.style.background='transparent';this.style.transform='scale(1)'">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        </a>
                         <button type="button" onclick="confirmDelete({{ $doc->id }}, '{{ addslashes($doc->subject) }}')"
                                 title="Hapus Permanen"
                                 style="width:32px;height:32px;display:inline-flex;align-items:center;justify-content:center;background:transparent;color:#ef4444;border-radius:6px;border:none;cursor:pointer;transition:all 0.2s"

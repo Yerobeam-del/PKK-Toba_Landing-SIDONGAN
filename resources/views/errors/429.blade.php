@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Halaman Tidak Ditemukan</title>
+    <title>429 - Too Many Requests</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -71,11 +71,11 @@
             50% { transform: translateY(-10px); }
         }
 
-        .ghost-icon {
+        .rate-icon {
             width: 72px;
             height: 72px;
             margin: 0 auto 1.25rem;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -83,18 +83,18 @@
             animation: pulseGlow 2.5s infinite;
         }
         @keyframes pulseGlow {
-            0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
-            70% { box-shadow: 0 0 0 18px rgba(245, 158, 11, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 18px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
         }
-        .ghost-icon svg { width: 36px; height: 36px; color: #ffffff; }
+        .rate-icon svg { width: 36px; height: 36px; color: #ffffff; }
 
         .error-code {
             font-size: 3.2rem;
             font-weight: 800;
             margin-bottom: 0.25rem;
             letter-spacing: -2px;
-            background: linear-gradient(135deg, #f59e0b, #d97706);
+            background: linear-gradient(135deg, #ef4444, #dc2626);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
@@ -162,18 +162,18 @@
     <div class="cloud c4"></div>
     
     <div class="container">
-        <div class="ghost-icon">
+        <div class="rate-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
+                <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"></path>
             </svg>
         </div>
         
-        <div class="error-code">404</div>
+        <div class="error-code">429</div>
         
         <div class="message">
-            <span class="dynamic-msg">Oops! Halaman yang Anda cari tidak ditemukan</span>
-            Mungkin tautannya sudah kadaluarsa atau halaman tersebut telah dihapus.<br>
-            Silahkan kembali ke halaman sebelumnya untuk melanjutkan.
+            <span class="dynamic-msg">Terlalu Banyak Permintaan</span>
+            Anda melakukan terlalu banyak permintaan. Silakan tunggu beberapa saat sebelum mencoba lagi.<br>
+            Ini adalah batasan keamanan untuk melindungi sistem.
         </div>
         
         <button onclick="history.back()" class="btn">
@@ -191,7 +191,6 @@
     </div>
     
     <script>
-        // Fallback jika tidak ada history
         if (window.history.length <= 1) {
             document.querySelector('.btn').onclick = function() {
                 window.location.href = '/';

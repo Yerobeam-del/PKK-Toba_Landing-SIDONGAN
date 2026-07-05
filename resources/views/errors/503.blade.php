@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>404 - Halaman Tidak Ditemukan</title>
+    <title>503 - Service Unavailable</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -71,7 +71,7 @@
             50% { transform: translateY(-10px); }
         }
 
-        .ghost-icon {
+        .maintenance-icon {
             width: 72px;
             height: 72px;
             margin: 0 auto 1.25rem;
@@ -87,7 +87,7 @@
             70% { box-shadow: 0 0 0 18px rgba(245, 158, 11, 0); }
             100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
         }
-        .ghost-icon svg { width: 36px; height: 36px; color: #ffffff; }
+        .maintenance-icon svg { width: 36px; height: 36px; color: #ffffff; }
 
         .error-code {
             font-size: 3.2rem;
@@ -162,18 +162,18 @@
     <div class="cloud c4"></div>
     
     <div class="container">
-        <div class="ghost-icon">
+        <div class="maintenance-icon">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M9 10h.01"/><path d="M15 10h.01"/><path d="M12 2a8 8 0 0 0-8 8v12l3-3 2.5 2.5L12 19l2.5 2.5L17 19l3 3V10a8 8 0 0 0-8-8z"/>
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
             </svg>
         </div>
         
-        <div class="error-code">404</div>
+        <div class="error-code">503</div>
         
         <div class="message">
-            <span class="dynamic-msg">Oops! Halaman yang Anda cari tidak ditemukan</span>
-            Mungkin tautannya sudah kadaluarsa atau halaman tersebut telah dihapus.<br>
-            Silahkan kembali ke halaman sebelumnya untuk melanjutkan.
+            <span class="dynamic-msg">Service Unavailable</span>
+            Sistem sedang dalam pemeliharaan. Kami akan segera kembali.<br>
+            Silakan coba lagi beberapa saat atau hubungi administrator.
         </div>
         
         <button onclick="history.back()" class="btn">
@@ -191,7 +191,6 @@
     </div>
     
     <script>
-        // Fallback jika tidak ada history
         if (window.history.length <= 1) {
             document.querySelector('.btn').onclick = function() {
                 window.location.href = '/';

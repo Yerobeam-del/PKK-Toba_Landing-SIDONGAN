@@ -31,6 +31,19 @@
     if (is_array($disposisiData) && isset($disposisiData['target_roles']) && $document->status === 'berjalan') {
         $userReceivedDisposisi = in_array($currentUser->sidongan_role, $disposisiData['target_roles']);
     }
+
+    $userReport = null;
+    $canLaporKegiatan = false;
+
+    if ($userReceivedDisposisi) {
+        $userReport = \App\Models\ActivityReport::where('document_id', $document->id)
+            ->where('created_by', $currentUser->id)
+            ->first();
+        
+        if (!$userReport || $userReport->status === 'ditolak') {
+            $canLaporKegiatan = true;
+        }
+    }
 @endphp
 
 <link rel="stylesheet" href="{{ asset('assets/sidongan/css/detail-surat.css') }}">
@@ -45,40 +58,95 @@
             </div>
             
             <div class="ds-header-actions">
-                <button onclick="window.history.back()" class="ds-btn ds-btn-back" type="button">
+                @php
+                    // Ambil URL kembali dari session
+                    $backUrl = session('document_back_url');
+                    
+                    // Validasi dan fallback
+                    if (!$backUrl || 
+                        str_contains($backUrl, '/disposisi/form') || 
+                        str_contains($backUrl, '/disposisi-print') ||
+                        str_contains($backUrl, '/create') ||
+                        str_contains($backUrl, '/edit')) {
+                        // Gunakan parameter 'from' dari URL jika ada
+                        if (request('from') && 
+                            !str_contains(request('from'), '/disposisi/form') &&
+                            !str_contains(request('from'), '/disposisi-print')) {
+                            $backUrl = request('from');
+                        } else {
+                            // Fallback ke daftar surat
+                            $backUrl = route('sidongan.documents.index');
+                        }
+                    }
+                @endphp
+
+                <a href="{{ $backUrl }}" class="ds-btn ds-btn-back">
                     <i class="fas fa-arrow-left"></i>
                     <span>Kembali</span>
-                </button>
+                </a>
                 
                 @if($currentUser && $currentUser->hasSidonganRole('sekretaris') && $document->status === 'menunggu_disposisi')
-                <a href="{{ route('sidongan.documents.edit', $document) }}" class="ds-btn ds-btn-edit">
+                <a href="{{ route('sidongan.documents.edit', $document) }}?from={{ urlencode(url()->current()) }}" class="ds-btn ds-btn-edit">
                     <i class="fas fa-edit"></i>
                     <span>Edit Surat</span>
                 </a>
                 @endif
                 
                 @if($currentUser && $currentUser->hasSidonganRole('ketua') && $document->status === 'menunggu_disposisi')
-                <a href="{{ route('sidongan.disposisi.form', $document) }}" class="ds-btn ds-btn-disposisi">
+                <a href="{{ route('sidongan.disposisi.form', $document) }}?from={{ urlencode(url()->current()) }}" class="ds-btn ds-btn-disposisi">
                     <i class="fas fa-paper-plane"></i>
                     <span>Disposisi</span>
                 </a>
                 @endif
 
                 @if(is_array($disposisiData) && isset($disposisiData['action']) && ($currentUser->hasSidonganRole('sekretaris') || $currentUser->hasSidonganRole('ketua')))
-                <a href="{{ route('sidongan.documents.disposisi-print', $document) }}" class="ds-btn ds-btn-print">
+                <a href="{{ route('sidongan.documents.disposisi-print', $document) }}?from={{ urlencode(url()->current()) }}" class="ds-btn ds-btn-print">
                     <i class="fas fa-print"></i>
                     <span>Cetak Disposisi</span>
                 </a>
                 @endif
 
-                @if($userReceivedDisposisi)
-                <a href="{{ route('sidongan.lapor_kegiatan.create', ['document_id' => $document->id]) }}" class="ds-btn ds-btn-lapor">
+                @if($canLaporKegiatan)
+                <a href="{{ route('sidongan.lapor_kegiatan.create', ['document_id' => $document->id]) }}?from={{ urlencode(url()->current()) }}" class="ds-btn ds-btn-lapor">
                     <i class="fas fa-clipboard-list"></i>
                     <span>Lapor Kegiatan</span>
                 </a>
                 @endif
 
-                @if($currentUser && $currentUser->hasSidonganRole('sekretaris') && $document->status === 'selesai')
+                @php
+                    $canArchive = false;
+                    if ($document->status === 'selesai') {
+                        $dispoData = is_string($document->disposisi_data) 
+                            ? json_decode($document->disposisi_data, true) 
+                            : $document->disposisi_data;
+                        
+                        if (isset($dispoData['target_roles'])) {
+                            $targetRoles = $dispoData['target_roles'];
+                            $targetUsers = \App\Models\User::whereIn('sidongan_role', $targetRoles)->get();
+                            
+                            if ($targetUsers->isEmpty()) {
+                                $canArchive = true;
+                            } else {
+                                $allReported = true;
+                                foreach ($targetUsers as $targetUser) {
+                                    $report = $document->activityReports()
+                                        ->where('created_by', $targetUser->id)
+                                        ->first();
+                                    
+                                    if (!$report || !in_array($report->status, ['disetujui', 'ditolak'])) {
+                                        $allReported = false;
+                                        break;
+                                    }
+                                }
+                                $canArchive = $allReported;
+                            }
+                        } else {
+                            $canArchive = true;
+                        }
+                    }
+                @endphp
+
+                @if($currentUser && $currentUser->hasSidonganRole('sekretaris') && $canArchive)
                 <form action="{{ route('sidongan.documents.archive', $document) }}" method="POST" style="display: inline;" onsubmit="return confirm('Apakah Anda yakin ingin mengarsipkan surat ini?\n\nSurat yang sudah diarsipkan akan dipindahkan ke arsip dan tidak akan muncul di daftar surat aktif.')">
                     @csrf
                     @method('PATCH')
@@ -246,7 +314,7 @@
                         }
                     @endphp
                     Didisposisikan oleh <strong>{{ $disposedBy->name ?? 'Ketua PKK' }}</strong> pada 
-                    {{ isset($dispo['disposed_at']) ? \Carbon\Carbon::parse($dispo['disposed_at'])->locale('id')->translatedFormat('d M Y, H.i') : $document->updated_at->locale('id')->translatedFormat('d M Y, H.i') }}
+                    {{ isset($dispo['disposed_at']) ? \Carbon\Carbon::parse($dispo['disposed_at'])->locale('id')->translatedFormat('d F Y, H.i') : $document->updated_at->locale('id')->translatedFormat('d F Y, H.i') }}
                 </div>
             </div>
         </div>
@@ -310,7 +378,7 @@
                                         </span>
                                     @endif
                                 </p>
-                                <p class="ds-laporan-date">{{ $report->created_at->locale('id')->translatedFormat('d M Y, H.i') }}</p>
+                                <p class="ds-laporan-date">{{ $report->created_at->locale('id')->translatedFormat('d F Y, H.i') }}</p>
                             </div>
                         </div>
                         <span class="ds-laporan-status-badge">{{ $statusLabel }}</span>
@@ -321,7 +389,7 @@
                             <span class="ds-laporan-info-label">Tanggal Kegiatan:</span>
                             <p class="ds-laporan-info-value">
                                 @if($report->kegiatan_tanggal)
-                                    {{ \Carbon\Carbon::parse($report->kegiatan_tanggal)->locale('id')->translatedFormat('d M Y') }}
+                                    {{ \Carbon\Carbon::parse($report->kegiatan_tanggal)->locale('id')->translatedFormat('d F Y') }}
                                 @else
                                     <span style="color: #94a3b8; font-style: italic;">-</span>
                                 @endif
@@ -414,154 +482,81 @@
                     $reports = $activityReports ?? collect();
                     $hasDisposisi = !empty($document->disposisi_data);
                     
-                    $totalItems = 1;
-                    if ($hasDisposisi) $totalItems++;
-                    foreach ($reports as $r) {
-                        $totalItems++;
-                        if (in_array($r->status ?? '', ['disetujui', 'ditolak'])) {
-                            $totalItems++;
+                    $timelineEvents = [];
+                    
+                    // 1. Surat Dibuat
+                    $timelineEvents[] = [
+                        'type' => 'created',
+                        'timestamp' => \Carbon\Carbon::parse($document->created_at),
+                        'data' => $document,
+                    ];
+                    
+                    // 2. Disposisi
+                    if ($hasDisposisi) {
+                        $disposedAt = isset($dispo['disposed_at']) 
+                            ? \Carbon\Carbon::parse($dispo['disposed_at']) 
+                            : \Carbon\Carbon::parse($document->updated_at);
+                        
+                        $timelineEvents[] = [
+                            'type' => 'disposisi',
+                            'timestamp' => $disposedAt,
+                            'data' => $dispo,
+                        ];
+                    }
+                    
+                    // 3. Laporan Kegiatan & Verifikasi
+                    foreach ($reports as $report) {
+                        $timelineEvents[] = [
+                            'type' => 'laporan',
+                            'timestamp' => \Carbon\Carbon::parse($report->created_at),
+                            'data' => $report,
+                            'subtype' => 'create',
+                        ];
+                        
+                        if (in_array($report->status ?? '', ['disetujui', 'ditolak'])) {
+                            $verifAt = $report->verified_at 
+                                ? \Carbon\Carbon::parse($report->verified_at) 
+                                : \Carbon\Carbon::parse($report->updated_at);
+                            
+                            $timelineEvents[] = [
+                                'type' => 'laporan',
+                                'timestamp' => $verifAt,
+                                'data' => $report,
+                                'subtype' => 'verify',
+                            ];
                         }
                     }
+                    
+                    // 4. ✅ PENGARSIPAN (BARU!)
+                    if ($document->status === 'diarsipkan') {
+                        $archivedAt = $document->updated_at;
+                        
+                        $timelineEvents[] = [
+                            'type' => 'archive',
+                            'timestamp' => $archivedAt,
+                            'data' => $document,
+                        ];
+                    }
+                    
+                    usort($timelineEvents, function($a, $b) {
+                        return $a['timestamp']->timestamp <=> $b['timestamp']->timestamp;
+                    });
+                    
+                    $totalItems = count($timelineEvents);
                     $currentItem = 0;
                 @endphp
                 
-                {{-- Timeline Item 1: Sekretaris Upload --}}
-                @php $currentItem++; @endphp
-                <div class="ds-timeline-item">
-                    <div class="ds-timeline-icon-col">
-                        <div class="ds-timeline-icon ds-timeline-icon-blue">
-                            @if($document->creator && $document->creator->avatar && file_exists(public_path('storage/' . $document->creator->avatar)))
-                                <img src="{{ asset('storage/' . $document->creator->avatar) }}" alt="{{ $document->creator->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                            @else
-                                <i class="fas fa-user"></i>
-                            @endif
-                        </div>
-                        @if($currentItem < $totalItems)
-                            <div class="ds-timeline-line" style="background: #e2e8f0;"></div>
-                        @endif
-                    </div>
-                    <div class="ds-timeline-content">
-                        <div class="ds-timeline-header">
-                            <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                <h4 class="ds-timeline-title" style="margin: 0;">{{ $document->creator->name ?? 'Sekretaris PKK' }}</h4>
-                                @if($document->creator && $document->creator->sidongan_role)
-                                    @php
-                                        $roleLabels = [
-                                            'ketua' => 'Ketua PKK',
-                                            'sekretaris' => 'Sekretaris PKK',
-                                            'bendahara' => 'Bendahara PKK',
-                                            'staf_ahli_1' => 'Staf Ahli I',
-                                            'staf_ahli_2' => 'Staf Ahli II',
-                                            'pengurus_1' => 'Ketua Pengurus I',
-                                            'pengurus_2' => 'Ketua Pengurus II',
-                                            'pengurus_3' => 'Ketua Pengurus III',
-                                            'pengurus_4' => 'Ketua Pengurus IV',
-                                        ];
-                                        $roleLabel = $roleLabels[$document->creator->sidongan_role] ?? ucfirst(str_replace('_', ' ', $document->creator->sidongan_role));
-                                    @endphp
-                                    <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
-                                @endif
-                            </div>
-                            <span class="ds-timeline-date">{{ $document->created_at->locale('id')->translatedFormat('d M Y, H.i') }}</span>
-                        </div>
-                        <p class="ds-timeline-desc">
-                            Membuat agenda dan mengupload surat dari {{ $document->sender ?? 'Pengirim' }}
-                        </p>
-                    </div>
-                </div>
-
-                {{-- Timeline Item 2: Disposisi --}}
-                @if($hasDisposisi)
+                @foreach($timelineEvents as $event)
                     @php $currentItem++; @endphp
-                    <div class="ds-timeline-item">
-                        <div class="ds-timeline-icon-col">
-                            <div class="ds-timeline-icon ds-timeline-icon-orange">
-                                @php
-                                    $disposedByUser = null;
-                                    if (isset($dispo['disposed_by'])) {
-                                        $disposedByUser = \App\Models\User::find($dispo['disposed_by']);
-                                    }
-                                @endphp
-                                @if($disposedByUser && $disposedByUser->avatar && file_exists(public_path('storage/' . $disposedByUser->avatar)))
-                                    <img src="{{ asset('storage/' . $disposedByUser->avatar) }}" alt="{{ $disposedByUser->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
-                                @else
-                                    <i class="fas fa-share-alt"></i>
-                                @endif
-                            </div>
-                            @if($currentItem < $totalItems)
-                                <div class="ds-timeline-line" style="background: #e2e8f0;"></div>
-                            @endif
-                        </div>
-                        <div class="ds-timeline-content">
-                            <div class="ds-timeline-header">
-                                <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                    <h4 class="ds-timeline-title" style="margin: 0;">{{ $disposedByUser->name ?? 'Ketua PKK' }}</h4>
-                                    @if($disposedByUser && $disposedByUser->sidongan_role)
-                                        @php
-                                            $roleLabels = [
-                                                'ketua' => 'Ketua PKK',
-                                                'sekretaris' => 'Sekretaris PKK',
-                                                'bendahara' => 'Bendahara PKK',
-                                                'staf_ahli_1' => 'Staf Ahli I',
-                                                'staf_ahli_2' => 'Staf Ahli II',
-                                                'pengurus_1' => 'Ketua Pengurus I',
-                                                'pengurus_2' => 'Ketua Pengurus II',
-                                                'pengurus_3' => 'Ketua Pengurus III',
-                                                'pengurus_4' => 'Ketua Pengurus IV',
-                                            ];
-                                            $roleLabel = $roleLabels[$disposedByUser->sidongan_role] ?? ucfirst(str_replace('_', ' ', $disposedByUser->sidongan_role));
-                                        @endphp
-                                        <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
-                                    @endif
-                                </div>
-                                <span class="ds-timeline-date">
-                                    {{ isset($dispo['disposed_at']) ? \Carbon\Carbon::parse($dispo['disposed_at'])->locale('id')->translatedFormat('d M Y, H:i') : '-' }}
-                                </span>
-                            </div>
-                            <p class="ds-timeline-desc">
-                                Melakukan disposisi kepada:
-                                @if(isset($dispo['target_roles']))
-                                    @foreach($dispo['target_roles'] as $role)
-                                        <span class="ds-timeline-role-badge">
-                                            {{ $rolesMap[$role] ?? ucfirst(str_replace('_', ' ', $role)) }}
-                                        </span>
-                                    @endforeach
-                                @endif
-                            </p>
-                            @if(isset($dispo['comment']) && $dispo['comment'])
-                            <p class="ds-timeline-quote">"{{ $dispo['comment'] }}"</p>
-                            @endif
-                        </div>
-                    </div>
-                @endif
-
-                {{-- Timeline 3: Laporan Kegiatan + Verifikasi --}}
-                @forelse($reports as $report)
-                    @php
-                        $currentItem++;
-                        $isVerified = in_array($report->status ?? '', ['disetujui', 'ditolak']);
-                        $verifStatus = $report->status ?? null;
-                        $verifColor = $verifStatus === 'disetujui' ? '#10b981' : '#ef4444';
-                        $verifIcon = $verifStatus === 'disetujui' ? 'check' : 'times';
-                        $verifComment = $report->catatan_verifikasi ?? null;
-                        $verifAt = $report->verified_at ?? $report->updated_at;
-                        
-                        $timelineLokasiParts = [];
-                        if ($report->kelurahan) $timelineLokasiParts[] = $report->kelurahan;
-                        if ($report->kecamatan) $timelineLokasiParts[] = $report->kecamatan;
-                        if ($report->kabupaten) $timelineLokasiParts[] = $report->kabupaten;
-                        if ($report->provinsi) $timelineLokasiParts[] = $report->provinsi;
-                        $timelineLokasi = implode(', ', $timelineLokasiParts);
-                    @endphp
-
-                        {{-- Laporan --}}
+                    
+                    @if($event['type'] === 'created')
                         <div class="ds-timeline-item">
                             <div class="ds-timeline-icon-col">
-                                <div class="ds-timeline-icon ds-timeline-icon-green">
-                                    @if($report->creator && $report->creator->avatar && file_exists(public_path('storage/' . $report->creator->avatar)))
-                                        <img src="{{ asset('storage/' . $report->creator->avatar) }}" alt="{{ $report->creator->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                <div class="ds-timeline-icon ds-timeline-icon-blue">
+                                    @if($document->creator && $document->creator->avatar && file_exists(public_path('storage/' . $document->creator->avatar)))
+                                        <img src="{{ asset('storage/' . $document->creator->avatar) }}" alt="{{ $document->creator->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                     @else
-                                        <i class="fas fa-clipboard-list"></i>
+                                        <i class="fas fa-user"></i>
                                     @endif
                                 </div>
                                 @if($currentItem < $totalItems)
@@ -571,10 +566,8 @@
                             <div class="ds-timeline-content">
                                 <div class="ds-timeline-header">
                                     <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
-                                        <h4 class="ds-timeline-title" style="margin: 0;">
-                                            {{ $report->creator->name ?? 'Sekretaris PKK' }}
-                                        </h4>
-                                        @if($report->creator && $report->creator->sidongan_role)
+                                        <h4 class="ds-timeline-title" style="margin: 0;">{{ $document->creator->name ?? 'Sekretaris PKK' }}</h4>
+                                        @if($document->creator && $document->creator->sidongan_role)
                                             @php
                                                 $roleLabels = [
                                                     'ketua' => 'Ketua PKK',
@@ -587,50 +580,204 @@
                                                     'pengurus_3' => 'Ketua Pengurus III',
                                                     'pengurus_4' => 'Ketua Pengurus IV',
                                                 ];
-                                                $roleLabel = $roleLabels[$report->creator->sidongan_role] ?? ucfirst(str_replace('_', ' ', $report->creator->sidongan_role));
+                                                $roleLabel = $roleLabels[$document->creator->sidongan_role] ?? ucfirst(str_replace('_', ' ', $document->creator->sidongan_role));
+                                            @endphp
+                                            <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
+                                        @endif
+                                    </div>
+                                    <span class="ds-timeline-date">{{ $event['timestamp']->locale('id')->translatedFormat('d F Y, H:i') }}</span>
+                                </div>
+                                <p class="ds-timeline-desc">
+                                    Membuat agenda dan mengupload surat dari {{ $document->sender ?? 'Pengirim' }}
+                                </p>
+                            </div>
+                        </div>
+                    
+                    @elseif($event['type'] === 'disposisi')
+                        <div class="ds-timeline-item">
+                            <div class="ds-timeline-icon-col">
+                                <div class="ds-timeline-icon ds-timeline-icon-orange">
+                                    @php
+                                        $disposedByUser = null;
+                                        if (isset($event['data']['disposed_by'])) {
+                                            $disposedByUser = \App\Models\User::find($event['data']['disposed_by']);
+                                        }
+                                    @endphp
+                                    @if($disposedByUser && $disposedByUser->avatar && file_exists(public_path('storage/' . $disposedByUser->avatar)))
+                                        <img src="{{ asset('storage/' . $disposedByUser->avatar) }}" alt="{{ $disposedByUser->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    @else
+                                        <i class="fas fa-share-alt"></i>
+                                    @endif
+                                </div>
+                                @if($currentItem < $totalItems)
+                                    <div class="ds-timeline-line" style="background: #e2e8f0;"></div>
+                                @endif
+                            </div>
+                            <div class="ds-timeline-content">
+                                <div class="ds-timeline-header">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h4 class="ds-timeline-title" style="margin: 0;">{{ $disposedByUser->name ?? 'Ketua PKK' }}</h4>
+                                        @if($disposedByUser && $disposedByUser->sidongan_role)
+                                            @php
+                                                $roleLabels = [
+                                                    'ketua' => 'Ketua PKK',
+                                                    'sekretaris' => 'Sekretaris PKK',
+                                                    'bendahara' => 'Bendahara PKK',
+                                                    'staf_ahli_1' => 'Staf Ahli I',
+                                                    'staf_ahli_2' => 'Staf Ahli II',
+                                                    'pengurus_1' => 'Ketua Pengurus I',
+                                                    'pengurus_2' => 'Ketua Pengurus II',
+                                                    'pengurus_3' => 'Ketua Pengurus III',
+                                                    'pengurus_4' => 'Ketua Pengurus IV',
+                                                ];
+                                                $roleLabel = $roleLabels[$disposedByUser->sidongan_role] ?? ucfirst(str_replace('_', ' ', $disposedByUser->sidongan_role));
                                             @endphp
                                             <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
                                         @endif
                                     </div>
                                     <span class="ds-timeline-date">
-                                        {{ $report->created_at->locale('id')->translatedFormat('d M Y, H:i') }}
+                                        {{ $event['timestamp']->locale('id')->translatedFormat('d F Y, H:i') }}
                                     </span>
                                 </div>
                                 <p class="ds-timeline-desc">
-                                    Membuat laporan kegiatan: <strong>{{ $report->kegiatan_nama }}</strong>
+                                    Melakukan disposisi kepada:
+                                    @if(isset($event['data']['target_roles']))
+                                        @foreach($event['data']['target_roles'] as $role)
+                                            <span class="ds-timeline-role-badge">
+                                                {{ $rolesMap[$role] ?? ucfirst(str_replace('_', ' ', $role)) }}
+                                            </span>
+                                        @endforeach
+                                    @endif
                                 </p>
-                                @if($timelineLokasi)
-                                <p class="ds-timeline-meta">
-                                    <i class="fas fa-map-marker-alt"></i>
-                                    {{ $timelineLokasi }}
-                                </p>
-                                @endif
-                                @if($report->alamat_lengkap)
-                                <p class="ds-timeline-meta">
-                                    <i class="fas fa-location-arrow"></i>
-                                    {{ Str::limit($report->alamat_lengkap, 80) }}
-                                </p>
+                                @if(isset($event['data']['comment']) && $event['data']['comment'])
+                                <p class="ds-timeline-quote">"{{ $event['data']['comment'] }}"</p>
                                 @endif
                             </div>
                         </div>
-
-                    {{-- Verifikasi --}}
-                    @if($isVerified)
-                        @php $currentItem++; @endphp
+                    
+                    @elseif($event['type'] === 'laporan')
+                        @php
+                            $report = $event['data'];
+                            $isVerified = $event['subtype'] === 'verify';
+                            $verifStatus = $report->status ?? null;
+                            $verifColor = $verifStatus === 'disetujui' ? '#10b981' : '#ef4444';
+                            $verifIcon = $verifStatus === 'disetujui' ? 'check' : 'times';
+                            $verifComment = $report->catatan_verifikasi ?? null;
+                            
+                            $timelineLokasiParts = [];
+                            if ($report->kelurahan) $timelineLokasiParts[] = $report->kelurahan;
+                            if ($report->kecamatan) $timelineLokasiParts[] = $report->kecamatan;
+                            if ($report->kabupaten) $timelineLokasiParts[] = $report->kabupaten;
+                            if ($report->provinsi) $timelineLokasiParts[] = $report->provinsi;
+                            $timelineLokasi = implode(', ', $timelineLokasiParts);
+                        @endphp
+                        
+                        @if(!$isVerified)
+                            <div class="ds-timeline-item">
+                                <div class="ds-timeline-icon-col">
+                                    <div class="ds-timeline-icon ds-timeline-icon-green">
+                                        @if($report->creator && $report->creator->avatar && file_exists(public_path('storage/' . $report->creator->avatar)))
+                                            <img src="{{ asset('storage/' . $report->creator->avatar) }}" alt="{{ $report->creator->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                        @else
+                                            <i class="fas fa-clipboard-list"></i>
+                                        @endif
+                                    </div>
+                                    @if($currentItem < $totalItems)
+                                        <div class="ds-timeline-line" style="background: #e2e8f0;"></div>
+                                    @endif
+                                </div>
+                                <div class="ds-timeline-content">
+                                    <div class="ds-timeline-header">
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                            <h4 class="ds-timeline-title" style="margin: 0;">
+                                                {{ $report->creator->name ?? 'Sekretaris PKK' }}
+                                            </h4>
+                                            @if($report->creator && $report->creator->sidongan_role)
+                                                @php
+                                                    $roleLabels = [
+                                                        'ketua' => 'Ketua PKK',
+                                                        'sekretaris' => 'Sekretaris PKK',
+                                                        'bendahara' => 'Bendahara PKK',
+                                                        'staf_ahli_1' => 'Staf Ahli I',
+                                                        'staf_ahli_2' => 'Staf Ahli II',
+                                                        'pengurus_1' => 'Ketua Pengurus I',
+                                                        'pengurus_2' => 'Ketua Pengurus II',
+                                                        'pengurus_3' => 'Ketua Pengurus III',
+                                                        'pengurus_4' => 'Ketua Pengurus IV',
+                                                    ];
+                                                    $roleLabel = $roleLabels[$report->creator->sidongan_role] ?? ucfirst(str_replace('_', ' ', $report->creator->sidongan_role));
+                                                @endphp
+                                                <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
+                                            @endif
+                                        </div>
+                                        <span class="ds-timeline-date">
+                                            {{ $event['timestamp']->locale('id')->translatedFormat('d F Y, H:i') }}
+                                        </span>
+                                    </div>
+                                    <p class="ds-timeline-desc">
+                                        Membuat laporan kegiatan: <strong>{{ $report->kegiatan_nama }}</strong>
+                                    </p>
+                                    @if($timelineLokasi)
+                                    <p class="ds-timeline-meta">
+                                        <i class="fas fa-map-marker-alt"></i>
+                                        {{ $timelineLokasi }}
+                                    </p>
+                                    @endif
+                                    @if($report->alamat_lengkap)
+                                    <p class="ds-timeline-meta">
+                                        <i class="fas fa-location-arrow"></i>
+                                        {{ Str::limit($report->alamat_lengkap, 80) }}
+                                    </p>
+                                    @endif
+                                </div>
+                            </div>
+                    @else
+                        {{-- ✅ VERIFIKASI DENGAN FOTO PROFIL DAN INFO LAPORAN YANG JELAS --}}
                         <div class="ds-timeline-item">
                             <div class="ds-timeline-icon-col">
                                 <div class="ds-timeline-icon" style="background: {{ $verifColor }}; box-shadow: 0 0 0 4px {{ $verifColor }}30;">
-                                    <i class="fas fa-{{ $verifIcon }}"></i>
+                                    @php
+                                        $verifier = null;
+                                        if ($report->verified_by) {
+                                            $verifier = \App\Models\User::find($report->verified_by);
+                                        }
+                                    @endphp
+                                    @if($verifier && $verifier->avatar && file_exists(public_path('storage/' . $verifier->avatar)))
+                                        <img src="{{ asset('storage/' . $verifier->avatar) }}" alt="{{ $verifier->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    @else
+                                        <i class="fas fa-{{ $verifIcon }}"></i>
+                                    @endif
                                 </div>
                                 @if($currentItem < $totalItems)
-                                    <div style="width: 3px; height: 2.5rem; background: #e2e8f0;"></div>
+                                    <div class="ds-timeline-line" style="background: #e2e8f0;"></div>
                                 @endif
                             </div>
                             <div class="ds-timeline-content">
                                 <div class="ds-timeline-header">
-                                    <h4 class="ds-timeline-title">Ketua PKK</h4>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h4 class="ds-timeline-title" style="margin: 0;">
+                                            {{ $verifier->name ?? 'Ketua PKK' }}
+                                        </h4>
+                                        @if($verifier && $verifier->sidongan_role)
+                                            @php
+                                                $roleLabels = [
+                                                    'ketua' => 'Ketua PKK',
+                                                    'sekretaris' => 'Sekretaris PKK',
+                                                    'bendahara' => 'Bendahara PKK',
+                                                    'staf_ahli_1' => 'Staf Ahli I',
+                                                    'staf_ahli_2' => 'Staf Ahli II',
+                                                    'pengurus_1' => 'Ketua Pengurus I',
+                                                    'pengurus_2' => 'Ketua Pengurus II',
+                                                    'pengurus_3' => 'Ketua Pengurus III',
+                                                    'pengurus_4' => 'Ketua Pengurus IV',
+                                                ];
+                                                $roleLabel = $roleLabels[$verifier->sidongan_role] ?? ucfirst(str_replace('_', ' ', $verifier->sidongan_role));
+                                            @endphp
+                                            <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
+                                        @endif
+                                    </div>
                                     <span class="ds-timeline-date">
-                                        {{ \Carbon\Carbon::parse($verifAt)->locale('id')->translatedFormat('d M Y, H:i') }}
+                                        {{ $event['timestamp']->locale('id')->translatedFormat('d F Y, H:i') }}
                                     </span>
                                 </div>
                                 
@@ -638,18 +785,50 @@
                                     <p class="ds-timeline-desc">
                                         <span class="ds-timeline-verif-badge ds-timeline-verif-badge-success">
                                             <i class="fas fa-check-circle"></i>
-                                            Menyetujui
+                                            Menyetujui laporan dari <strong>{{ $report->creator->name ?? 'Unknown' }}</strong>
                                         </span>
-                                        Laporan kegiatan: <strong>{{ $report->kegiatan_nama }}</strong>
                                     </p>
+                                    <div style="background: #f0fdf4; border-left: 3px solid #10b981; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-top: 0.75rem;">
+                                        <p style="font-size: 0.9rem; color: #065f46; margin: 0 0 0.5rem 0;">
+                                            <strong>Kegiatan:</strong> {{ $report->kegiatan_nama }}
+                                        </p>
+                                        @if($report->kegiatan_tanggal)
+                                        <p style="font-size: 0.85rem; color: #065f46; margin: 0 0 0.25rem 0;">
+                                            <i class="fas fa-calendar" style="margin-right: 0.35rem;"></i>
+                                            {{ \Carbon\Carbon::parse($report->kegiatan_tanggal)->locale('id')->translatedFormat('d F Y') }}
+                                        </p>
+                                        @endif
+                                        @if($report->start_time && $report->end_time)
+                                        <p style="font-size: 0.85rem; color: #065f46; margin: 0;">
+                                            <i class="fas fa-clock" style="margin-right: 0.35rem;"></i>
+                                            {{ \Carbon\Carbon::parse($report->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($report->end_time)->format('H:i') }}
+                                        </p>
+                                        @endif
+                                    </div>
                                 @elseif($verifStatus === 'ditolak')
                                     <p class="ds-timeline-desc">
                                         <span class="ds-timeline-verif-badge ds-timeline-verif-badge-danger">
                                             <i class="fas fa-times-circle"></i>
-                                            Menolak
+                                            Menolak laporan dari <strong>{{ $report->creator->name ?? 'Unknown' }}</strong>
                                         </span>
-                                        Laporan kegiatan: <strong>{{ $report->kegiatan_nama }}</strong>
                                     </p>
+                                    <div style="background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-top: 0.75rem;">
+                                        <p style="font-size: 0.9rem; color: #991b1b; margin: 0 0 0.5rem 0;">
+                                            <strong>Kegiatan:</strong> {{ $report->kegiatan_nama }}
+                                        </p>
+                                        @if($report->kegiatan_tanggal)
+                                        <p style="font-size: 0.85rem; color: #991b1b; margin: 0 0 0.25rem 0;">
+                                            <i class="fas fa-calendar" style="margin-right: 0.35rem;"></i>
+                                            {{ \Carbon\Carbon::parse($report->kegiatan_tanggal)->locale('id')->translatedFormat('d F Y') }}
+                                        </p>
+                                        @endif
+                                        @if($report->start_time && $report->end_time)
+                                        <p style="font-size: 0.85rem; color: #991b1b; margin: 0;">
+                                            <i class="fas fa-clock" style="margin-right: 0.35rem;"></i>
+                                            {{ \Carbon\Carbon::parse($report->start_time)->format('H:i') }} - {{ \Carbon\Carbon::parse($report->end_time)->format('H:i') }}
+                                        </p>
+                                        @endif
+                                    </div>
                                 @endif
                                 
                                 @if($verifComment)
@@ -660,16 +839,59 @@
                             </div>
                         </div>
                     @endif
-                @empty
-                    @if($hasDisposisi && $currentItem < $totalItems)
-                    <div class="ds-timeline-item">
-                        <div class="ds-timeline-icon-col">
-                            <div style="width: 3px; height: 2.5rem; background: linear-gradient(to bottom, #f97316, transparent);"></div>
+                    
+                    @elseif($event['type'] === 'archive')
+                        {{-- ✅ PENGARSIPAN SURAT --}}
+                        <div class="ds-timeline-item">
+                            <div class="ds-timeline-icon-col">
+                                <div class="ds-timeline-icon ds-timeline-icon-purple">
+                                    @if($document->creator && $document->creator->avatar && file_exists(public_path('storage/' . $document->creator->avatar)))
+                                        <img src="{{ asset('storage/' . $document->creator->avatar) }}" alt="{{ $document->creator->name }}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
+                                    @else
+                                        <i class="fas fa-archive"></i>
+                                    @endif
+                                </div>
+                                @if($currentItem < $totalItems)
+                                    <div class="ds-timeline-line" style="background: #e2e8f0;"></div>
+                                @endif
+                            </div>
+                            <div class="ds-timeline-content">
+                                <div class="ds-timeline-header">
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap;">
+                                        <h4 class="ds-timeline-title" style="margin: 0;">{{ $document->creator->name ?? 'Sekretaris PKK' }}</h4>
+                                        @if($document->creator && $document->creator->sidongan_role)
+                                            @php
+                                                $roleLabels = [
+                                                    'ketua' => 'Ketua PKK',
+                                                    'sekretaris' => 'Sekretaris PKK',
+                                                    'bendahara' => 'Bendahara PKK',
+                                                    'staf_ahli_1' => 'Staf Ahli I',
+                                                    'staf_ahli_2' => 'Staf Ahli II',
+                                                    'pengurus_1' => 'Ketua Pengurus I',
+                                                    'pengurus_2' => 'Ketua Pengurus II',
+                                                    'pengurus_3' => 'Ketua Pengurus III',
+                                                    'pengurus_4' => 'Ketua Pengurus IV',
+                                                ];
+                                                $roleLabel = $roleLabels[$document->creator->sidongan_role] ?? ucfirst(str_replace('_', ' ', $document->creator->sidongan_role));
+                                            @endphp
+                                            <span class="ds-timeline-role-badge">{{ $roleLabel }}</span>
+                                        @endif
+                                    </div>
+                                    <span class="ds-timeline-date">
+                                        {{ $event['timestamp']->locale('id')->translatedFormat('d F Y, H:i') }}
+                                    </span>
+                                </div>
+                                <p class="ds-timeline-desc">
+                                    <span class="ds-timeline-verif-badge ds-timeline-verif-badge-archive">
+                                        <i class="fas fa-archive"></i>
+                                        Mengarsipkan
+                                    </span>
+                                    Surat dengan nomor agenda <strong>{{ $document->agenda_number }}</strong>
+                                </p>
+                            </div>
                         </div>
-                        <div class="ds-timeline-content"></div>
-                    </div>
                     @endif
-                @endforelse
+                @endforeach
             </div>
         </div>
     </div>
@@ -705,11 +927,9 @@
     </div>
 </div>
 
-{{-- Reuse CSS dari detail-laporan untuk gallery --}}
 <link rel="stylesheet" href="{{ asset('assets/sidongan/css/detail-laporan.css') }}">
 
 <script>
-    // Data foto dari server
     const documentFoto = @json($document->file_path ? [$document->file_path] : []);
     
     @php

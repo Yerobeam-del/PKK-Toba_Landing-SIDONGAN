@@ -80,7 +80,7 @@
             <li><a href="{{ route('landing.home') }}#struktur" onclick="handleNavClick(event, 'struktur')" class="nav-link" data-page="struktur">Struktur</a></li>
             <li><a href="{{ route('landing.home') }}#aplikasi" onclick="handleNavClick(event, 'aplikasi')" class="nav-link" data-page="aplikasi">Aplikasi</a></li>
             <li><a href="{{ route('landing.home') }}#berita" onclick="handleNavClick(event, 'berita')" class="nav-link" data-page="berita">Berita</a></li>
-            <li><a href="{{ route('landing.home') }}#desa" onclick="handleNavClick(event, 'desa')" class="nav-link" data-page="desa">Desa</a></li>
+            {{-- <li><a href="{{ route('landing.home') }}#desa" onclick="handleNavClick(event, 'desa')" class="nav-link" data-page="desa">Desa</a></li> --}}
             <li><a href="{{ route('landing.home') }}#sk" onclick="handleNavClick(event, 'sk')" class="nav-link" data-page="sk">SK & Dokumen</a></li>
             <li><a href="{{ route('landing.home') }}#template" onclick="handleNavClick(event, 'template')" class="nav-link" data-page="template">Template</a></li>
             <li><a href="{{ route('landing.home') }}#tentang" onclick="handleNavClick(event, 'tentang')" class="nav-link" data-page="tentang">Tentang</a></li>
@@ -97,7 +97,7 @@
         <a href="{{ route('landing.home') }}#struktur" onclick="handleNavClick(event, 'struktur')" class="nav-link" data-page="struktur">Struktur</a>
         <a href="{{ route('landing.home') }}#aplikasi" onclick="handleNavClick(event, 'aplikasi')" class="nav-link" data-page="aplikasi">Aplikasi</a>
         <a href="{{ route('landing.home') }}#berita" onclick="handleNavClick(event, 'berita')" class="nav-link" data-page="berita">Berita</a>
-        <a href="{{ route('landing.home') }}#desa" onclick="handleNavClick(event, 'desa')" class="nav-link" data-page="desa">Desa</a>
+        {{-- <a href="{{ route('landing.home') }}#desa" onclick="handleNavClick(event, 'desa')" class="nav-link" data-page="desa">Desa</a> --}}
         <a href="{{ route('landing.home') }}#sk" onclick="handleNavClick(event, 'sk')" class="nav-link" data-page="sk">SK & Dokumen</a>
         <a href="{{ route('landing.home') }}#template" onclick="handleNavClick(event, 'template')" class="nav-link" data-page="template">Template</a>
         <a href="{{ route('landing.home') }}#tentang" onclick="handleNavClick(event, 'tentang')" class="nav-link" data-page="tentang">Tentang</a>

@@ -40,6 +40,6 @@ class Dokumen extends Model
     // Format tanggal untuk display
     public function getFormattedDateAttribute()
     {
-        return $this->document_date?->format('d M Y');
+        return $this->document_date?->format('d F Y');
     }
 }
